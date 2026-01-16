@@ -112,7 +112,7 @@ const SlotMachineGame: React.FC<SlotMachineGameProps> = ({ playerName, onExit })
     }
 
     return (
-        <div className="min-h-screen w-full bg-[#0a0f1c] flex flex-col items-center justify-center p-4 relative overflow-hidden overflow-y-auto">
+        <div className="min-h-screen w-full bg-[#0a0f1c] flex flex-col items-center justify-center p-4 relative overflow-x-hidden overflow-y-auto">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-[#0a0f1c] to-[#0a0f1c] pointer-events-none fixed" />
 
             <div className="relative z-10 flex flex-col xl:flex-row gap-8 items-start justify-center w-full max-w-[1400px]">
