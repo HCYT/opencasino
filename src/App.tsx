@@ -272,6 +272,7 @@ const App: React.FC = () => {
           npcProfiles={NPC_PROFILES}
           onExit={() => setBigTwoActive(false)}
           onProfilesUpdate={handleBigTwoProfileUpdate}
+          nightmareMode={teamingEnabled}
         />
       </>
     );
@@ -520,6 +521,18 @@ const App: React.FC = () => {
             )}
 
             {gameType === 'SHOWDOWN' && (
+              <div className="grid gap-4 grid-cols-2">
+                <div className="flex items-center justify-between bg-white/5 p-4 rounded-2xl border border-white/10">
+                  <div className="flex flex-col">
+                    <span className="text-white font-bold text-sm">惡夢模式</span>
+                    <span className="text-white/40 text-[10px] uppercase tracking-wider">NPC 聯合行動</span>
+                  </div>
+                  <ToggleSwitch checked={teamingEnabled} onChange={setTeamingEnabled} />
+                </div>
+              </div>
+            )}
+
+            {gameType === 'BIG_TWO' && (
               <div className="grid gap-4 grid-cols-2">
                 <div className="flex items-center justify-between bg-white/5 p-4 rounded-2xl border border-white/10">
                   <div className="flex flex-col">

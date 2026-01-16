@@ -42,11 +42,12 @@ interface UseBigTwoEngineParams {
   baseBet: number;
   npcProfiles: NPCProfile[];
   onProfilesUpdate: (updates: Array<{ name: string; chips: number; result: BigTwoResult }>) => void;
+  nightmareMode: boolean;
 }
 
 type Phase = 'PLAYING' | 'RESULT';
 
-export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate }: UseBigTwoEngineParams) => {
+export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate, nightmareMode }: UseBigTwoEngineParams) => {
   const [players, setPlayers] = useState<BigTwoPlayer[]>([]);
   const [currentTurnIndex, setCurrentTurnIndex] = useState(0);
   const [currentTrick, setCurrentTrick] = useState<TrickState | null>(null);
@@ -429,13 +430,17 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate 
     if (aiTimerRef.current) window.clearTimeout(aiTimerRef.current);
     aiTimerRef.current = window.setTimeout(() => {
       const aiPlayers = players.map(p => ({ hand: p.hand, tactic: p.tactic }));
+      const humanPlayerIdx = players.findIndex(p => p.id === 'player');
       const play = aiChoosePlay(
         current.hand,
         currentTrick,
         mustIncludeThreeClubs,
         currentTurnIndex,
         aiPlayers,
-        playedCards
+        playedCards,
+        nightmareMode,
+        humanPlayerIdx,
+        300
       );
       if (play && play.length > 0) {
         const success = applyPlay(currentTurnIndex, play);
@@ -452,7 +457,8 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate 
     mustIncludeThreeClubs,
     playedCards,
     applyPlay,
-    handlePass
+    handlePass,
+    nightmareMode
   ]);
 
   return {

@@ -42,9 +42,10 @@ interface BigTwoGameProps {
   npcProfiles: NPCProfile[];
   onExit: () => void;
   onProfilesUpdate: (updates: Array<{ name: string; chips: number; result: BigTwoResult }>) => void;
+  nightmareMode?: boolean;
 }
 
-const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, onExit, onProfilesUpdate }) => {
+const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, onExit, onProfilesUpdate, nightmareMode }) => {
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   const [statsOpen, setStatsOpen] = useState(false);
   const {
@@ -61,7 +62,7 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, on
     initializeGame,
     applyPlay,
     handlePass
-  } = useBigTwoEngine({ seats, baseBet, npcProfiles, onProfilesUpdate });
+  } = useBigTwoEngine({ seats, baseBet, npcProfiles, onProfilesUpdate, nightmareMode: !!nightmareMode });
 
   const playerIndex = players.findIndex(p => !p.isAI);
   const player = players[playerIndex];

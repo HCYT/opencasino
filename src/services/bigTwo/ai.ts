@@ -163,29 +163,63 @@ const simulateRound = (
   candidate: { cards: Card[]; eval: ComboEval },
   aiIdx: number,
   snapshotPlayers: BigTwoAiPlayer[],
-  playedCards: Card[]
+  playedCards: Card[],
+  nightmareMode = false,
+  humanIdx = -1
 ) => {
   const aiHand = sortCards(snapshotPlayers[aiIdx].hand);
   const aiRemaining = aiHand.filter(card => !candidate.cards.some(c => cardKey(c) === cardKey(card)));
+
+  // Build the deck of "unknown" cards
   const excludedKeys = new Set<string>();
+  // 1. My hand is known (obviously)
   aiHand.forEach(card => excludedKeys.add(cardKey(card)));
+  // 2. Played cards are known
   playedCards.forEach(card => excludedKeys.add(cardKey(card)));
 
+  // Nightmare Mode: We also know other NPCs' hands
+  if (nightmareMode) {
+    snapshotPlayers.forEach((p, idx) => {
+      if (idx !== aiIdx && idx !== humanIdx) {
+        p.hand.forEach(card => excludedKeys.add(cardKey(card)));
+      }
+    });
+  }
+
   const deck = createDeck().filter(card => !excludedKeys.has(cardKey(card)));
+
+  // Shuffle the unknown cards
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [deck[i], deck[j]] = [deck[j], deck[i]];
   }
 
   const simHands: Card[][] = snapshotPlayers.map((p, idx) => {
+    // My hand: logic passed remaining hand
     if (idx === aiIdx) return sortCards(aiRemaining);
+    // Determine if hand is empty/finished
     if (p.hand.length === 0) return [];
+
+    // Nightmare Mode: Other NPCs keep their actual hands
+    if (nightmareMode && idx !== humanIdx) {
+      return sortCards(p.hand);
+    }
+
+    // Others/Human: will get random cards from deck later
     return [];
   });
 
   let cursor = 0;
   snapshotPlayers.forEach((p, idx) => {
-    if (idx === aiIdx || p.hand.length === 0) return;
+    // Skip myself
+    if (idx === aiIdx) return;
+    // Skip empty hands
+    if (p.hand.length === 0) return;
+
+    // Nightmare Mode: Skip other NPCs (already filled)
+    if (nightmareMode && idx !== humanIdx) return;
+
+    // Fill the unknown hand (Human or normal NPC)
     simHands[idx] = sortCards(deck.slice(cursor, cursor + p.hand.length));
     cursor += p.hand.length;
   });
@@ -195,6 +229,7 @@ const simulateRound = (
     cards: sortCards(candidate.cards),
     playerIndex: aiIdx
   };
+
   const getNextSimIndex = (from: number) => {
     if (simHands.length === 0) return from;
     let idx = (from + 1) % simHands.length;
@@ -213,15 +248,32 @@ const simulateRound = (
 
   while (safety < 400) {
     safety += 1;
-    if (simHands[aiIdx].length === 0) return true;
+    // Check win condition
+    if (simHands[aiIdx].length === 0) {
+      // Normal: I win
+      // Nightmare: Team wins (so yes, success)
+      return true;
+    }
+
     const activePlayers = simHands.map((hand, idx) => ({ idx, count: hand.length })).filter(p => p.count > 0);
     if (activePlayers.length === 1) {
-      return activePlayers[0].idx === aiIdx;
+      const winnerIdx = activePlayers[0].idx;
+      // Normal: I win if I am the last one standing (unlikely in Big Two, usually empty hand wins)
+      // Actually standard Big Two ends when someone empties hand. 
+      // This block handles if everyone else passed out? No, Big Two doesn't work like that.
+      // This block might be for "everyone else finished"?
+      return winnerIdx === aiIdx;
     }
 
     if (simHands[currentTurn].length === 0) {
-      currentTurn = getNextSimIndex(currentTurn);
-      continue;
+      // Someone emptied their hand
+      if (nightmareMode) {
+        // SUCCESS if the winner is NOT the human
+        return currentTurn !== humanIdx;
+      } else {
+        // Normal: Only successful if *I* won
+        return currentTurn === aiIdx;
+      }
     }
 
     const play = chooseGreedyPlay(simHands[currentTurn], current, false);
@@ -235,6 +287,7 @@ const simulateRound = (
         if (othersPassed) {
           current = null;
           passed.fill(false);
+          // If leader finished, next active
           currentTurn = simHands[leaderIdx].length === 0 ? getNextSimIndex(leaderIdx) : leaderIdx;
           continue;
         }
@@ -252,6 +305,10 @@ const simulateRound = (
 
     simHands[currentTurn] = sortCards(simHands[currentTurn].filter(card => !play.some(c => cardKey(c) === cardKey(card))));
     if (simHands[currentTurn].length === 0) {
+      // Winner found
+      if (nightmareMode) {
+        return currentTurn !== humanIdx;
+      }
       return currentTurn === aiIdx;
     }
     current = {
@@ -272,6 +329,8 @@ export const aiChoosePlay = (
   aiIdx: number,
   players: BigTwoAiPlayer[],
   playedCards: Card[],
+  nightmareMode = false,
+  humanIdx = -1,
   totalSims = 300
 ) => {
   const legalCandidates = getLegalPlays(hand, current, mustIncludeThree);
@@ -289,13 +348,19 @@ export const aiChoosePlay = (
   legalCandidates.forEach(candidate => {
     let wins = 0;
     for (let i = 0; i < totalSims; i++) {
-      if (simulateRound(candidate, aiIdx, players, playedCards)) wins += 1;
+      // Pass nightmare params
+      if (simulateRound(candidate, aiIdx, players, playedCards, nightmareMode, humanIdx)) wins += 1;
     }
     const score = wins / totalSims;
     const normalizedPower = maxPower === minPower ? 0 : (getCandidatePower(candidate.eval) - minPower) / (maxPower - minPower);
     const isMonster = candidate.eval.cutRank > 0;
     const usesTwo = candidate.cards.some(card => card.rank === '2');
     const tactic = players[aiIdx]?.tactic;
+
+    // In Nightmare Mode, tactic weights might matter less or should be uniform,
+    // but the simulation result (Team Win Rate) should be the dominant factor.
+    // We'll keep the tactic bias but maybe dampen it if score is high?
+
     let tacticScore = 0;
     if (tactic === 'BAIT') {
       tacticScore = -0.25 * normalizedPower - 0.15 * lengthNorm(candidate.cards.length) - (isMonster ? 0.2 : 0);
@@ -309,7 +374,11 @@ export const aiChoosePlay = (
     } else if (tactic === 'AGGRESSIVE') {
       tacticScore = 0.25 * normalizedPower + 0.15 * lengthNorm(candidate.cards.length) + (isMonster ? 0.2 : 0);
     }
-    const totalScore = score + tacticScore;
+
+    // If Nightmare Mode, prioritize the simulation score significantly more
+    const scoreWeight = nightmareMode ? 2.5 : 1.0;
+    const totalScore = (score * scoreWeight) + tacticScore;
+
     if (totalScore > bestScore) {
       bestScore = totalScore;
       best = candidate;
