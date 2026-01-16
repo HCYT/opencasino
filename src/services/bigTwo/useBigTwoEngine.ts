@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { AITactic, Card, Rank } from '../../types';
-import { NPC_PROFILES } from '../../config/npcProfiles';
+import { AITactic, Card, NPCProfile, Rank } from '../../types';
 import { createDeck } from '../pokerLogic';
 import { playSound } from '../sound';
 import { aiChoosePlay } from './ai';
 import { pickAiTactic } from './aiTactics';
+import { loadRoundStats, saveRoundStats } from './statsStore';
 import {
   RANK_ORDER,
   THREE_CLUBS_KEY,
@@ -22,20 +22,7 @@ import {
   rankValue,
   sortCards
 } from './rules';
-import { BigTwoPlayer, BigTwoSeat, BigTwoResult, TrickState } from './types';
-
-export interface RoundStat {
-  timestamp: number;
-  baseBet: number;
-  twos: number;
-  pairs: number;
-  triples: number;
-  straights: number;
-  fullHouses: number;
-  fourKinds: number;
-  straightFlushes: number;
-  dragons: number;
-}
+import { BigTwoPlayer, BigTwoSeat, BigTwoResult, RoundStat, TrickState } from './types';
 
 export interface PayoutLine {
   name: string;
@@ -55,14 +42,13 @@ export interface PayoutSummary {
 interface UseBigTwoEngineParams {
   seats: BigTwoSeat[];
   baseBet: number;
+  npcProfiles: NPCProfile[];
   onProfilesUpdate: (updates: Array<{ name: string; chips: number; result: BigTwoResult }>) => void;
 }
 
-const BIG_TWO_STATS_KEY = 'cosglint_big_two_stats';
-
 type Phase = 'PLAYING' | 'RESULT';
 
-export const useBigTwoEngine = ({ seats, baseBet, onProfilesUpdate }: UseBigTwoEngineParams) => {
+export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate }: UseBigTwoEngineParams) => {
   const [players, setPlayers] = useState<BigTwoPlayer[]>([]);
   const [currentTurnIndex, setCurrentTurnIndex] = useState(0);
   const [currentTrick, setCurrentTrick] = useState<TrickState | null>(null);
@@ -73,15 +59,7 @@ export const useBigTwoEngine = ({ seats, baseBet, onProfilesUpdate }: UseBigTwoE
   const [playedCards, setPlayedCards] = useState<Card[]>([]);
   const [payoutSettled, setPayoutSettled] = useState(false);
   const [payoutSummary, setPayoutSummary] = useState<PayoutSummary | null>(null);
-  const [roundStats, setRoundStats] = useState<RoundStat[]>(() => {
-    try {
-      const raw = localStorage.getItem(BIG_TWO_STATS_KEY);
-      if (!raw) return [];
-      return JSON.parse(raw) as RoundStat[];
-    } catch {
-      return [];
-    }
-  });
+  const [roundStats, setRoundStats] = useState<RoundStat[]>(() => loadRoundStats());
 
   const aiTimerRef = useRef<number | null>(null);
   const quoteTimeoutRef = useRef<Record<string, number>>({});
@@ -91,10 +69,6 @@ export const useBigTwoEngine = ({ seats, baseBet, onProfilesUpdate }: UseBigTwoE
   useEffect(() => {
     playersRef.current = players;
   }, [players]);
-
-  const saveRoundStats = (stats: RoundStat[]) => {
-    localStorage.setItem(BIG_TWO_STATS_KEY, JSON.stringify(stats));
-  };
 
   const buildRoundStat = (snapshotPlayers: BigTwoPlayer[]): RoundStat => {
     return snapshotPlayers.reduce<RoundStat>((acc, p) => {
@@ -129,7 +103,7 @@ export const useBigTwoEngine = ({ seats, baseBet, onProfilesUpdate }: UseBigTwoE
     });
 
     const updatedPlayers: BigTwoPlayer[] = seats.map((seat, idx) => {
-      const profile = seat.isAI ? NPC_PROFILES.find(npc => npc.name === seat.name) : undefined;
+      const profile = seat.isAI ? npcProfiles.find(npc => npc.name === seat.name) : undefined;
       return {
         ...seat,
         hand: sortCards(handBuckets[idx]),
@@ -212,8 +186,8 @@ export const useBigTwoEngine = ({ seats, baseBet, onProfilesUpdate }: UseBigTwoE
     return false;
   };
 
-  const setNpcQuote = (name: string, type: keyof typeof NPC_PROFILES[0]['quotes']) => {
-    const profile = NPC_PROFILES.find(p => p.name === name);
+  const setNpcQuote = (name: string, type: keyof NPCProfile['quotes']) => {
+    const profile = npcProfiles.find(p => p.name === name);
     if (!profile) return;
     const player = playersRef.current.find(p => p.name === name);
     const tactic = player?.tactic;
@@ -360,7 +334,7 @@ export const useBigTwoEngine = ({ seats, baseBet, onProfilesUpdate }: UseBigTwoE
     setPlayers(nextPlayers);
     if (nextPlayers[playerIdx]?.isAI) {
       const tactic = nextPlayers[playerIdx].tactic;
-      let quoteType: keyof typeof NPC_PROFILES[0]['quotes'];
+      let quoteType: keyof NPCProfile['quotes'];
       if (combo.type === 'FOUR_KIND' || combo.type === 'STRAIGHT_FLUSH' || combo.type === 'DRAGON') {
         quoteType = 'ALL_IN';
       } else if (tactic === 'AGGRESSIVE') {

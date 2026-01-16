@@ -1,14 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Player, GamePhase } from './types';
-import { INITIAL_CHIPS_OPTIONS, LOAN_AMOUNT, MIN_BET } from './constants';
+import { INITIAL_CHIPS_OPTIONS, LOAN_AMOUNT, MIN_BET, PLAYER_QUOTES } from './constants';
 import { NPC_PROFILES } from './config/npcProfiles';
-import { loadProfiles, saveProfiles, type StoredProfile } from './services/profileStore';
+import { saveProfiles } from './services/profileStore';
+import { useLobbyState } from './services/lobby/useLobbyState';
+import { buildBigTwoSeats, buildBlackjackSeats, buildShowdownPlayers } from './services/lobby/gameStarters';
+import { validateLobbyEntry } from './services/lobby/entryValidation';
+import { pickEligibleNPC, pickNpcTriplet } from './services/lobby/npcPicker';
 import { useShowdownProfileSync } from './services/showdown/useShowdownProfileSync';
 import { useGameEngine } from './services/showdown/useShowdownEngine';
 import { ShowdownRules } from './services/showdown/ShowdownRules';
 import BlackjackGame, { BlackjackResult, BlackjackSeat } from './components/BlackjackGame';
 import BigTwoGame, { BigTwoResult, BigTwoSeat } from './components/BigTwoGame';
 import ShowdownGame from './components/showdown/ShowdownGame';
+import { GameButton } from './components/ui/GameButton';
 
 const BLACKJACK_DECK_OPTIONS = [4, 6, 8];
 const BIG_TWO_BASE_BETS = [5, 50, 1000, 5000];
@@ -24,8 +29,31 @@ type BlackjackCutPresetKey = typeof BLACKJACK_CUT_PRESETS[number]['key'];
 // profileStore handles localStorage persistence
 
 const App: React.FC = () => {
-  const [initialChips, setInitialChips] = useState(INITIAL_CHIPS_OPTIONS[0]);
-  const [playerName, setPlayerName] = useState('我 (玩家)');
+  const {
+    initialChips,
+    setInitialChips,
+    playerName,
+    setPlayerName,
+    profiles,
+    setProfiles,
+    repayAmount,
+    setRepayAmount,
+    activeProfile,
+    isExistingProfile,
+    displayedChips,
+    displayedDebt,
+    npcNames,
+    isNpcSelected,
+    leaderboard,
+    getProfile,
+    resolveChips,
+    handleLoan,
+    handleRepay,
+    handleCreateProfile,
+    handleDeleteProfile,
+    handleResetNpcProfiles,
+    handleResetAllProfiles
+  } = useLobbyState({ npcProfiles: NPC_PROFILES });
   const [betMode, setBetMode] = useState<'FIXED_LIMIT' | 'NO_LIMIT'>('FIXED_LIMIT');
   const [gameType, setGameType] = useState<'SHOWDOWN' | 'BLACKJACK' | 'BIG_TWO'>('SHOWDOWN');
   const [blackjackActive, setBlackjackActive] = useState(false);
@@ -38,13 +66,13 @@ const App: React.FC = () => {
   const [bigTwoSeats, setBigTwoSeats] = useState<BigTwoSeat[]>([]);
   const [bigTwoBaseBet, setBigTwoBaseBet] = useState(BIG_TWO_BASE_BETS[0]);
   const [teamingEnabled, setTeamingEnabled] = useState(false); // Default OFF
-  const [profiles, setProfiles] = useState<Record<string, StoredProfile>>(() => loadProfiles());
-  const [repayAmount, setRepayAmount] = useState(0);
   const [startError, setStartError] = useState<string | null>(null);
   const playerAvatar = 'https://picsum.photos/seed/me/200/200';
 
   // Initialize Engine with specific Rules
-  const { gameState, initGame, handleAction, startNewHand, playerSpeak } = useGameEngine(new ShowdownRules());
+  const { gameState, initGame, handleAction, startNewHand, playerSpeak } = useGameEngine(new ShowdownRules(), {
+    npcProfiles: NPC_PROFILES
+  });
   const { phase, players, pot, currentMaxBet, activePlayerIndex, winners } = gameState;
   const currentPlayer = players[activePlayerIndex];
   const user = players.find(p => p.id === 'player');
@@ -57,135 +85,78 @@ const App: React.FC = () => {
     setProfiles
   });
 
-  const getEligibleNPC = (exclude: string[]) => {
-    const avail = NPC_PROFILES.filter(p => !exclude.includes(p.name));
-    return avail[Math.floor(Math.random() * avail.length)];
-  };
+  const getEligibleNPC = (exclude: string[]) => pickEligibleNPC(NPC_PROFILES, exclude);
 
   const handleStartGame = () => {
     setStartError(null);
     if (npcNames.has(playerName)) return;
 
-    const getProfile = (name: string) => profiles[name];
-    const withStats = (base: Player, minChips: number = 0): Player => {
-      const stored = getProfile(base.name);
-      const storedChips = stored?.chips ?? base.chips;
-      const resolvedChips = minChips > 0 ? Math.max(storedChips, minChips) : storedChips;
-      return {
-        ...base,
-        chips: resolvedChips,
-        wins: stored?.wins ?? 0,
-        losses: stored?.losses ?? 0,
-        games: stored?.games ?? 0,
-        debt: stored?.debt ?? 0
-      };
-    };
-
-    const playerStored = getProfile(playerName);
-    const playerChips = playerStored?.chips ?? initialChips;
-    const minEntry = gameType === 'BIG_TWO' ? bigTwoBaseBet : MIN_BET;
-    if (playerChips < minEntry) {
-      setStartError('餘額不足，請先貸款或重設資料');
-      return;
-    }
-
-    const eligibleNPCs = NPC_PROFILES.filter(p => {
-      const stored = getProfile(p.name);
-      const chips = stored?.chips ?? initialChips;
-      return chips >= minEntry;
+    const { playerChips, error } = validateLobbyEntry({
+      playerName,
+      profiles,
+      initialChips,
+      minBet: MIN_BET,
+      bigTwoBaseBet,
+      gameType,
+      npcProfiles: NPC_PROFILES
     });
-
-    if (eligibleNPCs.length < 3) {
-      setStartError('可用 NPC 不足，請重設資料');
+    if (error) {
+      setStartError(error);
       return;
     }
 
-    if (gameType === 'BLACKJACK') {
-      const ai1 = getEligibleNPC([]);
-      const ai2 = getEligibleNPC([ai1.name]);
-      const ai3 = getEligibleNPC([ai1.name, ai2.name]);
-
-      const seatData: BlackjackSeat[] = [
-        { id: 'player', name: playerName, chips: playerChips, avatar: playerAvatar, isAI: false },
-        { id: 'ai1', name: ai1.name, chips: getProfile(ai1.name)?.chips ?? initialChips, avatar: ai1.avatar, isAI: true },
-        { id: 'ai2', name: ai2.name, chips: getProfile(ai2.name)?.chips ?? initialChips, avatar: ai2.avatar, isAI: true },
-        { id: 'ai3', name: ai3.name, chips: getProfile(ai3.name)?.chips ?? initialChips, avatar: ai3.avatar, isAI: true }
-      ];
-
-      const updated = { ...profiles };
-      seatData.forEach(seat => {
-        if (!updated[seat.name]) {
-          updated[seat.name] = {
-            name: seat.name,
-            chips: seat.chips,
-            wins: 0,
-            losses: 0,
-            games: 0,
-            debt: 0
-          };
-        } else {
-          updated[seat.name] = {
-            ...updated[seat.name],
-            chips: seat.chips
-          };
-        }
+    const startBlackjack = () => {
+      const [ai1, ai2, ai3] = pickNpcTriplet(NPC_PROFILES);
+      const { seats, updatedProfiles } = buildBlackjackSeats({
+        playerName,
+        playerChips,
+        playerAvatar,
+        initialChips,
+        profiles,
+        aiProfiles: [ai1, ai2, ai3]
       });
-      saveProfiles(updated);
-      setProfiles(updated);
-      setBlackjackSeats(seatData);
+      saveProfiles(updatedProfiles);
+      setProfiles(updatedProfiles);
+      setBlackjackSeats(seats);
       setBlackjackSessionKey(prev => prev + 1);
       setBlackjackActive(true);
+    };
+
+    const startBigTwo = () => {
+      const [ai1, ai2, ai3] = pickNpcTriplet(NPC_PROFILES);
+      const { seats, updatedProfiles } = buildBigTwoSeats({
+        playerName,
+        playerChips,
+        playerAvatar,
+        initialChips,
+        profiles,
+        aiProfiles: [ai1, ai2, ai3]
+      });
+      saveProfiles(updatedProfiles);
+      setProfiles(updatedProfiles);
+      setBigTwoSeats(seats);
+      setBigTwoSessionKey(prev => prev + 1);
+      setBigTwoActive(true);
+    };
+
+    if (gameType === 'BLACKJACK') {
+      startBlackjack();
       return;
     }
 
     if (gameType === 'BIG_TWO') {
-      const ai1 = getEligibleNPC([]);
-      const ai2 = getEligibleNPC([ai1.name]);
-      const ai3 = getEligibleNPC([ai1.name, ai2.name]);
-
-      const seatData: BigTwoSeat[] = [
-        { id: 'player', name: playerName, chips: playerChips, avatar: playerAvatar, isAI: false },
-        { id: 'ai1', name: ai1.name, chips: getProfile(ai1.name)?.chips ?? initialChips, avatar: ai1.avatar, isAI: true },
-        { id: 'ai2', name: ai2.name, chips: getProfile(ai2.name)?.chips ?? initialChips, avatar: ai2.avatar, isAI: true },
-        { id: 'ai3', name: ai3.name, chips: getProfile(ai3.name)?.chips ?? initialChips, avatar: ai3.avatar, isAI: true }
-      ];
-
-      const updated = { ...profiles };
-      seatData.forEach(seat => {
-        if (!updated[seat.name]) {
-          updated[seat.name] = {
-            name: seat.name,
-            chips: seat.chips,
-            wins: 0,
-            losses: 0,
-            games: 0,
-            debt: 0
-          };
-        } else {
-          updated[seat.name] = {
-            ...updated[seat.name],
-            chips: seat.chips
-          };
-        }
-      });
-      saveProfiles(updated);
-      setProfiles(updated);
-      setBigTwoSeats(seatData);
-      setBigTwoSessionKey(prev => prev + 1);
-      setBigTwoActive(true);
+      startBigTwo();
       return;
     }
 
-    const ai1 = getEligibleNPC([]);
-    const ai2 = getEligibleNPC([ai1.name]);
-    const ai3 = getEligibleNPC([ai1.name, ai2.name]);
-
-    const initialPlayers: Player[] = [
-      withStats({ id: 'player', name: playerName, chips: initialChips, currentBet: 0, cards: [], isFolded: false, isAI: false, avatar: playerAvatar }, 0),
-      withStats({ id: 'ai1', name: ai1.name, chips: initialChips, currentBet: 0, cards: [], isFolded: false, isAI: true, avatar: ai1.avatar, lastAction: '', teamId: 'AI_TEAM' }, 0),
-      withStats({ id: 'ai2', name: ai2.name, chips: initialChips, currentBet: 0, cards: [], isFolded: false, isAI: true, avatar: ai2.avatar, lastAction: '', teamId: 'AI_TEAM' }, 0),
-      withStats({ id: 'ai3', name: ai3.name, chips: initialChips, currentBet: 0, cards: [], isFolded: false, isAI: true, avatar: ai3.avatar, lastAction: '', teamId: 'AI_TEAM' }, 0)
-    ];
+    const [ai1, ai2, ai3] = pickNpcTriplet(NPC_PROFILES);
+    const initialPlayers = buildShowdownPlayers({
+      playerName,
+      playerAvatar,
+      initialChips,
+      profiles,
+      aiProfiles: [ai1, ai2, ai3]
+    });
     // Note: Added teamId for AI cooperation
     initGame(initialPlayers, teamingEnabled, betMode);
   };
@@ -234,129 +205,9 @@ const App: React.FC = () => {
     setProfiles(updated);
   };
 
-  const handleLoan = () => {
-    const current = profiles[playerName] || {
-      name: playerName,
-      chips: initialChips,
-      wins: 0,
-      losses: 0,
-      games: 0,
-      debt: 0
-    };
-    const updated = {
-      ...profiles,
-      [playerName]: {
-        ...current,
-        chips: current.chips + LOAN_AMOUNT,
-        debt: current.debt + LOAN_AMOUNT
-      }
-    };
-    saveProfiles(updated);
-    setProfiles(updated);
-  };
-
-  const handleResetAllProfiles = () => {
-    if (!window.confirm('確定要重設所有角色資料（含玩家與 NPC）嗎？')) return;
-    saveProfiles({});
-    setProfiles({});
-    setPlayerName('');
-    setInitialChips(INITIAL_CHIPS_OPTIONS[0]);
-  };
-
-  const handleRepay = () => {
-    const current = profiles[playerName];
-    if (!current || current.debt <= 0 || repayAmount <= 0) return;
-    const repay = Math.min(repayAmount, current.debt, current.chips);
-    if (repay <= 0) return;
-
-    const updated = {
-      ...profiles,
-      [playerName]: {
-        ...current,
-        chips: current.chips - repay,
-        debt: current.debt - repay
-      }
-    };
-    saveProfiles(updated);
-    setProfiles(updated);
-    setRepayAmount(0);
-  };
-
-  const handleCreateProfile = () => {
-    if (!playerName.trim()) return;
-    if (profiles[playerName]) return;
-    const updated = {
-      ...profiles,
-      [playerName]: {
-        name: playerName,
-        chips: initialChips,
-        wins: 0,
-        losses: 0,
-        games: 0,
-        debt: 0
-      }
-    };
-    saveProfiles(updated);
-    setProfiles(updated);
-  };
-
-  const handleDeleteProfile = (name: string) => {
-    if (!profiles[name]) return;
-    const { [name]: _, ...rest } = profiles;
-    saveProfiles(rest);
-    setProfiles(rest);
-    if (playerName === name) {
-      setPlayerName('');
-      setInitialChips(INITIAL_CHIPS_OPTIONS[0]);
-    }
-  };
-
-  const handleResetNpcProfiles = () => {
-    if (!window.confirm('確定要重設所有 NPC 資產嗎？')) return;
-    const npcNames = NPC_PROFILES.map(profile => profile.name);
-    const updated = { ...profiles };
-    npcNames.forEach(name => {
-      updated[name] = {
-        name,
-        chips: INITIAL_CHIPS_OPTIONS[0],
-        wins: 0,
-        losses: 0,
-        games: 0,
-        debt: 0
-      };
-    });
-    saveProfiles(updated);
-    setProfiles(updated);
-  };
-
   // showdown profile sync handled by useShowdownProfileSync
 
   const blackjackCutRange = BLACKJACK_CUT_PRESETS.find(preset => preset.key === blackjackCutPreset) ?? BLACKJACK_CUT_PRESETS[1];
-
-  const resolveBlackjackChips = (name: string) => {
-    const stored = profiles[name];
-    return stored?.chips ?? initialChips;
-  };
-
-  const activeProfile = profiles[playerName];
-  const isExistingProfile = Boolean(activeProfile);
-  const displayedChips = activeProfile?.chips ?? initialChips;
-  const displayedDebt = activeProfile?.debt ?? 0;
-  const npcNames = new Set(NPC_PROFILES.map(profile => profile.name));
-  const isNpcSelected = npcNames.has(playerName);
-  const leaderboard = Object.keys(profiles)
-    .map(key => profiles[key])
-    .filter((profile): profile is StoredProfile => Boolean(profile))
-    .sort((a, b) => {
-      if (b.chips !== a.chips) return b.chips - a.chips;
-      return b.wins - a.wins;
-    });
-
-  useEffect(() => {
-    if (activeProfile?.chips !== undefined) {
-      setInitialChips(activeProfile.chips);
-    }
-  }, [activeProfile?.chips]);
 
   if (bigTwoActive) {
     return (
@@ -364,6 +215,7 @@ const App: React.FC = () => {
         key={`big-two-${bigTwoSessionKey}`}
         seats={bigTwoSeats}
         baseBet={bigTwoBaseBet}
+        npcProfiles={NPC_PROFILES}
         onExit={() => setBigTwoActive(false)}
         onProfilesUpdate={handleBigTwoProfileUpdate}
       />
@@ -379,7 +231,7 @@ const App: React.FC = () => {
         shoeDecks={blackjackDecks}
         cutRatioRange={{ min: blackjackCutRange.min, max: blackjackCutRange.max }}
         npcProfiles={NPC_PROFILES}
-        resolveChips={resolveBlackjackChips}
+        resolveChips={resolveChips}
         onExit={() => setBlackjackActive(false)}
         onProfilesUpdate={handleBlackjackProfileUpdate}
       />
@@ -392,14 +244,21 @@ const App: React.FC = () => {
         <div className="h-screen w-full flex flex-col items-center justify-center bg-[#052c16] text-white p-4">
           <h1 className="text-4xl text-yellow-500 font-black mb-2">慈善撲克王大賽</h1>
           <div className="text-red-300 font-black mb-6">你已破產</div>
-          <button onClick={() => setInitialChips(INITIAL_CHIPS_OPTIONS[0])} className="text-white underline mb-8">返回大廳</button>
+          <GameButton
+            onClick={() => setInitialChips(INITIAL_CHIPS_OPTIONS[0])}
+            variant="ghost"
+            className="mb-8 text-sm underline"
+          >
+            返回大廳
+          </GameButton>
           <div className="bg-black/60 backdrop-blur-xl p-10 rounded-[40px] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] max-w-md w-full space-y-8">
-            <button
+            <GameButton
               onClick={() => window.location.reload()}
-              className="w-full bg-gradient-to-b from-yellow-400 to-amber-600 text-slate-900 font-black py-5 rounded-2xl text-2xl hover:brightness-110 active:scale-95 transition-all shadow-xl"
+              variant="primary"
+              className="w-full py-5 rounded-2xl text-2xl"
             >
               重新載入
-            </button>
+            </GameButton>
           </div>
         </div>
       );
@@ -430,13 +289,14 @@ const App: React.FC = () => {
                 <label className="block text-[10px] font-black uppercase text-yellow-500/60 mb-3 tracking-widest">初始帶入籌碼</label>
                 <div className="grid grid-cols-2 gap-4">
                   {INITIAL_CHIPS_OPTIONS.map(val => (
-                    <button
+                    <GameButton
                       key={val}
                       onClick={() => setInitialChips(val)}
-                      className={`py-4 rounded-2xl border transition-all font-black text-lg ${initialChips === val ? 'bg-yellow-500 border-yellow-300 text-slate-900 scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)]' : 'bg-white/5 border-white/10 hover:bg-white/10 text-white/50'}`}
+                      variant={initialChips === val ? 'primary' : 'muted'}
+                      className={`py-4 rounded-2xl border text-lg ${initialChips === val ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
                     >
                       ${val.toLocaleString()}
-                    </button>
+                    </GameButton>
                   ))}
                 </div>
               </div>
@@ -451,24 +311,27 @@ const App: React.FC = () => {
             <div>
               <label className="block text-[10px] font-black uppercase text-yellow-500/60 mb-3 tracking-widest">遊戲選擇</label>
               <div className="grid grid-cols-3 gap-4">
-                <button
+                <GameButton
                   onClick={() => setGameType('SHOWDOWN')}
-                  className={`py-4 rounded-2xl border transition-all font-black text-xs md:text-sm ${gameType === 'SHOWDOWN' ? 'bg-yellow-500 border-yellow-300 text-slate-900 scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)]' : 'bg-white/5 border-white/10 hover:bg-white/10 text-white/50'}`}
+                  variant={gameType === 'SHOWDOWN' ? 'primary' : 'muted'}
+                  className={`py-4 rounded-2xl border text-xs md:text-sm ${gameType === 'SHOWDOWN' ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
                 >
                   梭哈
-                </button>
-                <button
+                </GameButton>
+                <GameButton
                   onClick={() => setGameType('BLACKJACK')}
-                  className={`py-4 rounded-2xl border transition-all font-black text-xs md:text-sm ${gameType === 'BLACKJACK' ? 'bg-yellow-500 border-yellow-300 text-slate-900 scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)]' : 'bg-white/5 border-white/10 hover:bg-white/10 text-white/50'}`}
+                  variant={gameType === 'BLACKJACK' ? 'primary' : 'muted'}
+                  className={`py-4 rounded-2xl border text-xs md:text-sm ${gameType === 'BLACKJACK' ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
                 >
                   21 點
-                </button>
-                <button
+                </GameButton>
+                <GameButton
                   onClick={() => setGameType('BIG_TWO')}
-                  className={`py-4 rounded-2xl border transition-all font-black text-xs md:text-sm ${gameType === 'BIG_TWO' ? 'bg-yellow-500 border-yellow-300 text-slate-900 scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)]' : 'bg-white/5 border-white/10 hover:bg-white/10 text-white/50'}`}
+                  variant={gameType === 'BIG_TWO' ? 'primary' : 'muted'}
+                  className={`py-4 rounded-2xl border text-xs md:text-sm ${gameType === 'BIG_TWO' ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
                 >
                   大老二
-                </button>
+                </GameButton>
               </div>
               <div className="text-[10px] text-white/40 uppercase tracking-widest mt-2">
                 {gameType === 'SHOWDOWN' ? '經典五張梭哈' : gameType === 'BLACKJACK' ? '經典 21 點，挑戰莊家' : '臺灣玩法大老二'}
@@ -481,13 +344,14 @@ const App: React.FC = () => {
                   <label className="block text-[10px] font-black uppercase text-yellow-500/60 mb-3 tracking-widest">牌靴副數</label>
                   <div className="grid grid-cols-3 gap-3">
                     {BLACKJACK_DECK_OPTIONS.map(val => (
-                      <button
+                      <GameButton
                         key={val}
                         onClick={() => setBlackjackDecks(val)}
-                        className={`py-3 rounded-2xl border transition-all font-black text-xs md:text-sm ${blackjackDecks === val ? 'bg-yellow-500 border-yellow-300 text-slate-900 scale-105 shadow-[0_0_16px_rgba(234,179,8,0.25)]' : 'bg-white/5 border-white/10 hover:bg-white/10 text-white/50'}`}
+                        variant={blackjackDecks === val ? 'primary' : 'muted'}
+                        className={`py-3 rounded-2xl border text-xs md:text-sm ${blackjackDecks === val ? 'scale-105 shadow-[0_0_16px_rgba(234,179,8,0.25)] text-slate-900' : 'text-white/50'}`}
                       >
                         {val} 副牌
-                      </button>
+                      </GameButton>
                     ))}
                   </div>
                 </div>
@@ -495,13 +359,14 @@ const App: React.FC = () => {
                   <label className="block text-[10px] font-black uppercase text-yellow-500/60 mb-3 tracking-widest">切牌深度</label>
                   <div className="grid grid-cols-3 gap-3">
                     {BLACKJACK_CUT_PRESETS.map(preset => (
-                      <button
+                      <GameButton
                         key={preset.key}
                         onClick={() => setBlackjackCutPreset(preset.key)}
-                        className={`py-3 rounded-2xl border transition-all font-black text-[10px] md:text-xs ${blackjackCutPreset === preset.key ? 'bg-yellow-500 border-yellow-300 text-slate-900 scale-105 shadow-[0_0_16px_rgba(234,179,8,0.25)]' : 'bg-white/5 border-white/10 hover:bg-white/10 text-white/50'}`}
+                        variant={blackjackCutPreset === preset.key ? 'primary' : 'muted'}
+                        className={`py-3 rounded-2xl border text-[10px] md:text-xs ${blackjackCutPreset === preset.key ? 'scale-105 shadow-[0_0_16px_rgba(234,179,8,0.25)] text-slate-900' : 'text-white/50'}`}
                       >
                         {preset.label}
-                      </button>
+                      </GameButton>
                     ))}
                   </div>
                 </div>
@@ -513,13 +378,14 @@ const App: React.FC = () => {
                 <label className="block text-[10px] font-black uppercase text-yellow-500/60 mb-3 tracking-widest">大老二底注（每張）</label>
                 <div className="grid grid-cols-2 gap-4">
                   {BIG_TWO_BASE_BETS.map(val => (
-                    <button
+                    <GameButton
                       key={val}
                       onClick={() => setBigTwoBaseBet(val)}
-                      className={`py-4 rounded-2xl border transition-all font-black text-xs md:text-sm ${bigTwoBaseBet === val ? 'bg-yellow-500 border-yellow-300 text-slate-900 scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)]' : 'bg-white/5 border-white/10 hover:bg-white/10 text-white/50'}`}
+                      variant={bigTwoBaseBet === val ? 'primary' : 'muted'}
+                      className={`py-4 rounded-2xl border text-xs md:text-sm ${bigTwoBaseBet === val ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
                     >
                       每張 ${val.toLocaleString()}
-                    </button>
+                    </GameButton>
                   ))}
                 </div>
               </div>
@@ -528,18 +394,20 @@ const App: React.FC = () => {
               <div>
                 <label className="block text-[10px] font-black uppercase text-yellow-500/60 mb-3 tracking-widest">下注規則</label>
                 <div className="grid grid-cols-2 gap-4">
-                  <button
+                  <GameButton
                     onClick={() => setBetMode('FIXED_LIMIT')}
-                    className={`py-4 rounded-2xl border transition-all font-black text-xs md:text-sm ${betMode === 'FIXED_LIMIT' ? 'bg-yellow-500 border-yellow-300 text-slate-900 scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)]' : 'bg-white/5 border-white/10 hover:bg-white/10 text-white/50'}`}
+                    variant={betMode === 'FIXED_LIMIT' ? 'primary' : 'muted'}
+                    className={`py-4 rounded-2xl border text-xs md:text-sm ${betMode === 'FIXED_LIMIT' ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
                   >
                     固定籌碼
-                  </button>
-                  <button
+                  </GameButton>
+                  <GameButton
                     onClick={() => setBetMode('NO_LIMIT')}
-                    className={`py-4 rounded-2xl border transition-all font-black text-xs md:text-sm ${betMode === 'NO_LIMIT' ? 'bg-yellow-500 border-yellow-300 text-slate-900 scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)]' : 'bg-white/5 border-white/10 hover:bg-white/10 text-white/50'}`}
+                    variant={betMode === 'NO_LIMIT' ? 'primary' : 'muted'}
+                    className={`py-4 rounded-2xl border text-xs md:text-sm ${betMode === 'NO_LIMIT' ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
                   >
                     自由籌碼
-                  </button>
+                  </GameButton>
                 </div>
                 <div className="text-[10px] text-white/40 uppercase tracking-widest mt-2">
                   {betMode === 'FIXED_LIMIT' ? '小注 / 大注，依街數固定加注' : '可自由下注，仍有最低加注限制'}
@@ -570,13 +438,14 @@ const App: React.FC = () => {
             {startError && (
               <div className="text-xs text-red-300 font-black text-center">{startError}</div>
             )}
-            <button
+            <GameButton
               onClick={handleStartGame}
               disabled={isNpcSelected}
-              className={`w-full bg-gradient-to-b from-yellow-400 to-amber-600 text-slate-900 font-black py-5 rounded-2xl text-2xl transition-all shadow-xl ${isNpcSelected ? 'opacity-50 cursor-not-allowed' : 'hover:brightness-110 active:scale-95'}`}
+              variant="primary"
+              className={`w-full py-5 rounded-2xl text-2xl ${isNpcSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {gameType === 'BLACKJACK' ? '開始 21 點' : gameType === 'BIG_TWO' ? '開始大老二' : '踏入牌局'}
-            </button>
+            </GameButton>
           </div>
 
           <div className="space-y-6">
@@ -592,12 +461,13 @@ const App: React.FC = () => {
                   <div className="text-sm text-red-300 font-black">${displayedDebt.toLocaleString()}</div>
                 </div>
               </div>
-              <button
+              <GameButton
                 onClick={handleLoan}
-                className="w-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 font-black text-xs py-2 rounded-2xl hover:bg-emerald-500/30 transition-all"
+                variant="success"
+                className="w-full py-2 rounded-2xl text-xs"
               >
                 申請貸款 +${LOAN_AMOUNT.toLocaleString()}
-              </button>
+              </GameButton>
               <div className="flex gap-2">
                 <input
                   type="number"
@@ -607,12 +477,13 @@ const App: React.FC = () => {
                   placeholder="償還金額"
                   className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-4 py-2 text-white text-xs focus:outline-none focus:border-yellow-500 text-right"
                 />
-                <button
+                <GameButton
                   onClick={handleRepay}
-                  className="px-4 py-2 rounded-2xl bg-yellow-500/20 border border-yellow-400/40 text-yellow-200 text-xs font-black hover:bg-yellow-500/30 transition-all"
+                  variant="warning"
+                  className="px-4 py-2 rounded-2xl text-xs"
                 >
                   還款
-                </button>
+                </GameButton>
               </div>
             </div>
 
@@ -627,12 +498,13 @@ const App: React.FC = () => {
                     {npcNames.has(profile.name) ? (
                       <span className="text-sm font-black text-white/50">{profile.name}</span>
                     ) : (
-                      <button
+                      <GameButton
                         onClick={() => setPlayerName(profile.name)}
-                        className={`text-sm font-black ${playerName === profile.name ? 'text-yellow-300' : 'text-white/80'}`}
+                        variant="ghost"
+                        className={`text-sm ${playerName === profile.name ? 'text-yellow-300' : 'text-white/80'}`}
                       >
                         {profile.name}
-                      </button>
+                      </GameButton>
                     )}
                     <div className="text-xs text-emerald-200 font-black">${profile.chips.toLocaleString()}</div>
                     {playerName === profile.name ? (
@@ -640,34 +512,38 @@ const App: React.FC = () => {
                     ) : npcNames.has(profile.name) ? (
                       <span className="text-[10px] text-white/40 font-black">NPC</span>
                     ) : (
-                      <button
+                      <GameButton
                         onClick={() => handleDeleteProfile(profile.name)}
-                        className="text-[10px] text-red-200 font-black bg-red-500/10 border border-red-500/30 rounded-lg px-2 py-1"
+                        variant="danger"
+                        className="text-[10px] rounded-lg px-2 py-1"
                       >
                         刪除
-                      </button>
+                      </GameButton>
                     )}
                   </div>
                 ))}
               </div>
-              <button
+              <GameButton
                 onClick={handleCreateProfile}
-                className="w-full bg-white/5 border border-white/10 text-white/80 font-black text-xs py-2 rounded-2xl hover:bg-white/10 transition-all"
+                variant="muted"
+                className="w-full py-2 rounded-2xl text-xs text-white/80"
               >
                 建立角色
-              </button>
-              <button
+              </GameButton>
+              <GameButton
                 onClick={handleResetNpcProfiles}
-                className="w-full bg-red-500/10 border border-red-500/30 text-red-200 font-black text-[10px] py-2 rounded-2xl hover:bg-red-500/20 transition-all"
+                variant="danger"
+                className="w-full py-2 rounded-2xl text-[10px]"
               >
                 重設 NPC 資產
-              </button>
-              <button
+              </GameButton>
+              <GameButton
                 onClick={handleResetAllProfiles}
-                className="w-full bg-yellow-500/10 border border-yellow-400/30 text-yellow-200 font-black text-[10px] py-2 rounded-2xl hover:bg-yellow-500/20 transition-all"
+                variant="warning"
+                className="w-full py-2 rounded-2xl text-[10px]"
               >
                 全部重設
-              </button>
+              </GameButton>
             </div>
           </div>
         </div>
@@ -701,6 +577,8 @@ const App: React.FC = () => {
       minBet={MIN_BET}
       winners={winners}
       betMode={betMode}
+      npcProfiles={NPC_PROFILES}
+      playerQuotes={PLAYER_QUOTES}
       handleAction={handleAction}
       startNewHand={startNewHand}
       playerSpeak={playerSpeak}

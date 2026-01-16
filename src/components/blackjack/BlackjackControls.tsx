@@ -2,6 +2,7 @@ import React from 'react';
 import { BlackjackPhase } from '../../services/blackjack/types';
 import { getHandValue } from '../../services/blackjack/rules';
 import { BlackjackHand, BlackjackPlayer } from '../../services/blackjack/types';
+import { GameButton } from '../ui/GameButton';
 
 interface BlackjackControlsProps {
   phase: BlackjackPhase;
@@ -77,13 +78,14 @@ const BlackjackControls: React.FC<BlackjackControlsProps> = ({
                   className="w-52 accent-yellow-500"
                 />
               </div>
-              <button
+              <GameButton
                 onClick={onStartHand}
                 disabled={!canBet}
-                className="bg-gradient-to-b from-yellow-400 to-amber-600 text-slate-900 font-black px-10 py-5 rounded-2xl text-xl transition-all shadow-xl disabled:opacity-40"
+                variant="primary"
+                className="px-10 py-5 rounded-2xl text-xl"
               >
                 發牌
-              </button>
+              </GameButton>
             </div>
           )}
 
@@ -91,25 +93,28 @@ const BlackjackControls: React.FC<BlackjackControlsProps> = ({
             <div className="flex items-end gap-3">
               {isPlayerTurn ? (
                 <div className={`flex items-end ${canSplitHand ? 'gap-2' : 'gap-3'}`}>
-                  <button
+                  <GameButton
                     onClick={onHit}
-                    className="w-24 h-24 rounded-[1.5rem] bg-emerald-600 text-white font-black uppercase tracking-widest shadow-lg hover:brightness-110"
+                    variant="success"
+                    className="w-24 h-24 rounded-[1.5rem] uppercase tracking-widest"
                   >
                     要牌
-                  </button>
-                  <button
+                  </GameButton>
+                  <GameButton
                     onClick={onStand}
-                    className="w-24 h-24 rounded-[1.5rem] bg-red-600 text-white font-black uppercase tracking-widest shadow-lg hover:brightness-110"
+                    variant="danger"
+                    className="w-24 h-24 rounded-[1.5rem] uppercase tracking-widest"
                   >
                     停牌
-                  </button>
+                  </GameButton>
                   {canSplitHand && (
-                    <button
+                    <GameButton
                       onClick={onSplit}
-                      className="w-24 h-24 rounded-[1.5rem] bg-blue-600 text-white font-black uppercase tracking-widest shadow-lg hover:brightness-110"
+                      variant="info"
+                      className="w-24 h-24 rounded-[1.5rem] uppercase tracking-widest"
                     >
                       分牌
-                    </button>
+                    </GameButton>
                   )}
                 </div>
               ) : (
@@ -131,21 +136,23 @@ const BlackjackControls: React.FC<BlackjackControlsProps> = ({
               <div className="bg-black/60 backdrop-blur-md px-6 py-4 rounded-[1.5rem] border border-white/10 text-yellow-300 font-black">
                 {message || '本局結束'}
               </div>
-              <button
+              <GameButton
                 onClick={onReset}
-                className="bg-white text-slate-900 font-black px-10 py-5 rounded-2xl shadow-xl"
+                variant="light"
+                className="px-10 py-5 rounded-2xl"
               >
                 下一局
-              </button>
+              </GameButton>
             </div>
           )}
 
-          <button
+          <GameButton
             onClick={onExit}
-            className="ml-4 bg-black/50 border border-white/10 text-white/70 font-black px-6 py-4 rounded-2xl uppercase tracking-widest hover:text-white hover:border-white/40"
+            variant="ghost"
+            className="ml-4 px-6 py-4 rounded-2xl uppercase tracking-widest"
           >
             返回大廳
-          </button>
+          </GameButton>
         </div>
       </div>
     </div>

@@ -1,13 +1,17 @@
 import { useState, useRef, useEffect, type Dispatch, type SetStateAction } from 'react';
-import { Player, GameState, GamePhase, Card, ActionType, IPokerRules } from '../../types';
+import { Player, GameState, GamePhase, Card, ActionType, IPokerRules, NPCProfile } from '../../types';
 import { createDeck, evaluateHand } from '../pokerLogic';
 import { MIN_BET, SUIT_VALUE } from '../../constants';
-import { NPC_PROFILES } from '../../config/npcProfiles';
-import { playSound } from '../sound';
+import { playSound as defaultPlaySound } from '../sound';
+
+export interface ShowdownEngineOptions {
+    npcProfiles?: NPCProfile[];
+    playSound?: (name: string) => void;
+}
 
 // Helper to get random quote
-const getQuote = (name: string, type: keyof typeof NPC_PROFILES[0]['quotes']): string | undefined => {
-    const profile = NPC_PROFILES.find(p => p.name === name);
+const getQuote = (profiles: NPCProfile[], name: string, type: keyof NPCProfile['quotes']): string | undefined => {
+    const profile = profiles.find(p => p.name === name);
     if (!profile) return undefined;
     const quotes = profile.quotes[type];
     if (!quotes || quotes.length === 0) return undefined;
@@ -18,7 +22,9 @@ const getQuote = (name: string, type: keyof typeof NPC_PROFILES[0]['quotes']): s
     return quotes[Math.floor(Math.random() * quotes.length)];
 };
 
-export const useGameEngine = (initialRules: IPokerRules) => {
+export const useGameEngine = (initialRules: IPokerRules, options: ShowdownEngineOptions = {}) => {
+    const npcProfiles = options.npcProfiles ?? [];
+    const playSound = options.playSound ?? defaultPlaySound;
     const [gameState, setGameState] = useState<GameState>({
         players: [],
         pot: 0,
@@ -217,7 +223,7 @@ export const useGameEngine = (initialRules: IPokerRules) => {
     const startNewHand = async (players: Player[]) => {
         const buyInChips = latestStateRef.current.buyInChips ?? players.find(p => !p.isAI)?.chips ?? players[0]?.chips ?? MIN_BET * 10;
         const usedNames = new Set(players.filter(p => !p.isAI || p.chips >= MIN_BET).map(p => p.name));
-        const availableNPCs = NPC_PROFILES.filter(npc => !usedNames.has(npc.name));
+        const availableNPCs = npcProfiles.filter(npc => !usedNames.has(npc.name));
 
         let npcIndex = 0;
         const refreshedPlayers = players.map(p => {
@@ -337,7 +343,7 @@ export const useGameEngine = (initialRules: IPokerRules) => {
             const updatedPlayersWithQuotes = updatedPlayers.map(p => {
                 if (p.isAI) {
                     const type = winners.includes(p.id) ? 'WIN' : 'LOSE';
-                    const quote = getQuote(p.name, type);
+                    const quote = getQuote(npcProfiles, p.name, type);
                     if (quote) return { ...p, currentQuote: quote };
                 }
                 return p;
@@ -461,7 +467,7 @@ export const useGameEngine = (initialRules: IPokerRules) => {
             }
 
             // Determine Quote Type
-            let quoteType: keyof typeof NPC_PROFILES[0]['quotes'] | undefined;
+            let quoteType: keyof NPCProfile['quotes'] | undefined;
             if (resolvedAction === 'FOLD') quoteType = 'FOLD';
             else if (resolvedAction === 'CHECK') quoteType = 'CHECK';
             else if (resolvedAction === 'CALL') quoteType = 'CALL';
@@ -470,7 +476,7 @@ export const useGameEngine = (initialRules: IPokerRules) => {
 
             let quote = taunt;
             if (!quote && p.isAI && quoteType) {
-                quote = getQuote(p.name, quoteType);
+                quote = getQuote(npcProfiles, p.name, quoteType);
             }
 
             if (quote) {

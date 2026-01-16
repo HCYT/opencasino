@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { Card, Rank } from '../types';
+import { Card, NPCProfile, Rank } from '../types';
 import CardUI from './CardUI';
+import { GameButton } from './ui/GameButton';
 import {
   RANK_ORDER,
   canSplitDragon,
@@ -29,11 +30,12 @@ interface Suggestion {
 interface BigTwoGameProps {
   seats: BigTwoSeat[];
   baseBet: number;
+  npcProfiles: NPCProfile[];
   onExit: () => void;
   onProfilesUpdate: (updates: Array<{ name: string; chips: number; result: BigTwoResult }>) => void;
 }
 
-const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, onExit, onProfilesUpdate }) => {
+const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, onExit, onProfilesUpdate }) => {
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   const [statsOpen, setStatsOpen] = useState(false);
   const {
@@ -50,7 +52,7 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, onExit, onProfi
     initializeGame,
     applyPlay,
     handlePass
-  } = useBigTwoEngine({ seats, baseBet, onProfilesUpdate });
+  } = useBigTwoEngine({ seats, baseBet, npcProfiles, onProfilesUpdate });
 
   const playerIndex = players.findIndex(p => !p.isAI);
   const player = players[playerIndex];
@@ -306,19 +308,21 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, onExit, onProfi
               <div className="flex items-end gap-3">
                 {isPlayerTurn ? (
                   <div className="flex items-end gap-3">
-                    <button
+                    <GameButton
                       onClick={handlePlay}
-                      className="w-24 h-24 rounded-[1.5rem] bg-emerald-600 text-white font-black uppercase tracking-widest shadow-lg hover:brightness-110"
+                      variant="success"
+                      className="w-24 h-24 rounded-[1.5rem] uppercase tracking-widest"
                     >
                       出牌
-                    </button>
-                    <button
+                    </GameButton>
+                    <GameButton
                       onClick={handlePass}
                       disabled={!currentTrick}
-                      className="w-24 h-24 rounded-[1.5rem] bg-red-600 text-white font-black uppercase tracking-widest shadow-lg hover:brightness-110 disabled:opacity-50"
+                      variant="danger"
+                      className="w-24 h-24 rounded-[1.5rem] uppercase tracking-widest"
                     >
                       過
-                    </button>
+                    </GameButton>
                   </div>
                 ) : (
                   <div className="bg-black/60 backdrop-blur-md px-6 py-4 rounded-[1.5rem] border border-white/10 text-white/60 font-black uppercase tracking-widest">
@@ -328,33 +332,36 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, onExit, onProfi
               </div>
             )}
 
-            <button
+            <GameButton
               onClick={() => setStatsOpen(true)}
-              className="ml-2 bg-black/50 border border-white/10 text-white/70 font-black px-6 py-4 rounded-2xl uppercase tracking-widest hover:text-white hover:border-white/40"
+              variant="ghost"
+              className="ml-2 px-6 py-4 rounded-2xl uppercase tracking-widest"
             >
               牌局統計
-            </button>
+            </GameButton>
 
             {phase === 'RESULT' && (
               <div className="flex items-end gap-3">
                 <div className="bg-black/60 backdrop-blur-md px-6 py-4 rounded-[1.5rem] border border-white/10 text-yellow-300 font-black">
                   本局結束
                 </div>
-                <button
+                <GameButton
                   onClick={initializeGame}
-                  className="bg-white text-slate-900 font-black px-10 py-5 rounded-2xl shadow-xl"
+                  variant="light"
+                  className="px-10 py-5 rounded-2xl"
                 >
                   再來一局
-                </button>
+                </GameButton>
               </div>
             )}
 
-            <button
+            <GameButton
               onClick={onExit}
-              className="ml-4 bg-black/50 border border-white/10 text-white/70 font-black px-6 py-4 rounded-2xl uppercase tracking-widest hover:text-white hover:border-white/40"
+              variant="ghost"
+              className="ml-4 px-6 py-4 rounded-2xl uppercase tracking-widest"
             >
               返回大廳
-            </button>
+            </GameButton>
           </div>
         </div>
       </div>
@@ -458,12 +465,13 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, onExit, onProfi
                 <div className="text-yellow-400 font-black text-sm uppercase tracking-[0.3em]">發牌統計</div>
                 <div className="text-white/50 text-xs mt-1">最近 {roundStats.length} 局</div>
               </div>
-              <button
+              <GameButton
                 onClick={() => setStatsOpen(false)}
-                className="px-4 py-2 rounded-xl bg-white/10 border border-white/20 text-white/80 font-black text-xs hover:bg-white/20"
+                variant="ghost"
+                className="px-4 py-2 rounded-xl text-xs"
               >
                 關閉
-              </button>
+              </GameButton>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs font-black">

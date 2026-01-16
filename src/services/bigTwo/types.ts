@@ -38,3 +38,16 @@ export interface BigTwoPlayer extends BigTwoSeat {
   quote?: string;
   tactic?: AITactic;
 }
+
+export interface RoundStat {
+  timestamp: number;
+  baseBet: number;
+  twos: number;
+  pairs: number;
+  triples: number;
+  straights: number;
+  fullHouses: number;
+  fourKinds: number;
+  straightFlushes: number;
+  dragons: number;
+}

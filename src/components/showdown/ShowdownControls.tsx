@@ -2,6 +2,7 @@ import React from 'react';
 import { ActionType, GamePhase, Player } from '../../types';
 import { PLAYER_QUOTES } from '../../constants';
 import { IconBolt, IconChat, IconCheck, IconCoin, IconFlag, IconTrendUp } from './ShowdownIcons';
+import { GameButton } from '../ui/GameButton';
 
 interface ShowdownControlsProps {
   phase: GamePhase;
@@ -88,7 +89,7 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
                       placeholder="輸入你的台詞..."
                       className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-yellow-500"
                     />
-                    <button
+                    <GameButton
                       onClick={() => {
                         const text = chatInput.trim();
                         if (!text) return;
@@ -96,10 +97,11 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
                         setChatInput('');
                         setShowChatMenu(false);
                       }}
-                      className="px-3 py-2 rounded-xl bg-yellow-500/20 border border-yellow-400/40 text-yellow-200 text-xs font-black"
+                      variant="warning"
+                      className="px-3 py-2 rounded-xl text-xs"
                     >
                       送出
-                    </button>
+                    </GameButton>
                   </div>
                   {PLAYER_QUOTES.map((q, i) => (
                     <button
@@ -113,15 +115,16 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
                 </div>
               )}
 
-              <button
+              <GameButton
                 onClick={() => setShowChatMenu(!showChatMenu)}
-                className="group w-20 h-20 rounded-[1.5rem] bg-slate-700/50 border border-white/10 hover:bg-slate-600 text-white transition-all active:scale-95 flex flex-col items-center justify-center backdrop-blur-md"
+                variant="muted"
+                className="group w-20 h-20 rounded-[1.5rem] flex flex-col items-center justify-center backdrop-blur-md"
               >
                 <span className="mb-1 text-white/90 group-hover:scale-110 transition-transform">
                   <IconChat />
                 </span>
                 <span className="text-[8px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100">Talk</span>
-              </button>
+              </GameButton>
 
               <div className="absolute bottom-[110%] right-0 mb-4 bg-black/90 backdrop-blur-xl p-4 rounded-[2rem] border border-yellow-500/20 shadow-2xl w-[300px] flex flex-col gap-3">
                 {betMode === 'NO_LIMIT' ? (
@@ -164,19 +167,21 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
                 )}
               </div>
 
-              <button
+              <GameButton
                 onClick={() => onAction('FOLD')}
-                className="group w-20 h-20 rounded-[1.5rem] bg-red-500/10 border border-red-500/30 hover:bg-red-600 hover:border-red-400 text-red-100 transition-all active:scale-95 flex flex-col items-center justify-center backdrop-blur-md"
+                variant="danger"
+                className="group w-20 h-20 rounded-[1.5rem] flex flex-col items-center justify-center backdrop-blur-md"
               >
                 <span className="mb-1 text-red-100 group-hover:scale-110 transition-transform">
                   <IconFlag />
                 </span>
                 <span className="text-[8px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100">不跟</span>
-              </button>
+              </GameButton>
 
-              <button
+              <GameButton
                 onClick={() => onAction(callNeeded === 0 ? 'CHECK' : 'CALL')}
-                className="group w-24 h-24 rounded-[1.8rem] bg-emerald-500/10 border border-emerald-500/30 hover:bg-emerald-600 hover:border-emerald-400 text-emerald-100 transition-all active:scale-95 flex flex-col items-center justify-center backdrop-blur-md shadow-lg"
+                variant="success"
+                className="group w-24 h-24 rounded-[1.8rem] flex flex-col items-center justify-center backdrop-blur-md"
               >
                 <div className="mb-1 group-hover:scale-110 transition-transform">
                   {callNeeded === 0 ? <IconCheck /> : <IconCoin />}
@@ -184,36 +189,39 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
                 <span className="text-[10px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100">
                   {callNeeded === 0 ? '過牌' : `跟 $${callNeeded}`}
                 </span>
-              </button>
+              </GameButton>
 
-              <button
+              <GameButton
                 onClick={() => onAction('RAISE', raiseAmount)}
                 disabled={!canRaise}
-                className="group w-24 h-24 rounded-[1.8rem] bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500 hover:border-amber-400 text-amber-100 transition-all active:scale-95 flex flex-col items-center justify-center backdrop-blur-md shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="warning"
+                className="group w-24 h-24 rounded-[1.8rem] flex flex-col items-center justify-center backdrop-blur-md"
               >
                 <div className="mb-1 group-hover:scale-110 transition-transform">
                   <IconTrendUp />
                 </div>
                 <span className="text-[10px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100">加注</span>
-              </button>
+              </GameButton>
 
-              <button
+              <GameButton
                 onClick={() => onAction('ALL_IN')}
-                className="group w-20 h-20 rounded-[1.5rem] bg-purple-500/10 border border-purple-500/30 hover:bg-purple-600 hover:border-purple-400 text-purple-100 transition-all active:scale-95 flex flex-col items-center justify-center backdrop-blur-md"
+                variant="info"
+                className="group w-20 h-20 rounded-[1.5rem] flex flex-col items-center justify-center backdrop-blur-md"
               >
                 <span className="mb-1 text-purple-100 group-hover:scale-110 transition-transform">
                   <IconBolt />
                 </span>
                 <span className="text-[8px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100">梭哈</span>
-              </button>
+              </GameButton>
             </div>
           ) : phase === GamePhase.RESULT ? (
-            <button
+            <GameButton
               onClick={onStartNewHand}
-              className="bg-white text-slate-900 font-black px-12 py-6 rounded-3xl shadow-[0_0_50px_rgba(255,255,255,0.4)] text-xl animate-pulse transform hover:scale-105 active:scale-95 transition-all uppercase tracking-wider"
+              variant="light"
+              className="px-12 py-6 rounded-3xl text-xl animate-pulse transform hover:scale-105 uppercase tracking-wider"
             >
               Play Again
-            </button>
+            </GameButton>
           ) : (
             <div className="flex items-center gap-3 bg-black/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/5 opacity-80">
               <div className="flex gap-1">
