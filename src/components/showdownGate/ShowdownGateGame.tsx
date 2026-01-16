@@ -63,7 +63,7 @@ const ShowdownGateGame: React.FC<ShowdownGateGameProps> = ({
 
     return (
         <div className="game-container bg-[#052c16] relative overflow-visible select-none h-screen w-full">
-            <ShowdownTable statusText={statusText} pot={pot}>
+            <ShowdownTable title="射龍門" statusText={statusText} pot={pot}>
                 {players.map((p, i) => {
                     const { style, vertical, seatPosition } = getSeatLayout(i, p.id === 'player');
                     const isWinner = p.result === 'WIN';
@@ -100,13 +100,6 @@ const ShowdownGateGame: React.FC<ShowdownGateGameProps> = ({
                     phase={phase}
                 />
             )}
-
-            {/* Title */}
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
-                <h1 className="casino-font text-3xl md:text-4xl font-bold text-yellow-500 drop-shadow-[0_0_15px_rgba(234,179,8,0.6)] tracking-tight italic">
-                    射龍門
-                </h1>
-            </div>
         </div>
     );
 };
