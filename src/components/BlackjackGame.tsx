@@ -49,7 +49,6 @@ const BlackjackGame: React.FC<BlackjackGameProps> = ({
     phase,
     currentTurn,
     message,
-    playerIndex,
     player,
     dealerValue,
     activePlayer,

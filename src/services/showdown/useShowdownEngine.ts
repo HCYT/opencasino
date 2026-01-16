@@ -372,12 +372,6 @@ export const useGameEngine = (initialRules: IPokerRules, options: ShowdownEngine
         lastAggressorIndex.current = null;
         raiseCount.current = 0;
 
-        // CRITICAL FIX: "Everyone All-In" Auto-Advance
-        // If fewer than 2 players have chips, no meaningful betting can occur.
-        // We should automatically skip to the next phase (and eventually Showdown).
-        // Check active capable players again in the *new* state.
-        const capable = bettingPlayers.filter(p => !p.isFolded && p.chips > 0);
-
         const newState = {
             ...currentState,
             deck: updatedDeck,
@@ -434,7 +428,7 @@ export const useGameEngine = (initialRules: IPokerRules, options: ShowdownEngine
                 });
             }, 2000); // 2 Second Delay for drama
         }
-    }, [gameState.phase, gameState.players]); // Re-run when phase changes or players update (e.g. someone went all-in)
+    }, [gameState.phase, gameState.players, gameState.currentMaxBet, nextPhase]); // Re-run when phase changes or players update (e.g. someone went all-in)
 
     const handleAction = async (action: ActionType, amount: number = 0, taunt?: string, actorId?: string) => {
         let queuedQuote: { playerId: string; quote: string } | null = null;
@@ -654,82 +648,54 @@ export const useGameEngine = (initialRules: IPokerRules, options: ShowdownEngine
         setQuote('player', quote, setGameState);
         setGameState(prev => ({
             ...prev,
+            players: prev.players.map(p => p.id === 'player' ? { ...p, currentQuote: quote } : p),
             log: [`玩家：${quote}`, ...prev.log]
         }));
     };
 
-    // AI & Safety Trigger
     useEffect(() => {
-        if (gameState.phase.startsWith('BETTING')) {
-            const p = gameState.players[gameState.activePlayerIndex];
+        if (!gameState.phase.startsWith('BETTING')) return;
+        const current = gameState.players[gameState.activePlayerIndex];
+        if (!current || current.isFolded) return;
 
-            if (!p || p.isFolded) {
-                setGameState(current => {
-                    const players = current.players;
-                    const active = players.filter(pl => !pl.isFolded && pl.chips > 0);
-                    const fallback = players.filter(pl => !pl.isFolded);
-
-                    const pool = active.length > 0 ? active : fallback;
-                    if (pool.length === 0) {
-                        return current.phase === GamePhase.RESULT ? current : nextPhase(current);
-                    }
-
-                    const nextIdx = players.findIndex(pl => pl.id === pool[0].id);
-                    if (nextIdx === -1 || nextIdx === current.activePlayerIndex) return current;
-                    return { ...current, activePlayerIndex: nextIdx };
-                });
-                return;
-            }
-
-            // Safety Net: If active player has 0 chips (All-In) but somehow got the turn,
-            // they cannot Bet/Raise/Call. They must effectively "Pass".
-            // We force a CHECK action immediately to move the game forward.
-            if (p && !p.isFolded && p.chips === 0) {
+        if (current.chips === 0) {
+            if (gameLoopTimeout.current) clearTimeout(gameLoopTimeout.current);
+            gameLoopTimeout.current = setTimeout(() => {
+                console.warn(`Safety Net: Skipping turn for All-In player ${current.name}`);
+                handleAction('CHECK', 0, undefined, current.id);
+            }, 500);
+            return () => {
                 if (gameLoopTimeout.current) clearTimeout(gameLoopTimeout.current);
-                gameLoopTimeout.current = setTimeout(() => {
-                    // Log safety trigger?
-                    console.warn(`Safety Net: Skipping turn for All-In player ${p.name}`);
-                    handleAction('CHECK', 0);
-                }, 500);
-                return;
-            }
-
-            if (p && p.isAI && !p.isFolded && p.chips > 0) {
-                if (gameLoopTimeout.current) clearTimeout(gameLoopTimeout.current);
-
-                gameLoopTimeout.current = setTimeout(async () => {
-                    if (isProcessingTurn.current) return;
-                    isProcessingTurn.current = true;
-                    try {
-                        const latest = latestStateRef.current;
-                        const latestPlayer = latest.players[latest.activePlayerIndex];
-                        if (!latestPlayer || !latestPlayer.isAI || latestPlayer.isFolded || latestPlayer.chips <= 0) return;
-                        const move = await rulesRef.current.getAIAction(latestPlayer, latest);
-                        console.log('[AI Resolve]', {
-                            actor: latestPlayer.name,
-                            action: move.action,
-                            amount: move.amount,
-                            toCall: Math.max(0, latest.currentMaxBet - latestPlayer.currentBet),
-                            currentBet: latestPlayer.currentBet,
-                            currentMaxBet: latest.currentMaxBet
-                        });
-                        await handleAction(move.action, move.amount || 0, move.taunt, latestPlayer.id);
-                        if (move.taunt) {
-                            setQuote(latestPlayer.id, move.taunt, setGameState);
-                        }
-                    } catch (error) {
-                        console.error("AI Error", error);
-                        await handleAction('FOLD', 0);
-                    } finally {
-                        isProcessingTurn.current = false;
-                    }
-                }, 1000); // 1s Think time
-            }
+            };
         }
+
+        if (!current.isAI) return;
+        if (gameLoopTimeout.current) clearTimeout(gameLoopTimeout.current);
+
+        gameLoopTimeout.current = setTimeout(async () => {
+            if (isProcessingTurn.current) return;
+            isProcessingTurn.current = true;
+            try {
+                const latest = latestStateRef.current;
+                const latestPlayer = latest.players[latest.activePlayerIndex];
+                if (!latestPlayer || !latestPlayer.isAI || latestPlayer.isFolded || latestPlayer.chips <= 0) return;
+                const move = await rulesRef.current.getAIAction(latestPlayer, latest);
+                await handleAction(move.action, move.amount || 0, move.taunt, latestPlayer.id);
+                if (move.taunt) {
+                    setQuote(latestPlayer.id, move.taunt, setGameState);
+                }
+            } catch (error) {
+                console.error('AI Error', error);
+                await handleAction('FOLD', 0);
+            } finally {
+                isProcessingTurn.current = false;
+            }
+        }, 1000);
+
         return () => {
             if (gameLoopTimeout.current) clearTimeout(gameLoopTimeout.current);
         };
-    }, [gameState.activePlayerIndex, gameState.phase]);
+    }, [gameState.activePlayerIndex, gameState.phase, gameState.players, handleAction]);
 
     const returnToLobby = () => {
         setGameState({

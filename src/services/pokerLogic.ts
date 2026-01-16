@@ -1,5 +1,5 @@
 
-import { Card, Suit, Rank, HandEvaluation, Player, HandRank } from '../types';
+import { Card, HandEvaluation, Player, HandRank } from '../types';
 import { SUITS, RANKS, RANK_VALUE, HAND_VALUES } from '../constants';
 
 export const createDeck = (): Card[] => {
@@ -110,6 +110,8 @@ export const evaluateHand = (cards: Card[]): HandEvaluation => {
 };
 
 export const getAIAction = (player: Player, currentMaxBet: number, pot: number, communityCardsCount: number): { action: string, amount: number } => {
+  void pot;
+  void communityCardsCount;
   const visibleCards = player.cards.filter(c => c.isFaceUp || player.cards.length === 5);
   const evalResult = evaluateHand(visibleCards);
   const handStrength = HAND_VALUES[evalResult.rank];

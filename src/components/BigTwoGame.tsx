@@ -29,18 +29,12 @@ import {
   getStraightCombos,
   getStraightFlushCombos,
   rankValue,
-  setStrength,
   sortCards
 } from '../services/bigTwo/rules';
 import { BigTwoResult, BigTwoSeat } from '../services/bigTwo/types';
 import { useBigTwoEngine } from '../services/bigTwo/useBigTwoEngine';
 
 export type { BigTwoResult, BigTwoSeat } from '../services/bigTwo/types';
-
-interface Suggestion {
-  label: string;
-  cards: Card[];
-}
 
 interface BigTwoGameProps {
   seats: BigTwoSeat[];

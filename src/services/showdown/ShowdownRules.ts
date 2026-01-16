@@ -14,6 +14,7 @@ export class ShowdownRules implements IPokerRules {
     }
 
     getNextPhase(currentPhase: GamePhase, players: Player[]): GamePhase {
+        void players;
         const nextPhaseMap: Record<string, GamePhase> = {
             [GamePhase.BETTING_2]: GamePhase.BETTING_3,
             [GamePhase.BETTING_3]: GamePhase.BETTING_4,
@@ -24,6 +25,7 @@ export class ShowdownRules implements IPokerRules {
     }
 
     dealCards(deck: Card[], players: Player[], phase: GamePhase): { updatedDeck: Card[], updatedPlayers: Player[] } {
+        void phase;
         const updatedDeck = [...deck];
         const updatedPlayers = players.map(p => {
             if (p.isFolded) return p;

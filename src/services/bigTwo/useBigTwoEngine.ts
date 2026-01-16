@@ -1,12 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
-import { AITactic, Card, NPCProfile, Rank } from '../../types';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Card, NPCProfile } from '../../types';
 import { createDeck } from '../pokerLogic';
 import { playSound } from '../sound';
 import { aiChoosePlay } from './ai';
 import { pickAiTactic } from './aiTactics';
 import { loadRoundStats, saveRoundStats } from './statsStore';
 import {
-  RANK_ORDER,
   THREE_CLUBS_KEY,
   canBeat,
   canSplitDragon,
@@ -19,7 +18,6 @@ import {
   getPlayableTriples,
   getStraightCombos,
   getStraightFlushCombos,
-  rankValue,
   sortCards
 } from './rules';
 import { BigTwoPlayer, BigTwoSeat, BigTwoResult, RoundStat, TrickState } from './types';
@@ -136,7 +134,9 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate 
     });
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     initializeGame();
     return () => {
       if (aiTimerRef.current) window.clearTimeout(aiTimerRef.current);
@@ -186,7 +186,7 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate 
     return false;
   };
 
-  const setNpcQuote = (name: string, type: keyof NPCProfile['quotes']) => {
+  const setNpcQuote = useCallback((name: string, type: keyof NPCProfile['quotes']) => {
     const profile = npcProfiles.find(p => p.name === name);
     if (!profile) return;
     const player = playersRef.current.find(p => p.name === name);
@@ -212,7 +212,7 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate 
       setPlayers(prev => prev.map(p => (p.name === name ? { ...p, quote: undefined } : p)));
       delete quoteTimeoutRef.current[name];
     }, 2600);
-  };
+  }, [npcProfiles]);
 
   useEffect(() => {
     if (phase !== 'PLAYING') return;
@@ -234,7 +234,7 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate 
     return () => {
       if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
     };
-  }, [phase, currentTurnIndex, players]);
+  }, [phase, currentTurnIndex, players, setNpcQuote]);
 
   const settlePayout = (winnerIdx: number, winningPlay: Card[], snapshotPlayers: BigTwoPlayer[]) => {
     const winningEval = evaluateCombo(winningPlay);
@@ -364,7 +364,7 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate 
     return true;
   };
 
-  const handlePass = () => {
+  const handlePass = useCallback(() => {
     if (phase !== 'PLAYING') return;
     if (!currentTrick) {
       setMessage('你是首家，不能 Pass');
@@ -401,7 +401,18 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate 
       setNpcQuote(nextPlayers[currentTurnIndex].name, 'FOLD');
     }
     advanceTurn(nextPlayers, currentTurnIndex);
-  };
+  }, [
+    phase,
+    currentTrick,
+    players,
+    currentTurnIndex,
+    setPlayers,
+    setMessage,
+    setNpcQuote,
+    advanceTurn,
+    setCurrentTrick,
+    setCurrentTurnIndex
+  ]);
 
   useEffect(() => {
     if (phase !== 'PLAYING') return;
@@ -426,7 +437,16 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate 
         handlePass();
       }
     }, 950);
-  }, [phase, players, currentTurnIndex, currentTrick, mustIncludeThreeClubs, playedCards]);
+  }, [
+    phase,
+    players,
+    currentTurnIndex,
+    currentTrick,
+    mustIncludeThreeClubs,
+    playedCards,
+    applyPlay,
+    handlePass
+  ]);
 
   return {
     players,

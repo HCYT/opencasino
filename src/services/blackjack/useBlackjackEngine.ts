@@ -195,7 +195,7 @@ export const useBlackjackEngine = ({
   };
 
   const finishDealerTurn = (currentPlayers: BlackjackPlayer[], deckOverride?: Card[]) => {
-    let nextDeck = [...(deckOverride ?? deck)];
+    const nextDeck = [...(deckOverride ?? deck)];
     let nextDealer = dealerCards.map(card => ({ ...card, isFaceUp: true }));
 
     while (getHandValue(nextDealer).total < 17) {
@@ -231,7 +231,7 @@ export const useBlackjackEngine = ({
 
     const activeSeats = players.filter(p => p.chips >= minBet);
     const minCardsNeeded = activeSeats.length * 4 + 6;
-    let nextDeck = [...deck];
+    const nextDeck = [...deck];
 
     if (shufflePending || nextDeck.length < minCardsNeeded) {
       setCutRollPending(true);

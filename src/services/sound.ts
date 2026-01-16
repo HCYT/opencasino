@@ -14,7 +14,7 @@ export const playSound = (type: string) => {
     const audio = new Audio(src);
     audio.volume = 0.4;
     audio.play().catch(e => console.warn('Sound Error:', e));
-  } catch (e) {
+  } catch {
     console.warn('Audio not supported');
   }
 };

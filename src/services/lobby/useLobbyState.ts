@@ -102,7 +102,8 @@ export const useLobbyState = ({ npcProfiles }: UseLobbyStateOptions) => {
 
   const handleDeleteProfile = (name: string) => {
     if (!profiles[name]) return;
-    const { [name]: _, ...rest } = profiles;
+    const { [name]: removed, ...rest } = profiles;
+    void removed;
     saveProfiles(rest);
     setProfiles(rest);
     if (playerName === name) {

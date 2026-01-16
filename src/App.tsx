@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Player, GamePhase } from './types';
+import { GamePhase } from './types';
 import { INITIAL_CHIPS_OPTIONS, LOAN_AMOUNT, MIN_BET, PLAYER_QUOTES } from './constants';
 import { NPC_PROFILES } from './config/npcProfiles';
 import { saveProfiles } from './services/profileStore';
 import { useLobbyState } from './services/lobby/useLobbyState';
 import { buildBigTwoSeats, buildBlackjackSeats, buildShowdownPlayers } from './services/lobby/gameStarters';
 import { validateLobbyEntry } from './services/lobby/entryValidation';
-import { pickEligibleNPC, pickNpcTriplet } from './services/lobby/npcPicker';
+import { pickNpcTriplet } from './services/lobby/npcPicker';
 import { useShowdownProfileSync } from './services/showdown/useShowdownProfileSync';
 import { useGameEngine } from './services/showdown/useShowdownEngine';
 import { ShowdownRules } from './services/showdown/ShowdownRules';
@@ -40,14 +40,12 @@ const App: React.FC = () => {
     setProfiles,
     repayAmount,
     setRepayAmount,
-    activeProfile,
     isExistingProfile,
     displayedChips,
     displayedDebt,
     npcNames,
     isNpcSelected,
     leaderboard,
-    getProfile,
     resolveChips,
     handleLoan,
     handleRepay,
@@ -86,8 +84,6 @@ const App: React.FC = () => {
     players,
     setProfiles
   });
-
-  const getEligibleNPC = (exclude: string[]) => pickEligibleNPC(NPC_PROFILES, exclude);
 
   const handleStartGame = () => {
     setStartError(null);
