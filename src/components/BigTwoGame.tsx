@@ -203,7 +203,7 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, on
   const averagePerRound = (value: number) => statsSummary.rounds > 0 ? (value / statsSummary.rounds).toFixed(2) : '0.00';
 
   return (
-    <div className="game-container bg-[#052c16] relative overflow-visible select-none h-screen w-full">
+    <div className="game-container premium-table-bg relative overflow-visible select-none h-screen w-full">
       <TableFrame
         title="慈善撲克王大賽 · 大老二"
         statusText={phase === 'RESULT' ? '本局結束' : `${players[currentTurnIndex]?.name || ''} 出牌中...`}

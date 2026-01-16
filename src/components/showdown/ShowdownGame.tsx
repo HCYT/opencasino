@@ -91,7 +91,7 @@ const ShowdownGame: React.FC<ShowdownGameProps> = ({
   }, [phase, winners, userWon]);
 
   return (
-    <div className="game-container bg-[#052c16] relative overflow-visible select-none h-screen w-full">
+    <div className="game-container premium-table-bg relative overflow-visible select-none h-screen w-full">
       <ShowdownTable statusText={statusText} pot={pot}>
         {players.map((p, i) => {
           const { style, vertical, seatPosition } = getSeatLayout(i, p.id === 'player');
