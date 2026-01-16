@@ -7,7 +7,8 @@ interface LobbyEntryParams {
   initialChips: number;
   minBet: number;
   bigTwoBaseBet: number;
-  gameType: 'SHOWDOWN' | 'BLACKJACK' | 'BIG_TWO';
+  gateAnteBet: number;
+  gameType: 'SHOWDOWN' | 'BLACKJACK' | 'BIG_TWO' | 'GATE' | 'SLOTS';
   npcProfiles: NPCProfile[];
 }
 
@@ -23,13 +24,29 @@ export const validateLobbyEntry = ({
   initialChips,
   minBet,
   bigTwoBaseBet,
+  gateAnteBet,
   gameType,
   npcProfiles
 }: LobbyEntryParams): LobbyEntryResult => {
   const playerChips = profiles[playerName]?.chips ?? initialChips;
-  const minEntry = gameType === 'BIG_TWO' ? bigTwoBaseBet : minBet;
+
+  // Determine minimum entry requirement based on game type
+  let minEntry = minBet;
+  if (gameType === 'BIG_TWO') {
+    minEntry = bigTwoBaseBet;
+  } else if (gameType === 'GATE') {
+    minEntry = gateAnteBet;
+  } else if (gameType === 'SLOTS') {
+    minEntry = 10; // Minimum slot bet
+  }
+
   if (playerChips < minEntry) {
     return { playerChips, minEntry, error: '餘額不足，請先貸款或重設資料' };
+  }
+
+  // Slots don't need NPCs
+  if (gameType === 'SLOTS') {
+    return { playerChips, minEntry };
   }
 
   const eligibleNPCs = npcProfiles.filter(profile => {

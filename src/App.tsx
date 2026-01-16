@@ -48,15 +48,39 @@ const App: React.FC = () => {
   const user = players.find(p => p.id === 'player');
   const isUserAlive = !!user;
 
-  const handleGameStart = (
-    gameType: GameType,
-    playerName: string,
-    playerChips: number,
-    initialChips: number,
-    profiles: Record<string, any>,
-    betMode: BetMode,
-    teamingEnabled: boolean
-  ) => {
+  const handleGameStart = (config: {
+    gameType: GameType;
+    playerName: string;
+    playerChips: number;
+    initialChips: number;
+    profiles: Record<string, any>;
+    betMode: BetMode;
+    teamingEnabled: boolean;
+    bigTwoBaseBet: number;
+    gateAnteBet: number;
+    blackjackDecks: number;
+    blackjackCutPreset: BlackjackCutPresetKey;
+  }) => {
+    const {
+      gameType,
+      playerName,
+      playerChips,
+      initialChips,
+      profiles,
+      betMode,
+      teamingEnabled,
+      bigTwoBaseBet: configBigTwoBaseBet,
+      gateAnteBet: configGateAnteBet,
+      blackjackDecks: configBlackjackDecks,
+      blackjackCutPreset: configBlackjackCutPreset
+    } = config;
+
+    // Update state with config values
+    setBigTwoBaseBet(configBigTwoBaseBet);
+    setGateAnteBet(configGateAnteBet);
+    setBlackjackDecks(configBlackjackDecks);
+    setBlackjackCutPreset(configBlackjackCutPreset);
+
     const currentUserProfile = profiles[playerName];
     const dynamicAvatar = currentUserProfile?.avatar || playerAvatar;
 
@@ -248,7 +272,7 @@ const App: React.FC = () => {
           shoeDecks={blackjackDecks}
           cutRatioRange={{ min: blackjackCutRange.min, max: blackjackCutRange.max }}
           npcProfiles={NPC_PROFILES}
-          resolveChips={() => { }}
+          resolveChips={(name) => blackjackSeats.find(s => s.name === name)?.chips ?? 0}
           onExit={() => setBlackjackActive(false)}
           onProfilesUpdate={handleBlackjackProfileUpdate}
         />
@@ -267,7 +291,7 @@ const App: React.FC = () => {
           seats={gateSeats}
           anteBet={gateAnteBet}
           npcProfiles={NPC_PROFILES}
-          resolveChips={() => { }}
+          resolveChips={(name) => gateSeats.find(s => s.name === name)?.chips ?? 0}
           onExit={() => setGateActive(false)}
           onProfilesUpdate={handleGateProfileUpdate}
         />
@@ -327,7 +351,7 @@ const App: React.FC = () => {
         currentMaxBet={currentMaxBet}
         minBet={MIN_BET}
         winners={winners}
-        betMode="FIXED_LIMIT"
+        betMode={gameState.betMode || 'FIXED_LIMIT'}
         npcProfiles={NPC_PROFILES}
         playerQuotes={PLAYER_QUOTES}
         handleAction={handleAction}

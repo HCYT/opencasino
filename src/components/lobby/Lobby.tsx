@@ -18,16 +18,22 @@ import LobbyRightPanel from './LobbyRightPanel';
 import { GameButton } from '@/components/ui/GameButton';
 import VolumeControl from '@/components/ui/VolumeControl';
 
+interface GameStartConfig {
+  gameType: GameType;
+  playerName: string;
+  playerChips: number;
+  initialChips: number;
+  profiles: Record<string, any>;
+  betMode: BetMode;
+  teamingEnabled: boolean;
+  bigTwoBaseBet: number;
+  gateAnteBet: number;
+  blackjackDecks: number;
+  blackjackCutPreset: BlackjackCutPresetKey;
+}
+
 interface LobbyProps {
-  onGameStart: (
-    gameType: GameType,
-    playerName: string,
-    playerChips: number,
-    initialChips: number,
-    profiles: Record<string, any>,
-    betMode: BetMode,
-    teamingEnabled: boolean
-  ) => void;
+  onGameStart: (config: GameStartConfig) => void;
 }
 
 const Lobby: React.FC<LobbyProps> = ({ onGameStart }) => {
@@ -80,6 +86,7 @@ const Lobby: React.FC<LobbyProps> = ({ onGameStart }) => {
       initialChips,
       minBet: MIN_BET,
       bigTwoBaseBet,
+      gateAnteBet: MIN_BET,
       gameType,
       npcProfiles: NPC_PROFILES
     });
@@ -89,15 +96,19 @@ const Lobby: React.FC<LobbyProps> = ({ onGameStart }) => {
       return;
     }
 
-    onGameStart(
+    onGameStart({
       gameType,
       playerName,
       playerChips,
       initialChips,
       profiles,
       betMode,
-      teamingEnabled
-    );
+      teamingEnabled,
+      bigTwoBaseBet,
+      gateAnteBet: MIN_BET, // Gate uses MIN_BET as ante
+      blackjackDecks,
+      blackjackCutPreset
+    });
   };
 
   const onCreateProfile = (name: string) => {
