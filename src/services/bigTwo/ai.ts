@@ -30,7 +30,6 @@ interface TeamContext {
   teammates: number[];
   humanIdx: number;
   probHumanHasTwo: number;
-  unknownCardsCount: number;
 }
 
 const getCandidatePower = (combo: ComboEval) => combo.cutRank * 1000 + combo.strength;
@@ -210,8 +209,8 @@ const chooseTeamPlay = (
   current: TrickState | null,
   mustIncludeThree: boolean,
   myIdx: number,
-  snapshotPlayers: BigTwoAiPlayer[], // Used only for teammate hand lookup (simulated truth)
-  activePlayers: number[], // List of active player indices
+  simHands: Card[][], // Use REAL TIME simulation hands
+  activePlayers: number[],
   ctx: TeamContext
 ) => {
   const legalMoves = getLegalPlays(hand, current, mustIncludeThree);
@@ -220,156 +219,191 @@ const chooseTeamPlay = (
   if (mustIncludeThree) return pickLeadCombo(legalMoves)?.cards;
 
   const myRole = ctx.roles[myIdx] || 'CONTROLLER';
-  const _myHandSize = hand.length;
-  // Use length of activePlayers to correctly determine next player
-  // But activePlayers includes ME.
-  // Next player is the first index in activePlayers that is "after" me in cyclic order.
+
   const myActivePos = activePlayers.indexOf(myIdx);
   const nextActiveIndex = activePlayers[(myActivePos + 1) % activePlayers.length];
 
   const isTeammateLead = current && ctx.teammates.includes(current.playerIndex);
   const isHumanNext = nextActiveIndex === ctx.humanIdx;
 
-  // Estimate Human Weakness instead of peeking
-  // We use ctx.probHumanHasTwo (0-1) and ctx.unknownCardsCount (human hand size)
-  // Human is "dangerous" if they have few cards.
-  const humanHandSize = ctx.unknownCardsCount; // From context (passed down snapshot length)
-  const isHumanLow = humanHandSize <= 3;
+  // Use simHands for accurate state
+  const humanHandSize = simHands[ctx.humanIdx]?.length ?? 99;
+  const isHumanDangerous = humanHandSize <= 3;
 
-  // -- HARD RULES (Overriding Filters) --
+  // Finisher Ready Check (Use simHands!)
+  // And EXCLUDE if Finished (size == 0)
+  let finisherReady = false;
+  const finisherIdxStr = Object.entries(ctx.roles).find(([_, r]) => r === 'FINISHER')?.[0];
+  if (finisherIdxStr) {
+    const fIdx = parseInt(finisherIdxStr, 10);
+    const fHandSize = simHands[fIdx]?.length ?? 99;
+    if (fHandSize > 0 && fHandSize <= 4) finisherReady = true;
+  }
 
-  // 1. Teammate Lead Rule: Default PASS
+  // --- 1. Teammate Lead Logic (Strict) ---
   if (isTeammateLead) {
-    // Exceptions:
-    // A. Win Immediately: Can finish right now
+    // A. Win Immediately
     const winMove = legalMoves.find(m => m.cards.length === hand.length);
     if (winMove) {
-      // Only if it's a team win (human is not winner). 
-      // In Nightmare mode, any NPC win is a team win. So YES.
       return winMove.cards;
     }
 
-    // B. Critical Intercept: Human is next, Human is dangerous (<=3), and we can block high
-    if (isHumanNext && isHumanLow && current) {
-      // Allowed only if we play a strong card (Strength >= 10 -> K, A, 2) to force human resources
-      // And only if we don't overkill too much if teammate's card was already decent? 
-      // Simplified: If teammate's lead was weak (<=9) and we can boost to >=10
-      if (current.strength <= 9) {
-        const blocker = legalMoves.find(m => m.eval.strength >= 10);
-        if (blocker) {
-          // We allow it, but let scoring decide WHICH blocker
-          // So we filter OUT non-blockers, but keep blockers.
-          // Actually, we should essentially return the best blocker here or continue to scoring.
-          // Let's just NOT return null here, and let scoring prioritize the block.
-        } else {
-          return null; // Can't block high, so pass
-        }
-      } else {
-        return null; // Teammate already high, pass
+    // B. Critical Intercept (Check for Cuts too if Human very low)
+    if (isHumanNext && isHumanDangerous && current && current.strength <= 9) {
+      // Filter: Strength >= 10 (K, A, 2)
+      // Initial Check: No cuts (CutRank == 0)
+      let candidates = legalMoves.filter(m => m.eval.strength >= 10 && m.eval.cutRank === 0);
+
+      // Exception: If Human <= 2 cards, allow Cuts
+      if (candidates.length === 0 && humanHandSize <= 2) {
+        candidates = legalMoves.filter(m => m.eval.cutRank > 0);
       }
-    } else {
-      return null; // Default Pass
+
+      if (candidates.length > 0) {
+        // Pick smallest sufficient intercept
+        return candidates.sort((a, b) => a.eval.strength - b.eval.strength)[0].cards;
+      }
+      return null;
     }
+
+    // Default Pass
+    return null;
   }
 
-  // 2. Cut & Two Restrictions (Early Game)
-  // "Early" defined as: Human has > 5 cards
-  const isEarly = humanHandSize > 5;
-  const filteredMoves = legalMoves.filter(move => {
-    const isTwo = move.cards.some(c => c.rank === '2');
-    const isCut = move.eval.cutRank > 0;
+  // --- 2. Scoring System ---
 
-    if (isEarly && !current) {
-      // Leading: Don't lead 2s
-      if (isTwo) return false;
-    }
-
-    if (isEarly && (isTwo || isCut)) {
-      // Only allowed if:
-      // 1. Take back lead from Human
-      if (current && current.playerIndex === ctx.humanIdx) return true;
-      // 2. Can relay to Finisher (Complex to check here, let logic flow? No, hard filter)
-      // Let's allow it in scoring phase to penalize, but hard filter "useless" drops.
-      // Actually, preventing simple 2 drops is good.
-      if (!current) return false; // Don't lead 2 early
-    }
-    return true;
-  });
-
-  const candidates = filteredMoves.length > 0 ? filteredMoves : legalMoves; // Fallback if all filtered
-
-  // -- SCORING SYSTEM --
-
-  let bestMove = candidates[0];
+  let bestMove = legalMoves[0];
   let maxScore = -999999;
 
-  candidates.forEach(move => {
+  legalMoves.forEach(move => {
     let score = 0;
 
-    const power = getCandidatePower(move.eval);
     const isHighCard = move.eval.strength > 11; // A(11) or 2(12)
     const isTwo = move.cards.some(c => c.rank === '2');
     const isCut = move.eval.cutRank > 0;
 
-    // 1. Role Base Scores
+    // Pattern Preference (Lock patterns > Singles)
+    const isPattern = move.eval.type !== 'SINGLE';
+    const isFiveCard = ['STRAIGHT', 'FLUSH', 'FULL_HOUSE', 'FOUR_KIND', 'STRAIGHT_FLUSH'].includes(move.eval.type);
+
+    // -- Roles Base --
     if (myRole === 'FINISHER') {
       score += 50 * move.cards.length;
       if (move.cards.length === hand.length) score += 10000;
     }
 
     if (myRole === 'CONTROLLER') {
-      if (isHighCard) score += 40; // Control!
-      score += power / 50;
+      if (current) {
+        // Following
+        if (isHighCard) score += 30; // Control!
+        score += move.eval.strength;
+      } else {
+        // Leading: Prioritize Patterns & Clearing Hand
+        score += 20 * move.cards.length; // Efficiency
 
-      // If leading, prefer patterns that are hard for human (probabilistic)
-      if (!current) {
-        // If Human has 2s (probable), maybe bait?
-        // If Human likely no 2s, spam high singles
-        if (ctx.probHumanHasTwo < 0.3 && move.cards.length === 1 && move.eval.strength >= 10) {
-          score += 100; // BULLY MODE
+        if (isPattern) score += 40; // Prefer pattern leads
+        if (isFiveCard) score += 20;
+
+        // Pressure Curve
+        if (humanHandSize <= 5) {
+          score += 50; // Urgent control
+        }
+
+        // Single High Card Lead Penalty if Human unlikely to have 2
+        // (If Human has no 2s, Single K/A leads are good. If Human HAS 2s, don't feed.)
+        // Wait, rule is: If probHumanHasTwo is LOW (<0.3), Bully with High Singles.
+        if (move.eval.type === 'SINGLE' && isHighCard) {
+          if (ctx.probHumanHasTwo > 0.7) score -= 50; // Don't feed 2s
+          else if (ctx.probHumanHasTwo < 0.3) score += 50; // Bully
         }
       }
     }
 
     if (myRole === 'BREAKER') {
       if (isTwo || isCut) score -= 60; // Hold resources!
-      // But if blocking human...
       if (current && current.playerIndex === ctx.humanIdx) {
-        if (isTwo || isCut) score += 120; // USE resources!
+        if (isTwo || isCut) score += 100; // USE resources!
       }
     }
 
-    // 2. Pressure & Reaction
+    // -- Scenario: Human Lead (Must Beat) --
     if (current && current.playerIndex === ctx.humanIdx) {
-      score += 100; // Base: Beat human
-      // Block Human Exception:
-      // If Human played low, and I play SUPER high, that's good?
-      // Or play "Just enough"?
-      // Rule: "Just enough" to save strength, unless human is Low Hand.
-      if (isHumanLow && isHighCard) score += 50; // Crush hopes
-    }
+      // a) Base: Prefer smallest capture (Conserve)
+      // Overkill Penalty using Strength diff
+      score -= (move.eval.strength - current.strength) * 2;
+      score -= (move.eval.cutRank - current.cutRank) * 50;
 
-    // 3. Relay Score (Teammate is Next)
-    // If Next is Teammate, play something they can likely beat?
-    // We can peek teammate hand for this specific collaborative score (simulated communication)
-    if (!current && activePlayers.includes(nextActiveIndex) && ctx.teammates.includes(nextActiveIndex)) {
-      const teammateHand = snapshotPlayers[nextActiveIndex].hand;
-      if (move.eval.type === 'SINGLE') {
-        // If teammate has high singles, good
-        if (getPlayableSingles(teammateHand, move.eval.strength).length > 0) score += 30;
-      } else if (move.eval.type === 'PAIR') {
-        if (getPlayablePairs(teammateHand, move.eval.strength).length > 0) score += 40;
+      // b) Human Dangerous: Bonus for High Cards (Crush)
+      if (isHumanDangerous) {
+        if (isHighCard) score += 50;
+        score += move.eval.strength * 2;
       }
-      // ... etc for other types
+
+      // c) Relay: Next is Teammate
+      if (activePlayers.includes(nextActiveIndex) && ctx.teammates.includes(nextActiveIndex)) {
+        const tmHand = simHands[nextActiveIndex];
+        if (tmHand && tmHand.length > 0) {
+          // Check Singles
+          if (move.eval.type === 'SINGLE' && getPlayableSingles(tmHand, move.eval.strength).length > 0) score += 30;
+          // Check Pairs
+          else if (move.eval.type === 'PAIR' && getPlayablePairs(tmHand, move.eval.strength).length > 0) score += 40;
+          // Check Triples - NEW
+          else if (move.eval.type === 'TRIPLE' && getPlayableTriples(tmHand, move.eval.strength).length > 0) score += 45;
+          // Check 5-Card (Simplified: If I play 5-card, does teammate have ANY 5-card?) - NEW
+          else if (isFiveCard) {
+            // Simplified check: Just checking if they have valid combos
+            if (getStraightCombos(tmHand).length > 0 || getFullHouseCombos(tmHand, -1).length > 0) {
+              score += 50;
+            }
+          }
+        }
+      }
+
+      // d) Resource Penalty (with Exceptions)
+      if (isTwo || isCut) {
+        if (isHumanDangerous || finisherReady) {
+          score += 20;
+        } else {
+          score -= 100;
+        }
+      }
     }
 
-    // 4. Endgame Bonus
-    // If Finisher can go out in <= 2 turns after this?
-    // Hard to calc without full search. Simplified:
-    // If this move gives lead to Finisher (Next is Finisher)
-    if (nextActiveIndex && ctx.roles[nextActiveIndex] === 'FINISHER' && move.cards.length === 1 && move.eval.strength < 8) {
-      // Passing low card to finisher
-      score += 50;
+    // -- Scenario: Leading (current == null) --
+    if (!current) {
+      if (finisherReady) {
+        // Pass to Finisher
+        if (move.eval.strength <= 8) score += 40;
+        if (move.cards.length === 1) score -= 10;
+      } else             // Lock Logic (Teammate Sustain) - NEW
+        if (activePlayers.includes(nextActiveIndex) && ctx.teammates.includes(nextActiveIndex)) {
+          const tmHand = simHands[nextActiveIndex];
+          let canTmFollow = false;
+
+          if (move.eval.type === 'PAIR') {
+            canTmFollow = getPlayablePairs(tmHand, move.eval.strength).length > 0;
+          } else if (move.eval.type === 'TRIPLE') {
+            // requires getPlayableTriples
+            canTmFollow = getPlayableTriples(tmHand, move.eval.strength).length > 0;
+          } else if (isFiveCard) {
+            // conservative: only claim "can follow" if teammate can CUT (strong guarantee)
+            // You can expand this later with same-type beating checks if you implement them.
+            const tmCandidates = buildCandidates(tmHand);
+            canTmFollow = tmCandidates.some(x => x.eval.cutRank > 0);
+          }
+
+          if (canTmFollow) score += 30;
+          else score -= 30; // Don't block teammate
+        }      // Probability Logic
+      if (ctx.probHumanHasTwo < 0.3) {
+        // Bully with High Singles
+        if (move.eval.type === 'SINGLE' && move.eval.strength >= 10) score += 60;
+      } else if (ctx.probHumanHasTwo > 0.7) {
+        // Avoid forcing 2s (High Singles)
+        if (move.eval.type === 'SINGLE' && move.eval.strength >= 10) score -= 40;
+        // Force structure break
+        if (move.eval.type === 'FULL_HOUSE' || move.eval.type === 'STRAIGHT') score += 40;
+      }
     }
 
     if (score > maxScore) {
@@ -391,86 +425,87 @@ const simulateRound = (
   nightmareMode = false,
   humanIdx = -1,
   _totalSims = 300
-) => {
+): number => { // RETURN NUMBER UTILITY
   const aiHand = sortCards(snapshotPlayers[aiIdx].hand);
   const aiRemaining = aiHand.filter(card => !candidate.cards.some(c => cardKey(c) === cardKey(card)));
 
-  // 1. Build Deck & Probabilistic Estimation
   const excludedKeys = new Set<string>();
   aiHand.forEach(card => excludedKeys.add(cardKey(card)));
   playedCards.forEach(card => excludedKeys.add(cardKey(card)));
 
-  // In Nightmare, we know teammate hands
-  let teammateHandsKnown: Card[] = [];
   if (nightmareMode) {
     snapshotPlayers.forEach((p, idx) => {
       if (idx !== aiIdx && idx !== humanIdx) {
-        teammateHandsKnown = [...teammateHandsKnown, ...p.hand];
         p.hand.forEach(card => excludedKeys.add(cardKey(card)));
       }
     });
   }
 
-  // Cards unknown to me (The AI decision maker)
-  // This includes Human's hand + (if not nightmare) other NPCs
   const deck = createDeck().filter(card => !excludedKeys.has(cardKey(card)));
 
-  // Estimate Probabilities (Belief State)
+  // Determine whether we can deduce human exact hand in Nightmare mode
   let probHumanHasTwo = 0.5;
+  const humanCount = (nightmareMode && humanIdx >= 0) ? snapshotPlayers[humanIdx].hand.length : 0;
+
+  const canDeduceHumanExact =
+    nightmareMode &&
+    humanIdx >= 0 &&
+    deck.length === humanCount; // sanity check: unknown pool size equals human hand size
+
   if (nightmareMode && humanIdx >= 0) {
-    const remainingUnknown = deck.length;
-    if (remainingUnknown > 0) {
-      const twosInUnknown = deck.filter(c => c.rank === '2').length;
-      const humanHandCount = snapshotPlayers[humanIdx].hand.length;
-      // Simple Hypergeometric prob: P(X >= 1) = 1 - P(X=0)
-      // P(X=0) = C(NonTwos, k) / C(Total, k)
-      // Rough approx:
-      if (twosInUnknown === 0) probHumanHasTwo = 0;
-      else if (humanHandCount >= remainingUnknown) probHumanHasTwo = 1;
+    if (canDeduceHumanExact) {
+      // exact
+      probHumanHasTwo = deck.some(c => c.rank === '2') ? 1 : 0;
+    } else {
+      // fallback approximate
+      const twos = deck.filter(c => c.rank === '2').length;
+      if (twos === 0) probHumanHasTwo = 0;
       else {
-        // Approximation: 1 - ((Total-Twos)/Total)^Count
-        const nonTwos = remainingUnknown - twosInUnknown;
-        const probNone = Math.pow(nonTwos / remainingUnknown, humanHandCount);
+        const nonTwos = deck.length - twos;
+        const probNone = Math.pow(nonTwos / deck.length, humanCount);
         probHumanHasTwo = 1 - probNone;
       }
-    } else {
-      probHumanHasTwo = 0;
     }
   }
 
-  // Shuffle Deck for simulation instance
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
+  // Shuffle only when we cannot deduce exact human hand
+  if (!canDeduceHumanExact) {
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
   }
 
-  // Distribute Hands
+  // Build simHands
   const simHands: Card[][] = snapshotPlayers.map((p, idx) => {
     if (idx === aiIdx) return sortCards(aiRemaining);
     if (p.hand.length === 0) return [];
-    if (nightmareMode && idx !== humanIdx) return sortCards(p.hand);
+    if (nightmareMode && idx !== humanIdx) return sortCards(p.hand); // NPC hands are known
     return [];
   });
 
-  let cursor = 0;
-  snapshotPlayers.forEach((p, idx) => {
-    if (idx === aiIdx) return;
-    if (p.hand.length === 0) return;
-    if (nightmareMode && idx !== humanIdx) return; // Teammates already set
-    // Distribute to Unknowns (Human or Normal NPCs)
-    simHands[idx] = sortCards(deck.slice(cursor, cursor + p.hand.length));
-    cursor += p.hand.length;
-  });
+  if (nightmareMode && humanIdx >= 0 && canDeduceHumanExact) {
+    // Exact human hand
+    simHands[humanIdx] = sortCards(deck);
+  } else {
+    // Fallback distribution from deck (human + any unknown NPCs)
+    let cursor = 0;
+    snapshotPlayers.forEach((p, idx) => {
+      if (idx === aiIdx) return;
+      if (p.hand.length === 0) return;
+      if (nightmareMode && idx !== humanIdx) return; // already set
+      simHands[idx] = sortCards(deck.slice(cursor, cursor + p.hand.length));
+      cursor += p.hand.length;
+    });
+  }
 
-  // Setup Team Context
   let teamContext: TeamContext | undefined;
   if (nightmareMode && humanIdx >= 0) {
     const teammateIndices = snapshotPlayers
       .map((_, i) => i)
       .filter(i => i !== humanIdx);
 
-    // Pass FULL players (with simHands) to identify roles correctly for this simulation instance
-    // We construct temporary players with simHands
+    // Pass FULL players (with simHands) to identify roles
     const simPlayersForRoles: BigTwoAiPlayer[] = simHands.map(h => ({ hand: h }));
     const roles = identifyRoles(simPlayersForRoles, teammateIndices);
 
@@ -478,8 +513,7 @@ const simulateRound = (
       roles,
       teammates: teammateIndices,
       humanIdx,
-      probHumanHasTwo,
-      unknownCardsCount: snapshotPlayers[humanIdx].hand.length
+      probHumanHasTwo
     };
   }
 
@@ -497,7 +531,7 @@ const simulateRound = (
       idx = (idx + 1) % simHands.length;
       safety += 1;
     }
-    return from; // Shoudn't happen if game not over
+    return from;
   };
 
   let currentTurn = getNextSimIndex(aiIdx);
@@ -505,37 +539,23 @@ const simulateRound = (
   let safety = 0;
   let firstWinner = -1;
 
-  // Unified Pass Handler
   const applyPass = () => {
     passed[currentTurn] = true;
-
-    // Get active players (indices)
     const activeIndices = simHands.map((h, i) => h.length > 0 ? i : -1).filter(i => i !== -1);
 
     if (!current) {
-      // Should not happen: Pass on null current?
-      // Means leader passed? Logic error, just move on.
       currentTurn = getNextSimIndex(currentTurn);
       return;
     }
 
     const leaderIdx = current.playerIndex;
-    // Check if everyone ELSE has passed
-    // NOTE: If leader is finished (empty hand), they are not "active" in terms of playing,
-    // but they still hold the Trick.
-    // So we check: Do all Active Players (excluding leader if he is active) have passed=true?
-
     const others = activeIndices.filter(idx => idx !== leaderIdx);
     const allOthersPassed = others.every(idx => passed[idx]);
 
     if (allOthersPassed) {
-      // Trick Reset
       current = null;
       passed.fill(false);
-
-      // Determine next leader
       if (simHands[leaderIdx].length === 0) {
-        // Leader finished, next active player leads
         currentTurn = getNextSimIndex(leaderIdx);
       } else {
         currentTurn = leaderIdx;
@@ -547,41 +567,32 @@ const simulateRound = (
 
   while (safety < 400) {
     safety += 1;
-
-    // Check Win
     if (simHands[aiIdx].length === 0) {
-      return firstWinner === aiIdx || (nightmareMode && firstWinner !== humanIdx);
+      firstWinner = aiIdx;
+      break;
     }
-
     const activeIndices = simHands.map((h, i) => h.length > 0 ? i : -1).filter(i => i !== -1);
-
-    // Last man standing?
     if (activeIndices.length === 1) {
       if (firstWinner === -1) firstWinner = activeIndices[0];
-      return firstWinner === aiIdx || (nightmareMode && firstWinner !== humanIdx);
+      break;
     }
-
-    // Current player empty? (finished)
     if (simHands[currentTurn].length === 0) {
       currentTurn = getNextSimIndex(currentTurn);
       continue;
     }
 
-    // DECISION
+    // --- DECISION ---
     let play: Card[] | null | undefined = null;
 
     if (nightmareMode && currentTurn !== humanIdx && teamContext) {
-      // Use activeIndices to help chooseTeamPlay know who is next
-      play = chooseTeamPlay(simHands[currentTurn], current, false, currentTurn, snapshotPlayers, activeIndices, teamContext);
+      play = chooseTeamPlay(simHands[currentTurn], current, false, currentTurn, simHands, activeIndices, teamContext);
     } else {
-      // Human / Normal AI
       const rand = Math.random();
       if (rand < 0.7) {
         play = chooseGreedyPlay(simHands[currentTurn], current, false);
       } else if (rand < 0.9) {
         play = null;
       } else {
-        // Weak play
         const legals = getLegalPlays(simHands[currentTurn], current, false);
         if (legals.length > 0) play = legals.sort((a, b) => a.eval.strength - b.eval.strength)[0].cards;
       }
@@ -591,20 +602,16 @@ const simulateRound = (
       applyPass();
       continue;
     }
-
     const evalResult = evaluateCombo(play);
     if (!evalResult || !canBeat(evalResult, current)) {
-      // Invalid play -> Pass
       applyPass();
       continue;
     }
 
-    // Execute Play
     simHands[currentTurn] = sortCards(simHands[currentTurn].filter(card => !play!.some(c => cardKey(c) === cardKey(card))));
-
     if (simHands[currentTurn].length === 0 && firstWinner === -1) {
       firstWinner = currentTurn;
-      if (nightmareMode ? currentTurn !== humanIdx : currentTurn === aiIdx) return true;
+      break;
     }
 
     current = {
@@ -612,11 +619,52 @@ const simulateRound = (
       cards: sortCards(play),
       playerIndex: currentTurn
     };
-    passed.fill(false); // Reset pass on valid play
+    passed.fill(false);
     currentTurn = getNextSimIndex(currentTurn);
   }
 
-  return false;
+  if (firstWinner !== -1) {
+    if (nightmareMode) {
+      if (firstWinner === humanIdx) return 0;
+      const finisherIdxStr = Object.entries(teamContext?.roles || {}).find(([_, r]) => r === 'FINISHER')?.[0];
+      const finisherIdx = finisherIdxStr ? parseInt(finisherIdxStr, 10) : -1;
+      if (firstWinner === finisherIdx) return 1.0;
+      return 0.7;
+    } else {
+      return firstWinner === aiIdx ? 1 : 0;
+    }
+  }
+
+  return 0;
+};
+
+// Calculate heuristic score for filtering
+const getTacticScore = (
+  candidate: { cards: Card[], eval: ComboEval },
+  handSize: number,
+  minPower: number,
+  maxPower: number,
+  tactic?: AITactic
+) => {
+  const normalizedPower = maxPower === minPower ? 0 : (getCandidatePower(candidate.eval) - minPower) / (maxPower - minPower);
+  const isMonster = candidate.eval.cutRank > 0;
+  const usesTwo = candidate.cards.some(card => card.rank === '2');
+  const lengthNorm = (length: number) => (length - 1) / 12;
+
+  let tacticScore = 0;
+  if (tactic === 'BAIT') {
+    tacticScore = -0.25 * normalizedPower - 0.15 * lengthNorm(candidate.cards.length) - (isMonster ? 0.2 : 0);
+  } else if (tactic === 'CONSERVATIVE') {
+    tacticScore = -0.2 * normalizedPower - 0.1 * lengthNorm(candidate.cards.length) - (usesTwo ? 0.2 : 0) - (isMonster ? 0.3 : 0);
+  } else if (tactic === 'DECEPTIVE') {
+    const early = handSize > 7;
+    tacticScore = early
+      ? -0.2 * normalizedPower - 0.1 * lengthNorm(candidate.cards.length)
+      : 0.2 * normalizedPower + 0.1 * lengthNorm(candidate.cards.length) + (isMonster ? 0.2 : 0);
+  } else if (tactic === 'AGGRESSIVE') {
+    tacticScore = 0.25 * normalizedPower + 0.15 * lengthNorm(candidate.cards.length) + (isMonster ? 0.2 : 0);
+  }
+  return tacticScore;
 };
 
 export const aiChoosePlay = (
@@ -635,46 +683,37 @@ export const aiChoosePlay = (
 
   const dynSims = Math.min(100 + hand.length * 20, 800);
 
-  // Power normalization
   const powers = legalCandidates.map(candidate => getCandidatePower(candidate.eval));
   const minPower = Math.min(...powers);
   const maxPower = Math.max(...powers);
-  const handSize = hand.length; // Used in tactic score
-  const lengthNorm = (length: number) => (length - 1) / 12;
+  const handSize = hand.length;
 
-  let best = legalCandidates[0];
+  // Pre-calculate tactic scores for heuristics
+  const candidatesWithScore = legalCandidates.map(c => ({
+    ...c,
+    heuristicScore: getTacticScore(c, handSize, minPower, maxPower, players[aiIdx]?.tactic)
+  }));
+
+  // Top-K Filtering
+  // If too many candidates, take top 12 based on heuristic
+  let candidatesToSimulate = candidatesWithScore;
+  if (candidatesWithScore.length > 12) {
+    // Sort descending by heuristic
+    candidatesToSimulate = candidatesWithScore.sort((a, b) => b.heuristicScore - a.heuristicScore).slice(0, 12);
+  }
+
+  let best = candidatesToSimulate[0];
   let bestScore = -999999;
 
-  legalCandidates.forEach(candidate => {
-    let wins = 0;
+  candidatesToSimulate.forEach(candidate => {
+    let utilitySum = 0;
     for (let i = 0; i < dynSims; i++) {
-      if (simulateRound(candidate, aiIdx, players, playedCards, nightmareMode, humanIdx)) wins += 1;
+      utilitySum += simulateRound(candidate, aiIdx, players, playedCards, nightmareMode, humanIdx);
     }
-    const score = wins / dynSims; // 0..1
-
-    // Heuristics
-    const normalizedPower = maxPower === minPower ? 0 : (getCandidatePower(candidate.eval) - minPower) / (maxPower - minPower);
-    const isMonster = candidate.eval.cutRank > 0;
-    const usesTwo = candidate.cards.some(card => card.rank === '2');
-    const tactic = players[aiIdx]?.tactic;
-
-    let tacticScore = 0;
-    // Standard heuristics (unchanged)
-    if (tactic === 'BAIT') {
-      tacticScore = -0.25 * normalizedPower - 0.15 * lengthNorm(candidate.cards.length) - (isMonster ? 0.2 : 0);
-    } else if (tactic === 'CONSERVATIVE') {
-      tacticScore = -0.2 * normalizedPower - 0.1 * lengthNorm(candidate.cards.length) - (usesTwo ? 0.2 : 0) - (isMonster ? 0.3 : 0);
-    } else if (tactic === 'DECEPTIVE') {
-      const early = handSize > 7;
-      tacticScore = early
-        ? -0.2 * normalizedPower - 0.1 * lengthNorm(candidate.cards.length)
-        : 0.2 * normalizedPower + 0.1 * lengthNorm(candidate.cards.length) + (isMonster ? 0.2 : 0);
-    } else if (tactic === 'AGGRESSIVE') {
-      tacticScore = 0.25 * normalizedPower + 0.15 * lengthNorm(candidate.cards.length) + (isMonster ? 0.2 : 0);
-    }
+    const score = utilitySum / dynSims;
 
     const scoreWeight = nightmareMode ? 5.0 : 1.0;
-    const totalScore = (score * scoreWeight) + tacticScore;
+    const totalScore = (score * scoreWeight) + candidate.heuristicScore;
 
     if (totalScore > bestScore) {
       bestScore = totalScore;
