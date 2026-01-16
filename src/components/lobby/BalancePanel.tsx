@@ -26,14 +26,14 @@ const BalancePanel: React.FC<BalancePanelProps> = ({
       <label className="block text-[11px] font-black uppercase text-amber-400/70 mb-5 tracking-widest">
         真實餘額
       </label>
-      
+
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-emerald-500/10 border-2 border-emerald-500/30 rounded-2xl p-4 shadow-inner">
           <div className="text-[11px] text-emerald-200/60 uppercase tracking-widest font-medium mb-1">
             可用籌碼
           </div>
           <div className="text-3xl font-black text-emerald-300">
-            ${displayedChips.toLocaleString()}
+            ${(displayedChips ?? 0).toLocaleString()}
           </div>
         </div>
         <div className="bg-red-500/10 border-2 border-red-500/30 rounded-2xl p-4 shadow-inner">
@@ -41,7 +41,7 @@ const BalancePanel: React.FC<BalancePanelProps> = ({
             負債
           </div>
           <div className="text-3xl font-black text-red-300">
-            ${displayedDebt.toLocaleString()}
+            ${(displayedDebt ?? 0).toLocaleString()}
           </div>
         </div>
       </div>

@@ -38,7 +38,7 @@ export const useLobbyState = ({ npcProfiles }: UseLobbyStateOptions) => {
     }), [profiles]);
 
   useEffect(() => {
-    if (activeProfile?.chips !== undefined) {
+    if (typeof activeProfile?.chips === 'number') {
       setInitialChips(activeProfile.chips);
     }
   }, [activeProfile?.chips]);

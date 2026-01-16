@@ -3,6 +3,7 @@ import { NPC_PROFILES } from '@/config/npcProfiles';
 
 const NPCDescriptions: Record<string, string> = {
   '高進': '賭神，傳奇中的傳奇。一手牌定乾坤，眼神就能讀心。',
+  '陳金城': '新加坡賭王，老謀深算。擅長心理戰，為達目的不擇手段。',
   '陳小刀': '高進的徒弟，年輕氣盛但實力強勁。喜歡冒險，總能逆風翻盤。',
   '周星祖': '擁有特異功能的賭徒，能夠透視底牌。雖然實力強大，但運氣也不錯。',
   '龍五': '神秘的高手，沉默寡言。出手穩狠，從不輕易暴露實力。',
@@ -110,7 +111,7 @@ const NPCProfiles: React.FC = () => {
               </div>
             </div>
 
-            <div className="absolute -top-3 -right-3 w-9 h-9 bg-gradient-to-br from-amber-400 to-amber-500 rounded-full flex items-center justify-center text-slate-900 font-black text-base shadow-lg border-2 border-slate-900">
+            <div className="absolute top-2 right-2 w-8 h-8 bg-gradient-to-br from-amber-400 to-amber-500 rounded-full flex items-center justify-center text-slate-900 font-black text-sm shadow-lg border-2 border-slate-900/50">
               {index + 1}
             </div>
           </div>

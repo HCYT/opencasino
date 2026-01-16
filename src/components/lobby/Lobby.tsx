@@ -275,7 +275,7 @@ const Lobby: React.FC<LobbyProps> = ({ onGameStart }) => {
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <div className="text-xl font-black text-emerald-400 tabular-nums tracking-wide group-hover:scale-105 transition-transform origin-right">
-                        ${profile.chips.toLocaleString()}
+                        ${(profile.chips ?? 0).toLocaleString()}
                       </div>
                       <div className="text-xs text-white/40 font-bold uppercase tracking-wider bg-white/5 px-2 py-0.5 rounded-md">
                         Win {((profile.wins / (profile.games || 1)) * 100).toFixed(0)}%

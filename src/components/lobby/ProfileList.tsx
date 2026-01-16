@@ -167,7 +167,7 @@ const ProfileList: React.FC<ProfileListProps> = ({
 
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <div className="text-base font-black text-emerald-300 min-w-[60px] text-right">
-                    ${profile.chips.toLocaleString()}
+                    ${(profile.chips ?? 0).toLocaleString()}
                   </div>
 
                   {editingName !== profile.name && (

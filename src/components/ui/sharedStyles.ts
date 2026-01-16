@@ -1,10 +1,12 @@
 export const tableStyles = {
   wrapper: 'table-area relative w-full h-full',
   frame:
-    'absolute inset-8 rounded-[120px] border-[20px] border-[#3d2414] shadow-[inset_0_0_120px_rgba(0,0,0,0.9),0_20px_40px_rgba(0,0,0,0.5)] overflow-hidden',
-  surface: 'w-full h-full bg-[#0a4a27] relative flex items-center justify-center',
-  innerBorder: 'absolute inset-20 border-[2px] border-white/5 rounded-[80px]',
-  title: 'absolute top-6 left-10 text-yellow-500/80 font-black uppercase tracking-[0.3em] text-xs',
+    'absolute inset-4 sm:inset-8 rounded-[140px] p-6 bg-gradient-to-br from-[#6b4226] to-[#2e1a0e] shadow-[0_30px_60px_rgba(0,0,0,0.7),inset_0_2px_4px_rgba(255,255,255,0.2),inset_0_-4px_8px_rgba(0,0,0,0.4)]',
+  surface:
+    'w-full h-full rounded-[116px] bg-[radial-gradient(circle_at_center,_#156e46_0%,_#052e16_100%)] shadow-[inset_0_10px_40px_rgba(0,0,0,0.6)] relative flex items-center justify-center border border-white/5',
+  innerBorder: 'absolute inset-20 border-[2px] border-white/5 rounded-[60px]',
+  title:
+    'absolute top-6 left-0 right-0 text-center sm:text-left sm:left-10 text-yellow-500/80 font-black uppercase tracking-[0.3em] text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]',
   statusWrap: 'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-48 z-[40]',
   statusBadge:
     'bg-black/60 backdrop-blur-xl px-10 py-3 rounded-full border border-yellow-500/30 shadow-[0_10px_30px_rgba(0,0,0,0.5)] flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500',

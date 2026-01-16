@@ -137,7 +137,7 @@ const GameSelector: React.FC<GameSelectorProps> = ({
                 </div>
                 <div className="text-3xl font-black text-emerald-300 tracking-tight relative z-10">
                   <span className="text-lg mr-1 opacity-50">$</span>
-                  {displayedChips.toLocaleString()}
+                  {(displayedChips ?? 0).toLocaleString()}
                 </div>
                 <div className="text-[10px] text-emerald-500/50 uppercase tracking-wider font-bold relative z-10">
                   延續角色資產
