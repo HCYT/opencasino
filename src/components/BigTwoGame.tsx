@@ -8,6 +8,9 @@ import StatusPanel from './ui/StatusPanel';
 import TableFrame from './table/TableFrame';
 import PayoutPanel from './ui/PayoutPanel';
 import StackCard from './ui/StackCard';
+import ResultOverlay from './ui/ResultOverlay';
+import ModalOverlay from './ui/ModalOverlay';
+import ToastBanner from './ui/ToastBanner';
 import {
   bottomDock,
   bottomDockInner,
@@ -361,40 +364,39 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, on
       </div>
 
       {phase === 'RESULT' && ranking.length > 0 && (
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-[6px] flex items-center justify-center z-50 pointer-events-none">
-          <div className="text-center animate-in fade-in zoom-in duration-700">
-            <h2 className="text-[6rem] md:text-[8rem] font-black text-yellow-500 drop-shadow-[0_0_60px_rgba(0,0,0,1)] casino-font mb-4 italic tracking-tight text-shadow">慈善撲克王大賽</h2>
-            <div className="text-2xl md:text-3xl font-black mb-6 text-emerald-400">大老二名次</div>
-            <div className="flex flex-wrap items-center justify-center gap-6">
-              {ranking.map((p, idx) => (
-                <ResultCard key={p.id} className="max-w-[340px]">
-                  <div className="text-yellow-300 text-sm font-black uppercase tracking-widest">第 {idx + 1} 名</div>
-                  <img
-                    src={p.avatar}
-                    alt={p.name}
-                    className="w-24 h-24 rounded-full object-cover border-4 border-yellow-400/40 shadow-[0_0_30px_rgba(234,179,8,0.35)] mx-auto mt-3"
-                  />
-                  <div className="text-white text-2xl font-black mt-4 tracking-tight">{p.name}</div>
-                </ResultCard>
-              ))}
-            </div>
-            {payoutSummary && (
-              <PayoutPanel
-                baseBet={payoutSummary.baseBet}
-                winnerName={payoutSummary.winnerName}
-                totalGain={payoutSummary.totalGain}
-                winnerMultipliers={payoutSummary.winnerMultipliers}
-                lines={payoutSummary.lines}
-              />
-            )}
+        <ResultOverlay
+          title="慈善撲克王大賽"
+          subtitle="大老二名次"
+          titleClassName="text-[6rem] md:text-[8rem] font-black text-yellow-500 drop-shadow-[0_0_60px_rgba(0,0,0,1)] casino-font mb-4 italic tracking-tight text-shadow"
+          subtitleClassName="text-2xl md:text-3xl font-black mb-6 text-emerald-400"
+        >
+          <div className="flex flex-wrap items-center justify-center gap-6">
+            {ranking.map((p, idx) => (
+              <ResultCard key={p.id} className="max-w-[340px]">
+                <div className="text-yellow-300 text-sm font-black uppercase tracking-widest">第 {idx + 1} 名</div>
+                <img
+                  src={p.avatar}
+                  alt={p.name}
+                  className="w-24 h-24 rounded-full object-cover border-4 border-yellow-400/40 shadow-[0_0_30px_rgba(234,179,8,0.35)] mx-auto mt-3"
+                />
+                <div className="text-white text-2xl font-black mt-4 tracking-tight">{p.name}</div>
+              </ResultCard>
+            ))}
           </div>
-        </div>
+          {payoutSummary && (
+            <PayoutPanel
+              baseBet={payoutSummary.baseBet}
+              winnerName={payoutSummary.winnerName}
+              totalGain={payoutSummary.totalGain}
+              winnerMultipliers={payoutSummary.winnerMultipliers}
+              lines={payoutSummary.lines}
+            />
+          )}
+        </ResultOverlay>
       )}
 
       {message && phase === 'PLAYING' && (
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[80] bg-black/70 border border-white/10 px-6 py-3 rounded-full text-sm text-white/80 font-black">
-          {message}
-        </div>
+        <ToastBanner>{message}</ToastBanner>
       )}
 
       {player && phase === 'PLAYING' && (
@@ -442,56 +444,54 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, on
       )}
 
       {statsOpen && (
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-[4px] flex items-center justify-center z-[90] pointer-events-auto">
-          <div className="bg-black/80 border border-white/10 rounded-[2rem] p-8 w-[92vw] max-w-3xl text-white">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <div className="text-yellow-400 font-black text-sm uppercase tracking-[0.3em]">發牌統計</div>
-                <div className="text-white/50 text-xs mt-1">最近 {roundStats.length} 局</div>
-              </div>
-              <GameButton
-                onClick={() => setStatsOpen(false)}
-                variant="ghost"
-                size="pillSm"
-                className="text-xs"
-              >
-                關閉
-              </GameButton>
+        <ModalOverlay contentClassName="w-[92vw] max-w-3xl">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <div className="text-yellow-400 font-black text-sm uppercase tracking-[0.3em]">發牌統計</div>
+              <div className="text-white/50 text-xs mt-1">最近 {roundStats.length} 局</div>
             </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs font-black">
-              <div className="bg-white/5 rounded-xl px-4 py-3">2 點總數 <span className="text-emerald-300 ml-2">{statsSummary.twos}</span></div>
-              <div className="bg-white/5 rounded-xl px-4 py-3">對子總數 <span className="text-emerald-300 ml-2">{statsSummary.pairs}</span></div>
-              <div className="bg-white/5 rounded-xl px-4 py-3">三條總數 <span className="text-emerald-300 ml-2">{statsSummary.triples}</span></div>
-              <div className="bg-white/5 rounded-xl px-4 py-3">順子總數 <span className="text-emerald-300 ml-2">{statsSummary.straights}</span></div>
-              <div className="bg-white/5 rounded-xl px-4 py-3">葫蘆總數 <span className="text-emerald-300 ml-2">{statsSummary.fullHouses}</span></div>
-              <div className="bg-white/5 rounded-xl px-4 py-3">鐵支總數 <span className="text-emerald-300 ml-2">{statsSummary.fourKinds}</span></div>
-              <div className="bg-white/5 rounded-xl px-4 py-3">同花順總數 <span className="text-emerald-300 ml-2">{statsSummary.straightFlushes}</span></div>
-              <div className="bg-white/5 rounded-xl px-4 py-3">一條龍總數 <span className="text-emerald-300 ml-2">{statsSummary.dragons}</span></div>
-              <div className="bg-white/5 rounded-xl px-4 py-3">平均 2 點/局 <span className="text-emerald-300 ml-2">{averagePerRound(statsSummary.twos)}</span></div>
-            </div>
-
-            <div className="mt-6 text-[11px] font-black text-white/60 uppercase tracking-widest">最近局數</div>
-            <div className="mt-3 max-h-56 overflow-y-auto pr-2 space-y-2">
-              {roundStats.slice().reverse().slice(0, 12).map(stat => (
-                <div key={stat.timestamp} className="flex items-center justify-between bg-white/5 rounded-xl px-4 py-2 text-xs">
-                  <div className="text-white/70">{new Date(stat.timestamp).toLocaleTimeString()}</div>
-                  <div className="text-white/50">2 點 {stat.twos}</div>
-                  <div className="text-white/50">對 {stat.pairs}</div>
-                  <div className="text-white/50">三 {stat.triples}</div>
-                  <div className="text-white/50">順 {stat.straights}</div>
-                  <div className="text-white/50">葫 {stat.fullHouses}</div>
-                  <div className="text-white/50">鐵 {stat.fourKinds}</div>
-                  <div className="text-white/50">同花順 {stat.straightFlushes}</div>
-                  <div className="text-white/50">龍 {stat.dragons}</div>
-                </div>
-              ))}
-              {roundStats.length === 0 && (
-                <div className="text-xs text-white/40">尚無資料</div>
-              )}
-            </div>
+            <GameButton
+              onClick={() => setStatsOpen(false)}
+              variant="ghost"
+              size="pillSm"
+              className="text-xs"
+            >
+              關閉
+            </GameButton>
           </div>
-        </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs font-black">
+            <div className="bg-white/5 rounded-xl px-4 py-3">2 點總數 <span className="text-emerald-300 ml-2">{statsSummary.twos}</span></div>
+            <div className="bg-white/5 rounded-xl px-4 py-3">對子總數 <span className="text-emerald-300 ml-2">{statsSummary.pairs}</span></div>
+            <div className="bg-white/5 rounded-xl px-4 py-3">三條總數 <span className="text-emerald-300 ml-2">{statsSummary.triples}</span></div>
+            <div className="bg-white/5 rounded-xl px-4 py-3">順子總數 <span className="text-emerald-300 ml-2">{statsSummary.straights}</span></div>
+            <div className="bg-white/5 rounded-xl px-4 py-3">葫蘆總數 <span className="text-emerald-300 ml-2">{statsSummary.fullHouses}</span></div>
+            <div className="bg-white/5 rounded-xl px-4 py-3">鐵支總數 <span className="text-emerald-300 ml-2">{statsSummary.fourKinds}</span></div>
+            <div className="bg-white/5 rounded-xl px-4 py-3">同花順總數 <span className="text-emerald-300 ml-2">{statsSummary.straightFlushes}</span></div>
+            <div className="bg-white/5 rounded-xl px-4 py-3">一條龍總數 <span className="text-emerald-300 ml-2">{statsSummary.dragons}</span></div>
+            <div className="bg-white/5 rounded-xl px-4 py-3">平均 2 點/局 <span className="text-emerald-300 ml-2">{averagePerRound(statsSummary.twos)}</span></div>
+          </div>
+
+          <div className="mt-6 text-[11px] font-black text-white/60 uppercase tracking-widest">最近局數</div>
+          <div className="mt-3 max-h-56 overflow-y-auto pr-2 space-y-2">
+            {roundStats.slice().reverse().slice(0, 12).map(stat => (
+              <div key={stat.timestamp} className="flex items-center justify-between bg-white/5 rounded-xl px-4 py-2 text-xs">
+                <div className="text-white/70">{new Date(stat.timestamp).toLocaleTimeString()}</div>
+                <div className="text-white/50">2 點 {stat.twos}</div>
+                <div className="text-white/50">對 {stat.pairs}</div>
+                <div className="text-white/50">三 {stat.triples}</div>
+                <div className="text-white/50">順 {stat.straights}</div>
+                <div className="text-white/50">葫 {stat.fullHouses}</div>
+                <div className="text-white/50">鐵 {stat.fourKinds}</div>
+                <div className="text-white/50">同花順 {stat.straightFlushes}</div>
+                <div className="text-white/50">龍 {stat.dragons}</div>
+              </div>
+            ))}
+            {roundStats.length === 0 && (
+              <div className="text-xs text-white/40">尚無資料</div>
+            )}
+          </div>
+        </ModalOverlay>
       )}
     </div>
   );

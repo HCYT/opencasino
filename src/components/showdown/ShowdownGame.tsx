@@ -6,6 +6,7 @@ import ShowdownControls from './ShowdownControls';
 import ShowdownSeat from './ShowdownSeat';
 import ShowdownTable from './ShowdownTable';
 import ResultCard from '../ui/ResultCard';
+import ResultOverlay from '../ui/ResultOverlay';
 import { useShowdownUIState } from './useShowdownUIState';
 import { getSeatLayout } from '../ui/seatLayout';
 import { seatWrapper } from '../ui/sharedStyles';
@@ -124,39 +125,38 @@ const ShowdownGame: React.FC<ShowdownGameProps> = ({
       />
 
       {phase === GamePhase.RESULT && winners.length > 0 && (
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-[6px] flex items-center justify-center z-50 pointer-events-none">
-          <div className="text-center animate-in fade-in zoom-in duration-700">
-            <h2 className="text-[7rem] md:text-[10rem] font-black text-yellow-500 drop-shadow-[0_0_60px_rgba(0,0,0,1)] casino-font mb-4 italic tracking-tight text-shadow">慈善撲克王大賽</h2>
-            <div className={`text-4xl md:text-5xl font-black mb-6 ${userWon ? 'text-emerald-400' : 'text-red-400'}`}>
-              {userWon ? '你贏了' : '你輸了'}
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-6">
-              {winnerPlayers.map(player => (
-                <ResultCard key={player.id} className="max-w-[380px]">
-                  <img
-                    src={player.avatar}
-                    alt={player.name}
-                    className="w-32 h-32 rounded-full object-cover border-4 border-yellow-400/40 shadow-[0_0_30px_rgba(234,179,8,0.35)] mx-auto"
-                  />
-                  <div className="text-white text-3xl font-black mt-4 tracking-tight">{player.name}</div>
-                  {winnerQuotes[player.id] && (
-                    <QuoteBubble text={winnerQuotes[player.id]} className="mt-3" />
-                  )}
-                  {player.cards.length > 0 && (
-                    <div className="mt-4">
-                      <div className="flex flex-wrap justify-center gap-2">
-                        {player.cards.map((card, idx) => (
-                          <CardUI key={`${player.id}-win-${idx}`} card={card} />
-                        ))}
-                      </div>
+        <ResultOverlay
+          title="慈善撲克王大賽"
+          subtitle={userWon ? '你贏了' : '你輸了'}
+          titleClassName="text-[7rem] md:text-[10rem] font-black text-yellow-500 drop-shadow-[0_0_60px_rgba(0,0,0,1)] casino-font mb-4 italic tracking-tight text-shadow"
+          subtitleClassName={`text-4xl md:text-5xl font-black mb-6 ${userWon ? 'text-emerald-400' : 'text-red-400'}`}
+        >
+          <div className="flex flex-wrap items-center justify-center gap-6">
+            {winnerPlayers.map(player => (
+              <ResultCard key={player.id} className="max-w-[380px]">
+                <img
+                  src={player.avatar}
+                  alt={player.name}
+                  className="w-32 h-32 rounded-full object-cover border-4 border-yellow-400/40 shadow-[0_0_30px_rgba(234,179,8,0.35)] mx-auto"
+                />
+                <div className="text-white text-3xl font-black mt-4 tracking-tight">{player.name}</div>
+                {winnerQuotes[player.id] && (
+                  <QuoteBubble text={winnerQuotes[player.id]} className="mt-3" />
+                )}
+                {player.cards.length > 0 && (
+                  <div className="mt-4">
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {player.cards.map((card, idx) => (
+                        <CardUI key={`${player.id}-win-${idx}`} card={card} />
+                      ))}
                     </div>
-                  )}
-                </ResultCard>
-              ))}
-            </div>
-            <div className="mt-6 text-white/60 text-sm font-bold uppercase tracking-widest">本局贏家</div>
+                  </div>
+                )}
+              </ResultCard>
+            ))}
           </div>
-        </div>
+          <div className="mt-6 text-white/60 text-sm font-bold uppercase tracking-widest">本局贏家</div>
+        </ResultOverlay>
       )}
     </div>
   );
