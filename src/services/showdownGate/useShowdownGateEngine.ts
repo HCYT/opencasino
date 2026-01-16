@@ -92,6 +92,10 @@ export function useShowdownGateEngine({
     const [message, setMessage] = useState('');
     const npcTimerRef = useRef<number | null>(null);
 
+    // Refs for cyclic dependencies
+    const handleAITurnRef = useRef<any>(null);
+    const advanceTurnRef = useRef<any>(null);
+
     const playerIndex = players.findIndex(p => !p.isAI);
     const player = players[playerIndex];
     const currentPlayer = players[currentPlayerIndex];
@@ -113,45 +117,22 @@ export function useShowdownGateEngine({
     }, []);
 
     /**
-     * 收取 Ante 開始新回合
+     * 結束回合
      */
-    const startRound = useCallback(() => {
-        const newDeck = createDeck();
-        // 保留現有彩池餘額（確保不為負數），累積新的底注
-        let newPot = Math.max(0, pot);
+    const endRound = useCallback((currentPlayers: GatePlayer[], msg: string) => {
+        // 計算結果更新
+        const updates = currentPlayers
+            .filter(p => p.result !== null)
+            .map(p => ({
+                name: p.name,
+                chips: p.chips,
+                result: p.result!,
+            }));
 
-        // 收取所有玩家的 ante
-        const updatedPlayers = players.map(p => {
-            const contribution = Math.min(anteBet, Math.max(0, p.chips));
-            newPot += contribution;
-            return {
-                ...p,
-                chips: Math.max(0, p.chips - contribution),
-                gateCards: [],
-                thirdCard: null,
-                currentBet: 0,
-                guess: null,
-                turnStatus: 'WAITING' as const,
-                result: null,
-                quote: undefined,
-                roundStartChips: Math.max(0, p.chips - contribution),
-            };
-        });
-
-        // 確保最終 pot 不為負數
-        const safePot = Math.max(0, newPot);
-
-        setPlayers(updatedPlayers);
-        setPot(safePot);
-        setDeck(newDeck);
-        setPhase('PLAYER_TURN');
-        setCurrentPlayerIndex(0);
-        setMessage(`新回合開始，彩池 $${safePot.toLocaleString()}`);
-        playSound('chip');
-
-        // 發第一位玩家的門柱牌
-        dealGateCards(updatedPlayers, newDeck, 0, safePot);
-    }, [players, anteBet, pot, playSound]);
+        setPhase('RESULT');
+        setMessage(msg);
+        onProfilesUpdate(updates);
+    }, [onProfilesUpdate]);
 
     /**
      * 發門柱牌給指定玩家
@@ -187,69 +168,59 @@ export function useShowdownGateEngine({
         // 如果是 AI，自動下注
         if (targetPlayer.isAI) {
             npcTimerRef.current = window.setTimeout(() => {
-                handleAITurn(updatedPlayers, workingDeck, targetIndex, currentPot);
+                if (handleAITurnRef.current) {
+                    handleAITurnRef.current(updatedPlayers, workingDeck, targetIndex, currentPot);
+                }
             }, 1500);
         }
     }, [drawCard, playSound]);
 
     /**
-     * AI 自動下注
+     * 進入下一位玩家
      */
-    const handleAITurn = useCallback((
+    const advanceTurn = useCallback((
         currentPlayers: GatePlayer[],
         currentDeck: Card[],
-        aiIndex: number,
-        currentPot: number
+        currentPot: number,
+        finishedIndex: number
     ) => {
-        const aiPlayer = currentPlayers[aiIndex];
-        const { amount, guess } = calculateAIBet(
-            aiPlayer.gateCards,
-            currentPot,
-            anteBet,
-            aiPlayer.chips
-        );
+        // 檢查彩池是否清空
+        if (currentPot <= 0) {
+            endRound(currentPlayers, '彩池清空！');
+            return;
+        }
 
-        // 更新下注狀態
-        const afterBetPlayers = currentPlayers.map((p, i) =>
-            i === aiIndex
-                ? { ...p, currentBet: amount, guess, turnStatus: 'BET_PLACED' as const }
-                : p
-        );
-        setPlayers(afterBetPlayers);
-        setMessage(`${aiPlayer.name} 下注 $${amount}`);
-        playSound('chip');
+        // 找下一位有籌碼的玩家
+        const nextIndex = (finishedIndex + 1) % currentPlayers.length;
 
-        // 延遲後開第三張牌
-        npcTimerRef.current = window.setTimeout(() => {
-            revealThirdCard(afterBetPlayers, currentDeck, aiIndex, currentPot);
-        }, 1200);
-    }, [anteBet, playSound]);
+        // 如果繞回到第一位玩家，本輪結束
+        if (nextIndex === 0) {
+            endRound(currentPlayers, '本輪結束');
+            return;
+        }
 
-    /**
-     * 玩家下注
-     */
-    const placeBet = useCallback((amount: number, guess: GuessDirection = null) => {
-        if (!isPlayerTurn) return;
-        if (currentPlayer.turnStatus !== 'GATE_REVEALED') return;
+        // 檢查下一位是否有足夠籌碼
+        if (currentPlayers[nextIndex].chips < anteBet) {
+            // 跳過沒籌碼的玩家，遞歸找下一位
+            setCurrentPlayerIndex(nextIndex);
+            // 使用 setTimeout 避免堆棧溢出
+            setTimeout(() => {
+                if (advanceTurnRef.current) {
+                    advanceTurnRef.current(currentPlayers, currentDeck, currentPot, nextIndex);
+                }
+            }, 100);
+            return;
+        }
 
-        // 驗證下注金額
-        const validAmount = Math.max(anteBet, Math.min(amount, pot, currentPlayer.chips));
+        // 繼續下一位
+        setCurrentPlayerIndex(nextIndex);
+        dealGateCards(currentPlayers, currentDeck, nextIndex, currentPot);
+    }, [anteBet, dealGateCards, endRound]);
 
-        const updatedPlayers = players.map((p, i) =>
-            i === currentPlayerIndex
-                ? { ...p, currentBet: validAmount, guess, turnStatus: 'BET_PLACED' as const }
-                : p
-        );
-        setPlayers(updatedPlayers);
-        setMessage(`${currentPlayer.name} 下注 $${validAmount}`);
-        playSound('chip');
-
-        // 開第三張牌 - 保存當前 pot 值
-        const currentPot = pot;
-        setTimeout(() => {
-            revealThirdCard(updatedPlayers, deck, currentPlayerIndex, currentPot);
-        }, 800);
-    }, [isPlayerTurn, currentPlayer, currentPlayerIndex, players, pot, anteBet, deck, playSound]);
+    // Update ref
+    useEffect(() => {
+        advanceTurnRef.current = advanceTurn;
+    }, [advanceTurn]);
 
     /**
      * 開第三張牌並結算
@@ -322,67 +293,116 @@ export function useShowdownGateEngine({
 
         // 延遲後進入下一位或結束
         npcTimerRef.current = window.setTimeout(() => {
-            advanceTurn(updatedPlayers, result.deck, newPot, targetIndex);
+            if (advanceTurnRef.current) {
+                advanceTurnRef.current(updatedPlayers, result.deck, newPot, targetIndex);
+            }
         }, 2000);
     }, [npcProfiles, drawCard, playSound]);
 
     /**
-     * 結束回合
+     * AI 自動下注
      */
-    const endRound = useCallback((currentPlayers: GatePlayer[], msg: string) => {
-        // 計算結果更新
-        const updates = currentPlayers
-            .filter(p => p.result !== null)
-            .map(p => ({
-                name: p.name,
-                chips: p.chips,
-                result: p.result!,
-            }));
-
-        setPhase('RESULT');
-        setMessage(msg);
-        onProfilesUpdate(updates);
-    }, [onProfilesUpdate]);
-
-    /**
-     * 進入下一位玩家
-     */
-    const advanceTurn = useCallback((
+    const handleAITurn = useCallback((
         currentPlayers: GatePlayer[],
         currentDeck: Card[],
-        currentPot: number,
-        finishedIndex: number
+        aiIndex: number,
+        currentPot: number
     ) => {
-        // 檢查彩池是否清空
-        if (currentPot <= 0) {
-            endRound(currentPlayers, '彩池清空！');
-            return;
-        }
+        const aiPlayer = currentPlayers[aiIndex];
+        const { amount, guess } = calculateAIBet(
+            aiPlayer.gateCards,
+            currentPot,
+            anteBet,
+            aiPlayer.chips
+        );
 
-        // 找下一位有籌碼的玩家
-        const nextIndex = (finishedIndex + 1) % currentPlayers.length;
+        // 更新下注狀態
+        const afterBetPlayers = currentPlayers.map((p, i) =>
+            i === aiIndex
+                ? { ...p, currentBet: amount, guess, turnStatus: 'BET_PLACED' as const }
+                : p
+        );
+        setPlayers(afterBetPlayers);
+        setMessage(`${aiPlayer.name} 下注 $${amount}`);
+        playSound('chip');
 
-        // 如果繞回到第一位玩家，本輪結束
-        if (nextIndex === 0) {
-            endRound(currentPlayers, '本輪結束');
-            return;
-        }
+        // 延遲後開第三張牌
+        npcTimerRef.current = window.setTimeout(() => {
+            revealThirdCard(afterBetPlayers, currentDeck, aiIndex, currentPot);
+        }, 1200);
+    }, [anteBet, playSound, revealThirdCard]);
 
-        // 檢查下一位是否有足夠籌碼
-        if (currentPlayers[nextIndex].chips < anteBet) {
-            // 跳過沒籌碼的玩家，遞歸找下一位
-            setCurrentPlayerIndex(nextIndex);
-            // 使用 setTimeout 避免堆棧溢出
-            setTimeout(() => {
-                advanceTurn(currentPlayers, currentDeck, currentPot, nextIndex);
-            }, 100);
-            return;
-        }
+    // Update ref
+    useEffect(() => {
+        handleAITurnRef.current = handleAITurn;
+    }, [handleAITurn]);
 
-        // 繼續下一位
-        setCurrentPlayerIndex(nextIndex);
-        dealGateCards(currentPlayers, currentDeck, nextIndex, currentPot);
-    }, [anteBet, dealGateCards, endRound]);
+    /**
+     * 收取 Ante 開始新回合
+     */
+    const startRound = useCallback(() => {
+        const newDeck = createDeck();
+        // 保留現有彩池餘額（確保不為負數），累積新的底注
+        let newPot = Math.max(0, pot);
+
+        // 收取所有玩家的 ante
+        const updatedPlayers = players.map(p => {
+            const contribution = Math.min(anteBet, Math.max(0, p.chips));
+            newPot += contribution;
+            return {
+                ...p,
+                chips: Math.max(0, p.chips - contribution),
+                gateCards: [],
+                thirdCard: null,
+                currentBet: 0,
+                guess: null,
+                turnStatus: 'WAITING' as const,
+                result: null,
+                quote: undefined,
+                roundStartChips: Math.max(0, p.chips - contribution),
+            };
+        });
+
+        // 確保最終 pot 不為負數
+        const safePot = Math.max(0, newPot);
+
+        setPlayers(updatedPlayers);
+        setPot(safePot);
+        setDeck(newDeck);
+        setPhase('PLAYER_TURN');
+        setCurrentPlayerIndex(0);
+        setMessage(`新回合開始，彩池 $${safePot.toLocaleString()}`);
+        playSound('chip');
+
+        // 發第一位玩家的門柱牌
+        dealGateCards(updatedPlayers, newDeck, 0, safePot);
+    }, [players, anteBet, pot, playSound, dealGateCards]);
+
+    /**
+     * 玩家下注
+     */
+    const placeBet = useCallback((amount: number, guess: GuessDirection = null) => {
+        if (!isPlayerTurn) return;
+        if (currentPlayer.turnStatus !== 'GATE_REVEALED') return;
+
+        // 驗證下注金額
+        const validAmount = Math.max(anteBet, Math.min(amount, pot, currentPlayer.chips));
+
+        const updatedPlayers = players.map((p, i) =>
+            i === currentPlayerIndex
+                ? { ...p, currentBet: validAmount, guess, turnStatus: 'BET_PLACED' as const }
+                : p
+        );
+        setPlayers(updatedPlayers);
+        setMessage(`${currentPlayer.name} 下注 $${validAmount}`);
+        playSound('chip');
+
+        // 開第三張牌 - 保存當前 pot 值
+        const currentPot = pot;
+        setTimeout(() => {
+            revealThirdCard(updatedPlayers, deck, currentPlayerIndex, currentPot);
+        }, 800);
+    }, [isPlayerTurn, currentPlayer, currentPlayerIndex, players, pot, anteBet, deck, playSound, revealThirdCard]);
 
     /**
      * 重置開始新局（保留彩池餘額）

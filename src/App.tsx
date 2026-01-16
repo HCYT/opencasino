@@ -15,6 +15,7 @@ import BigTwoGame, { BigTwoResult, BigTwoSeat } from './components/BigTwoGame';
 import ShowdownGame from './components/showdown/ShowdownGame';
 import ShowdownGateGame from './components/showdownGate/ShowdownGateGame';
 import { GateSeat, GateResult } from './services/showdownGate/types';
+import SlotMachineGame from './components/slots/SlotMachineGame';
 import { GameButton } from './components/ui/GameButton';
 import Panel from './components/ui/Panel';
 import ToggleSwitch from './components/ui/ToggleSwitch';
@@ -58,7 +59,7 @@ const App: React.FC = () => {
     handleResetAllProfiles
   } = useLobbyState({ npcProfiles: NPC_PROFILES });
   const [betMode, setBetMode] = useState<'FIXED_LIMIT' | 'NO_LIMIT'>('FIXED_LIMIT');
-  const [gameType, setGameType] = useState<'SHOWDOWN' | 'BLACKJACK' | 'BIG_TWO' | 'GATE'>('SHOWDOWN');
+  const [gameType, setGameType] = useState<'SHOWDOWN' | 'BLACKJACK' | 'BIG_TWO' | 'GATE' | 'SLOTS'>('SHOWDOWN');
   const [blackjackActive, setBlackjackActive] = useState(false);
   const [blackjackSessionKey, setBlackjackSessionKey] = useState(0);
   const [blackjackSeats, setBlackjackSeats] = useState<BlackjackSeat[]>([]);
@@ -72,6 +73,8 @@ const App: React.FC = () => {
   const [gateSessionKey, setGateSessionKey] = useState(0);
   const [gateSeats, setGateSeats] = useState<GateSeat[]>([]);
   const [gateAnteBet, setGateAnteBet] = useState(MIN_BET);
+  const [slotsActive, setSlotsActive] = useState(false);
+  const [slotsSessionKey, setSlotsSessionKey] = useState(0);
   const [teamingEnabled, setTeamingEnabled] = useState(false); // Default OFF
   const [startError, setStartError] = useState<string | null>(null);
   const playerAvatar = 'https://picsum.photos/seed/me/200/200';
@@ -161,6 +164,11 @@ const App: React.FC = () => {
       setGateActive(true);
     };
 
+    const startSlots = () => {
+      setSlotsSessionKey(prev => prev + 1);
+      setSlotsActive(true);
+    };
+
     if (gameType === 'BLACKJACK') {
       startBlackjack();
       return;
@@ -173,6 +181,11 @@ const App: React.FC = () => {
 
     if (gameType === 'GATE') {
       startGate();
+      return;
+    }
+
+    if (gameType === 'SLOTS') {
+      startSlots();
       return;
     }
 
@@ -318,6 +331,21 @@ const App: React.FC = () => {
     );
   }
 
+  if (slotsActive) {
+    return (
+      <>
+        <div className="fixed top-4 right-4 z-[100] md:top-6 md:right-6">
+          <VolumeControl />
+        </div>
+        <SlotMachineGame
+          key={`slots-${slotsSessionKey}`}
+          playerName={playerName}
+          onExit={() => setSlotsActive(false)}
+        />
+      </>
+    );
+  }
+
   if (phase === GamePhase.SETTING || (!isUserAlive && phase !== GamePhase.RESULT)) {
     if (players.length > 0 && !isUserAlive) {
       return (
@@ -399,7 +427,7 @@ const App: React.FC = () => {
 
             <div>
               <label className="block text-[10px] font-black uppercase text-yellow-500/60 mb-3 tracking-widest">遊戲選擇</label>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-5 gap-2">
                 <GameButton
                   onClick={() => setGameType('SHOWDOWN')}
                   variant={gameType === 'SHOWDOWN' ? 'primary' : 'muted'}
@@ -432,9 +460,17 @@ const App: React.FC = () => {
                 >
                   射龍門
                 </GameButton>
+                <GameButton
+                  onClick={() => setGameType('SLOTS')}
+                  variant={gameType === 'SLOTS' ? 'primary' : 'muted'}
+                  size="pill"
+                  className={`text-xs md:text-sm ${gameType === 'SLOTS' ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
+                >
+                  拉霸機
+                </GameButton>
               </div>
               <div className="text-[10px] text-white/40 uppercase tracking-widest mt-2">
-                {gameType === 'SHOWDOWN' ? '經典五張梭哈' : gameType === 'BLACKJACK' ? '經典 21 點，挑戰莊家' : gameType === 'BIG_TWO' ? '臺灣玩法大老二' : '經典射龍門，賭運氣'}
+                {gameType === 'SHOWDOWN' ? '經典五張梭哈' : gameType === 'BLACKJACK' ? '經典 21 點，挑戰莊家' : gameType === 'BIG_TWO' ? '臺灣玩法大老二' : gameType === 'GATE' ? '經典射龍門，賭運氣' : '角子老虎機，累積彩金'}
               </div>
             </div>
 
@@ -557,7 +593,7 @@ const App: React.FC = () => {
               size="pillLg"
               className={`w-full text-2xl ${isNpcSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              {gameType === 'BLACKJACK' ? '開始 21 點' : gameType === 'BIG_TWO' ? '開始大老二' : '踏入牌局'}
+              {gameType === 'BLACKJACK' ? '開始 21 點' : gameType === 'BIG_TWO' ? '開始大老二' : gameType === 'SLOTS' ? '進入賭場' : '踏入牌局'}
             </GameButton>
           </Panel>
 

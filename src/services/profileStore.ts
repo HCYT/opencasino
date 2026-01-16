@@ -22,3 +22,19 @@ export const loadProfiles = (): Record<string, StoredProfile> => {
 export const saveProfiles = (profiles: Record<string, StoredProfile>) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles));
 };
+
+const JACKPOT_KEY = 'opencasino_jackpot';
+const DEFAULT_JACKPOT = 10000;
+
+export const loadJackpot = (): number => {
+  try {
+    const raw = localStorage.getItem(JACKPOT_KEY);
+    return raw ? parseInt(raw, 10) : DEFAULT_JACKPOT;
+  } catch {
+    return DEFAULT_JACKPOT;
+  }
+};
+
+export const saveJackpot = (amount: number) => {
+  localStorage.setItem(JACKPOT_KEY, amount.toString());
+};
