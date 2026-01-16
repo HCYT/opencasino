@@ -26,7 +26,6 @@ const GateSeat: React.FC<GateSeatProps> = ({
     isWinner,
     phase,
     vertical,
-    isMe,
     seatPosition
 }) => {
     const dealVars = (() => {
@@ -87,7 +86,7 @@ const GateSeat: React.FC<GateSeatProps> = ({
             isAI={player.isAI}
             isActive={isActive}
             vertical={vertical}
-            stat={{ value: `$ ${player.chips.toLocaleString()}`, label: '籌碼' }}
+            stat={{ value: `$ ${(player.chips || 0).toLocaleString()}`, label: '籌碼' }}
             quote={player.quote}
             lines={lines}
         />

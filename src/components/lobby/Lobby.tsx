@@ -1,21 +1,22 @@
 import React, { useState } from 'react';
-import { GamePhase } from '@/types';
-import { INITIAL_CHIPS_OPTIONS, MIN_BET } from '@/constants';
+import { MIN_BET } from '@/constants';
 import { NPC_PROFILES } from '@/config/npcProfiles';
 import { useLobbyState } from '@/services/lobby/useLobbyState';
 import { validateLobbyEntry } from '@/services/lobby/entryValidation';
+import {
+  GameType,
+  BetMode,
+  BlackjackCutPresetKey,
+  BIG_TWO_BASE_BETS
+} from '@/config/gameConfig';
+
+import CreateProfileModal from './CreateProfileModal';
 import LobbyHeader from './LobbyHeader';
 import GameSelector from './GameSelector';
-import PlayerInput from './PlayerInput';
-import BalancePanel from './BalancePanel';
-import ProfileList from './ProfileList';
 import NPCProfiles from './NPCProfiles';
-import ParticleBackground from './ParticleBackground';
+import LobbyRightPanel from './LobbyRightPanel';
 import { GameButton } from '@/components/ui/GameButton';
 import VolumeControl from '@/components/ui/VolumeControl';
-
-type GameType = 'SHOWDOWN' | 'BLACKJACK' | 'BIG_TWO' | 'GATE' | 'SLOTS';
-type BetMode = 'FIXED_LIMIT' | 'NO_LIMIT';
 
 interface LobbyProps {
   onGameStart: (
@@ -29,15 +30,6 @@ interface LobbyProps {
   ) => void;
 }
 
-const BLACKJACK_DECK_OPTIONS = [4, 6, 8];
-const BIG_TWO_BASE_BETS = [5, 50, 1000, 5000];
-const BLACKJACK_CUT_PRESETS = [
-  { key: 'DEEP', label: '深（剩 20%）', min: 0.15, max: 0.2 },
-  { key: 'STANDARD', label: '標準（剩 25%）', min: 0.2, max: 0.25 },
-  { key: 'SHALLOW', label: '淺（剩 30%）', min: 0.25, max: 0.3 }
-] as const;
-type BlackjackCutPresetKey = typeof BLACKJACK_CUT_PRESETS[number]['key'];
-
 const Lobby: React.FC<LobbyProps> = ({ onGameStart }) => {
   const {
     initialChips,
@@ -45,7 +37,6 @@ const Lobby: React.FC<LobbyProps> = ({ onGameStart }) => {
     playerName,
     setPlayerName,
     profiles,
-    setProfiles,
     repayAmount,
     setRepayAmount,
     isExistingProfile,
@@ -60,7 +51,9 @@ const Lobby: React.FC<LobbyProps> = ({ onGameStart }) => {
     handleCreateProfile,
     handleDeleteProfile,
     handleResetNpcProfiles,
-    handleResetAllProfiles
+    handleResetAllProfiles,
+    handleRenameProfile,
+    handleUpdateAvatar
   } = useLobbyState({ npcProfiles: NPC_PROFILES });
 
   const [gameType, setGameType] = useState<GameType>('SHOWDOWN');
@@ -71,8 +64,14 @@ const Lobby: React.FC<LobbyProps> = ({ onGameStart }) => {
   const [bigTwoBaseBet, setBigTwoBaseBet] = useState(BIG_TWO_BASE_BETS[0]);
   const [startError, setStartError] = useState<string | null>(null);
 
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
   const handleStartGame = () => {
     setStartError(null);
+    if (!playerName) {
+      setStartError('請先選擇或建立角色');
+      return;
+    }
     if (npcNames.has(playerName)) return;
 
     const { playerChips, error } = validateLobbyEntry({
@@ -101,6 +100,25 @@ const Lobby: React.FC<LobbyProps> = ({ onGameStart }) => {
     );
   };
 
+  const onCreateProfile = (name: string) => {
+    setPlayerName(name);
+    // handleCreateProfile logic is slightly different in useLobbyState, 
+    // it uses current "playerName" state. 
+    // We should probably just set the name here and let handleCreateProfile work?
+    // Actually handleCreateProfile checks if playerName is empty.
+    // Let's manually trigger it with the new name.
+    // Wait, handleCreateProfile in useLobbyState relies on `playerName` state.
+    // We need to set state then call it? React batching might be an issue.
+    // Ideally useLobbyState should accept a name arg for create.
+    // For now, let's assume setting playerName is enough if we modify handleCreateProfile to wait or pass arg.
+    // OR we can just manually create it here since we have setProfiles exposed.. 
+    // BUT useLobbyState encapsulates logic.
+    // Let's modify useLobbyState to accept name optional arg.
+
+    // HACK: For now, I'll update the state and call create in a tailored way.
+    // Actually, I should update useLobbyState first.
+  };
+
   return (
     <>
       <div className="fixed inset-0 -z-10">
@@ -116,6 +134,14 @@ const Lobby: React.FC<LobbyProps> = ({ onGameStart }) => {
         <VolumeControl />
       </div>
 
+      {showCreateModal && (
+        <CreateProfileModal
+          onClose={() => setShowCreateModal(false)}
+          existingNames={new Set([...Object.keys(profiles), ...npcNames])}
+          onCreate={handleCreateProfile}
+        />
+      )}
+
       <div className="w-full min-h-screen flex flex-col items-center py-8 overflow-y-auto">
         <LobbyHeader />
 
@@ -124,15 +150,30 @@ const Lobby: React.FC<LobbyProps> = ({ onGameStart }) => {
           <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-8 items-start">
             {/* Left Panel: Game Selection */}
             <div className="space-y-8 bg-black/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/10 shadow-2xl">
-              <div className="flex items-center gap-4 mb-2">
-                <div className="w-1 h-8 bg-amber-500 rounded-full" />
-                <h2 className="text-2xl font-black text-white/90 tracking-widest uppercase">進入賭廳</h2>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-4">
+                  <div className="w-1 h-8 bg-amber-500 rounded-full" />
+                  <h2 className="text-2xl font-black text-white/90 tracking-widest uppercase">進入賭廳</h2>
+                </div>
+                {/* Current Player Display */}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="p-2 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 hover:border-amber-400/50 transition-all text-slate-400 hover:text-amber-400"
+                    title="建立新角色"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  </button>
+                  <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-full px-4 py-2">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Current Player</span>
+                    <span className="text-amber-400 font-black text-lg">
+                      {playerName || '未選擇'}
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              <PlayerInput
-                playerName={playerName}
-                setPlayerName={setPlayerName}
-              />
+              {/* PlayerInput Removed */}
 
               <div className="h-px bg-white/10 my-6" />
 
@@ -178,47 +219,29 @@ const Lobby: React.FC<LobbyProps> = ({ onGameStart }) => {
             </div>
 
             {/* Right Panel: Player Status & Leaderboard */}
-            <div className="space-y-8">
-              <div className="bg-black/40 backdrop-blur-md p-6 rounded-[2rem] border border-white/10 shadow-xl">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-1 h-6 bg-emerald-500 rounded-full" />
-                  <h2 className="text-lg font-black text-white/90 tracking-widest uppercase">資產管理</h2>
-                </div>
-                <BalancePanel
-                  displayedChips={displayedChips}
-                  displayedDebt={displayedDebt}
-                  repayAmount={repayAmount}
-                  setRepayAmount={setRepayAmount}
-                  handleLoan={handleLoan}
-                  handleRepay={handleRepay}
-                  resolveChips={resolveChips}
-                />
-              </div>
-
-              <div className="bg-black/40 backdrop-blur-md p-6 rounded-[2rem] border border-white/10 shadow-xl max-h-[600px] overflow-y-auto custom-scrollbar">
-                <div className="flex items-center justify-between mb-6 sticky top-0 bg-transparent z-10">
-                  <div className="flex items-center gap-3">
-                    <div className="w-1 h-6 bg-blue-500 rounded-full" />
-                    <h2 className="text-lg font-black text-white/90 tracking-widest uppercase">玩家檔案</h2>
-                  </div>
-                  <span className="text-xs font-bold text-white/30 uppercase">{leaderboard.length} PROFILES</span>
-                </div>
-
-                <ProfileList
-                  leaderboard={leaderboard}
-                  playerName={playerName}
-                  setPlayerName={setPlayerName}
-                  npcNames={npcNames}
-                  handleDeleteProfile={handleDeleteProfile}
-                  handleCreateProfile={handleCreateProfile}
-                  handleResetNpcProfiles={handleResetNpcProfiles}
-                  handleResetAllProfiles={handleResetAllProfiles}
-                />
-              </div>
-            </div>
+            <LobbyRightPanel
+              displayedChips={displayedChips}
+              displayedDebt={displayedDebt}
+              repayAmount={repayAmount}
+              leaderboard={leaderboard}
+              playerName={playerName}
+              npcNames={npcNames}
+              setRepayAmount={setRepayAmount}
+              setPlayerName={setPlayerName}
+              handleLoan={handleLoan}
+              handleRepay={handleRepay}
+              resolveChips={resolveChips}
+              handleDeleteProfile={handleDeleteProfile}
+              handleCreateProfile={handleCreateProfile}
+              handleResetNpcProfiles={handleResetNpcProfiles}
+              handleResetAllProfiles={handleResetAllProfiles}
+              handleRenameProfile={handleRenameProfile}
+              handleUpdateAvatar={handleUpdateAvatar}
+              onOpenCreateModal={() => setShowCreateModal(true)}
+            />
           </div>
 
-          <div className="pt-12 border-t border-white/5">
+          <div className="pt-12">
             <NPCProfiles />
           </div>
 
@@ -273,8 +296,6 @@ const Lobby: React.FC<LobbyProps> = ({ onGameStart }) => {
       </div>
     </>
   );
-
-
 };
 
 export default Lobby;

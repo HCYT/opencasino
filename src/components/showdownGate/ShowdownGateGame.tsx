@@ -65,6 +65,7 @@ const ShowdownGateGame: React.FC<ShowdownGateGameProps> = ({
         <div className="game-container bg-[#052c16] relative overflow-visible select-none h-screen w-full">
             <ShowdownTable title="射龍門" statusText={statusText} pot={pot}>
                 {players.map((p, i) => {
+                    if (!p) return null;
                     const { style, vertical, seatPosition } = getSeatLayout(i, p.id === 'player');
                     const isWinner = p.result === 'WIN';
                     const isActive = currentPlayerIndex === i && phase === 'PLAYER_TURN';

@@ -37,7 +37,7 @@ const NPCProfiles: React.FC = () => {
             }}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            
+
             <div className="relative z-10">
               <div className="w-28 h-28 mx-auto mb-4 rounded-full border-4 border-amber-400/30 overflow-hidden shadow-lg group-hover:border-amber-400/60 transition-all duration-300 group-hover:shadow-amber-500/20">
                 <img
@@ -55,7 +55,7 @@ const NPCProfiles: React.FC = () => {
                   }}
                 />
               </div>
-              
+
               <h3 className="text-2xl font-black text-center text-white mb-2 group-hover:text-amber-300 transition-colors">
                 {npc.name}
               </h3>
@@ -63,12 +63,12 @@ const NPCProfiles: React.FC = () => {
               <p className="text-slate-400 text-xs text-center leading-relaxed mb-4 h-12">
                 {NPCDescriptions[npc.name]}
               </p>
-              
+
               <div className="space-y-2 text-xs mb-4">
                 <div className="flex items-center gap-2">
                   <span className="text-slate-500 w-12">保守</span>
                   <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full transition-all duration-300"
                       style={{ width: `${npc.tacticWeights.CONSERVATIVE * 100}%` }}
                     ></div>
@@ -77,7 +77,7 @@ const NPCProfiles: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span className="text-slate-500 w-12">欺詐</span>
                   <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className="h-full bg-gradient-to-r from-purple-400 to-purple-500 rounded-full transition-all duration-300"
                       style={{ width: `${npc.tacticWeights.DECEPTIVE * 100}%` }}
                     ></div>
@@ -86,7 +86,7 @@ const NPCProfiles: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span className="text-slate-500 w-12">誘餌</span>
                   <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className="h-full bg-gradient-to-r from-cyan-400 to-cyan-500 rounded-full transition-all duration-300"
                       style={{ width: `${npc.tacticWeights.BAIT * 100}%` }}
                     ></div>
@@ -95,7 +95,7 @@ const NPCProfiles: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span className="text-slate-500 w-12">進取</span>
                   <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className="h-full bg-gradient-to-r from-red-400 to-red-500 rounded-full transition-all duration-300"
                       style={{ width: `${npc.tacticWeights.AGGRESSIVE * 100}%` }}
                     ></div>
@@ -103,7 +103,7 @@ const NPCProfiles: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-700/50">
+              <div className="pt-3">
                 <p className="text-amber-200/60 text-xs text-center italic leading-relaxed">
                   "{npc.quotes.WIN[0]}"
                 </p>

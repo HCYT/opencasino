@@ -9,8 +9,16 @@ interface UseLobbyStateOptions {
 
 export const useLobbyState = ({ npcProfiles }: UseLobbyStateOptions) => {
   const [initialChips, setInitialChips] = useState(INITIAL_CHIPS_OPTIONS[0]);
-  const [playerName, setPlayerName] = useState('我 (玩家)');
   const [profiles, setProfiles] = useState<Record<string, StoredProfile>>(() => loadProfiles());
+
+  // Auto-select first available non-NPC profile
+  const [playerName, setPlayerName] = useState(() => {
+    const npcNames = new Set(npcProfiles.map(p => p.name));
+    const loaded = loadProfiles();
+    const existing = Object.keys(loaded).filter(n => !npcNames.has(n));
+    return existing.length > 0 ? existing[0] : '我 (玩家)';
+  });
+
   const [repayAmount, setRepayAmount] = useState(0);
 
   const activeProfile = profiles[playerName];
@@ -82,14 +90,15 @@ export const useLobbyState = ({ npcProfiles }: UseLobbyStateOptions) => {
     setRepayAmount(0);
   };
 
-  const handleCreateProfile = () => {
-    if (!playerName.trim()) return;
-    if (profiles[playerName]) return;
+  const handleCreateProfile = (nameOverride?: string) => {
+    const targetName = nameOverride ?? playerName;
+    if (!targetName.trim()) return;
+    if (profiles[targetName]) return;
     const updated = {
       ...profiles,
-      [playerName]: {
-        name: playerName,
-        chips: initialChips,
+      [targetName]: {
+        name: targetName,
+        chips: nameOverride ? INITIAL_CHIPS_OPTIONS[0] : initialChips, // Reset chips for new profile
         wins: 0,
         losses: 0,
         games: 0,
@@ -98,6 +107,10 @@ export const useLobbyState = ({ npcProfiles }: UseLobbyStateOptions) => {
     };
     saveProfiles(updated);
     setProfiles(updated);
+    if (nameOverride) {
+      setPlayerName(targetName);
+      setInitialChips(INITIAL_CHIPS_OPTIONS[0]);
+    }
   };
 
   const handleDeleteProfile = (name: string) => {
@@ -160,6 +173,40 @@ export const useLobbyState = ({ npcProfiles }: UseLobbyStateOptions) => {
     handleCreateProfile,
     handleDeleteProfile,
     handleResetNpcProfiles,
-    handleResetAllProfiles
+    handleResetAllProfiles,
+    handleRenameProfile: (oldName: string, newName: string) => {
+      const trimmedNew = newName.trim();
+      if (!trimmedNew || trimmedNew === oldName) return;
+      if (profiles[trimmedNew] || npcNames.has(trimmedNew)) {
+        alert('名稱已存在或為 NPC 名稱');
+        return;
+      }
+
+      const { [oldName]: oldProfile, ...rest } = profiles;
+      if (!oldProfile) return;
+
+      const updated = {
+        ...rest,
+        [trimmedNew]: { ...oldProfile, name: trimmedNew }
+      };
+
+      saveProfiles(updated);
+      setProfiles(updated);
+
+      if (playerName === oldName) {
+        setPlayerName(trimmedNew);
+      }
+    },
+    handleUpdateAvatar: (name: string, avatarBase64: string) => {
+      const current = profiles[name];
+      if (!current) return;
+
+      const updated = {
+        ...profiles,
+        [name]: { ...current, avatar: avatarBase64 }
+      };
+      saveProfiles(updated);
+      setProfiles(updated);
+    }
   };
 };

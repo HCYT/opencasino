@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { GamePhase } from './types';
 import { INITIAL_CHIPS_OPTIONS, MIN_BET, PLAYER_QUOTES } from './constants';
 import { NPC_PROFILES } from './config/npcProfiles';
+import { BIG_TWO_BASE_BETS, BLACKJACK_CUT_PRESETS, GameType, BetMode, BlackjackCutPresetKey } from './config/gameConfig';
 import { saveProfiles } from './services/profileStore';
 import { buildBigTwoSeats, buildBlackjackSeats, buildGateSeats, buildShowdownPlayers } from './services/lobby/gameStarters';
 import { pickNpcTriplet } from './services/lobby/npcPicker';
@@ -18,17 +19,6 @@ import { GameButton } from './components/ui/GameButton';
 import Panel from './components/ui/Panel';
 import VolumeControl from './components/ui/VolumeControl';
 import Lobby from './components/lobby/Lobby';
-
-const BIG_TWO_BASE_BETS = [5, 50, 1000, 5000];
-const BLACKJACK_CUT_PRESETS = [
-  { key: 'DEEP', label: '深（剩 20%）', min: 0.15, max: 0.2 },
-  { key: 'STANDARD', label: '標準（剩 25%）', min: 0.2, max: 0.25 },
-  { key: 'SHALLOW', label: '淺（剩 30%）', min: 0.25, max: 0.3 }
-] as const;
-type BlackjackCutPresetKey = typeof BLACKJACK_CUT_PRESETS[number]['key'];
-
-type GameType = 'SHOWDOWN' | 'BLACKJACK' | 'BIG_TWO' | 'GATE' | 'SLOTS';
-type BetMode = 'FIXED_LIMIT' | 'NO_LIMIT';
 
 const App: React.FC = () => {
   const [profiles, setProfiles] = useState<Record<string, any>>({});
@@ -47,6 +37,7 @@ const App: React.FC = () => {
   const [gateAnteBet, setGateAnteBet] = useState(MIN_BET);
   const [slotsActive, setSlotsActive] = useState(false);
   const [slotsSessionKey, setSlotsSessionKey] = useState(0);
+  const [currentActivePlayer, setCurrentActivePlayer] = useState('');
   const playerAvatar = 'https://picsum.photos/seed/me/200/200';
 
   const { gameState, initGame, handleAction, startNewHand, playerSpeak, returnToLobby } = useGameEngine(new ShowdownRules(), {
@@ -66,12 +57,18 @@ const App: React.FC = () => {
     betMode: BetMode,
     teamingEnabled: boolean
   ) => {
+    const currentUserProfile = profiles[playerName];
+    const dynamicAvatar = currentUserProfile?.avatar || playerAvatar;
+
+    // Set the active player for single-player games like Slots
+    setCurrentActivePlayer(playerName);
+
     const startBlackjack = () => {
       const [ai1, ai2, ai3] = pickNpcTriplet(NPC_PROFILES);
       const { seats, updatedProfiles } = buildBlackjackSeats({
         playerName,
         playerChips,
-        playerAvatar,
+        playerAvatar: dynamicAvatar,
         initialChips,
         profiles,
         aiProfiles: [ai1, ai2, ai3]
@@ -87,7 +84,7 @@ const App: React.FC = () => {
       const { seats, updatedProfiles } = buildBigTwoSeats({
         playerName,
         playerChips,
-        playerAvatar,
+        playerAvatar: dynamicAvatar,
         initialChips,
         profiles,
         aiProfiles: [ai1, ai2, ai3]
@@ -103,7 +100,7 @@ const App: React.FC = () => {
       const { seats, updatedProfiles } = buildGateSeats({
         playerName,
         playerChips,
-        playerAvatar,
+        playerAvatar: dynamicAvatar,
         initialChips,
         profiles,
         aiProfiles: [ai1, ai2, ai3]
@@ -142,7 +139,7 @@ const App: React.FC = () => {
     const [ai1, ai2, ai3] = pickNpcTriplet(NPC_PROFILES);
     const initialPlayers = buildShowdownPlayers({
       playerName,
-      playerAvatar,
+      playerAvatar: dynamicAvatar,
       initialChips,
       profiles,
       aiProfiles: [ai1, ai2, ai3]
@@ -251,7 +248,7 @@ const App: React.FC = () => {
           shoeDecks={blackjackDecks}
           cutRatioRange={{ min: blackjackCutRange.min, max: blackjackCutRange.max }}
           npcProfiles={NPC_PROFILES}
-          resolveChips={() => {}}
+          resolveChips={() => { }}
           onExit={() => setBlackjackActive(false)}
           onProfilesUpdate={handleBlackjackProfileUpdate}
         />
@@ -270,7 +267,7 @@ const App: React.FC = () => {
           seats={gateSeats}
           anteBet={gateAnteBet}
           npcProfiles={NPC_PROFILES}
-          resolveChips={() => {}}
+          resolveChips={() => { }}
           onExit={() => setGateActive(false)}
           onProfilesUpdate={handleGateProfileUpdate}
         />
@@ -286,7 +283,7 @@ const App: React.FC = () => {
         </div>
         <SlotMachineGame
           key={`slots-${slotsSessionKey}`}
-          playerName=""
+          playerName={currentActivePlayer}
           onExit={() => setSlotsActive(false)}
         />
       </>
