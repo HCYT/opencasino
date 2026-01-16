@@ -6,6 +6,7 @@ import { GameButton } from '../ui/GameButton';
 import StatusPanel from '../ui/StatusPanel';
 import StackCard from '../ui/StackCard';
 import RangeSlider from '../ui/RangeSlider';
+import { playSound } from '../../services/sound';
 import {
   bottomDock,
   bottomDockInner,
@@ -96,7 +97,7 @@ const BlackjackControls: React.FC<BlackjackControlsProps> = ({
                 />
               </StatusPanel>
               <GameButton
-                onClick={onStartHand}
+                onClick={() => { playSound('deal'); onStartHand(); }}
                 disabled={!canBet}
                 variant="primary"
                 size="pillLg"
@@ -112,7 +113,7 @@ const BlackjackControls: React.FC<BlackjackControlsProps> = ({
               {isPlayerTurn ? (
                 <div className={`flex items-end ${canSplitHand ? 'gap-2' : 'gap-3'}`}>
                   <GameButton
-                    onClick={onHit}
+                    onClick={() => { playSound('card-deal'); onHit(); }}
                     variant="success"
                     size="squareMd"
                     className="uppercase tracking-widest"
@@ -120,7 +121,7 @@ const BlackjackControls: React.FC<BlackjackControlsProps> = ({
                     要牌
                   </GameButton>
                   <GameButton
-                    onClick={onStand}
+                    onClick={() => { playSound('fold'); onStand(); }}
                     variant="danger"
                     size="squareMd"
                     className="uppercase tracking-widest"
@@ -129,7 +130,7 @@ const BlackjackControls: React.FC<BlackjackControlsProps> = ({
                   </GameButton>
                   {canSplitHand && (
                     <GameButton
-                      onClick={onSplit}
+                      onClick={() => { playSound('card-deal'); onSplit(); }}
                       variant="info"
                       size="squareMd"
                       className="uppercase tracking-widest"
@@ -152,7 +153,7 @@ const BlackjackControls: React.FC<BlackjackControlsProps> = ({
             <div className="flex items-end gap-3">
               <StatusPanel className="text-yellow-300">{message || '本局結束'}</StatusPanel>
               <GameButton
-                onClick={onReset}
+                onClick={() => { playSound('deal'); onReset(); }}
                 variant="light"
                 size="pillLg"
               >

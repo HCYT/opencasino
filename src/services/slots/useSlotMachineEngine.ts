@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { loadProfiles, saveProfiles, loadJackpot, saveJackpot } from '../profileStore';
 import { SlotRules, SpinResult } from './SlotRules';
+import { playSound } from '../sound';
 
 const JACKPOT_CONTRIBUTION_RATE = 0.3; // 30% of bet goes to jackpot (Super High!)
 
@@ -58,6 +59,8 @@ export const useSlotMachineEngine = (playerName: string) => {
         setIsSpinning(true);
         setMessage(isAutoSpin ? '自動轉動中...' : '轉動中...');
 
+        playSound('chip-place');
+
         // Deduct bet
         const currentCredits = credits - betAmount;
         updateCredits(currentCredits);
@@ -70,6 +73,7 @@ export const useSlotMachineEngine = (playerName: string) => {
 
         // Artificial delay for "spinning"
         setTimeout(() => {
+            playSound('chip-stack');
             const result = rules.spin(betAmount);
             setLastResult(result);
             setIsSpinning(false);

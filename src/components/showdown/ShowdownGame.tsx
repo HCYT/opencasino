@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ActionType, GamePhase, NPCProfile, Player } from '../../types';
 import CardUI from '../CardUI';
 import QuoteBubble from '../ui/QuoteBubble';
@@ -10,6 +10,7 @@ import ResultOverlay from '../ui/ResultOverlay';
 import { useShowdownUIState } from './useShowdownUIState';
 import { getSeatLayout } from '../ui/seatLayout';
 import { seatWrapper } from '../ui/sharedStyles';
+import { playSound } from '../../services/sound';
 
 interface ShowdownGameProps {
   phase: GamePhase;
@@ -78,6 +79,16 @@ const ShowdownGame: React.FC<ShowdownGameProps> = ({
     : phase === GamePhase.RESULT
       ? '本局結束'
       : `${currentPlayer?.name || ''} 思考中...`;
+
+  useEffect(() => {
+    if (phase === GamePhase.RESULT && winners.length > 0) {
+      if (userWon) {
+        playSound('win');
+      } else {
+        playSound('lose');
+      }
+    }
+  }, [phase, winners, userWon]);
 
   return (
     <div className="game-container bg-[#052c16] relative overflow-visible select-none h-screen w-full">

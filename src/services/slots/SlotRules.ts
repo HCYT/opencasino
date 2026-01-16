@@ -9,9 +9,31 @@ export enum SlotSymbol {
     LEMON = 'LEMON'
 }
 
+export const SYMBOL_EMOJIS: Record<SlotSymbol, string> = {
+    [SlotSymbol.WILD]: '🃏',
+    [SlotSymbol.SEVEN]: '7️⃣',
+    [SlotSymbol.BAR]: '💎',
+    [SlotSymbol.BELL]: '🔔',
+    [SlotSymbol.GRAPE]: '🍇',
+    [SlotSymbol.ORANGE]: '🍊',
+    [SlotSymbol.CHERRY]: '🍒',
+    [SlotSymbol.LEMON]: '🍋'
+};
+
+export const SYMBOL_COLORS: Record<SlotSymbol, { bg: string; border: string; glow: string }> = {
+    [SlotSymbol.WILD]: { bg: 'bg-purple-900', border: 'border-purple-400', glow: 'shadow-purple-500/50' },
+    [SlotSymbol.SEVEN]: { bg: 'bg-red-900', border: 'border-red-500', glow: 'shadow-red-500/50' },
+    [SlotSymbol.BAR]: { bg: 'bg-cyan-900', border: 'border-cyan-400', glow: 'shadow-cyan-500/50' },
+    [SlotSymbol.BELL]: { bg: 'bg-yellow-800', border: 'border-yellow-400', glow: 'shadow-yellow-500/50' },
+    [SlotSymbol.GRAPE]: { bg: 'bg-fuchsia-900', border: 'border-fuchsia-500', glow: 'shadow-fuchsia-500/50' },
+    [SlotSymbol.ORANGE]: { bg: 'bg-orange-900', border: 'border-orange-500', glow: 'shadow-orange-500/50' },
+    [SlotSymbol.CHERRY]: { bg: 'bg-rose-900', border: 'border-rose-500', glow: 'shadow-rose-500/50' },
+    [SlotSymbol.LEMON]: { bg: 'bg-yellow-900/50', border: 'border-yellow-200', glow: 'shadow-yellow-300/30' }
+};
+
 export const SYMBOL_VALUES: Record<SlotSymbol, number> = {
     [SlotSymbol.WILD]: 10,
-    [SlotSymbol.SEVEN]: 500, // Jackpot trigger if 3
+    [SlotSymbol.SEVEN]: 500,
     [SlotSymbol.BAR]: 50,
     [SlotSymbol.BELL]: 20,
     [SlotSymbol.GRAPE]: 15,
@@ -20,15 +42,25 @@ export const SYMBOL_VALUES: Record<SlotSymbol, number> = {
     [SlotSymbol.LEMON]: 2
 };
 
-// Virtual Reel Strips - Weighted by presence
-// More low value symbols, fewer high value ones.
+export const PAYOUT_MULTIPLIERS: Record<SlotSymbol, number> = {
+    [SlotSymbol.WILD]: 500,
+    [SlotSymbol.SEVEN]: 2500,
+    [SlotSymbol.BAR]: 250,
+    [SlotSymbol.BELL]: 100,
+    [SlotSymbol.GRAPE]: 75,
+    [SlotSymbol.ORANGE]: 50,
+    [SlotSymbol.CHERRY]: 25,
+    [SlotSymbol.LEMON]: 10
+};
+
 const REEL_STRIP_1 = [
     SlotSymbol.WILD, SlotSymbol.SEVEN, SlotSymbol.BAR, SlotSymbol.BAR,
     SlotSymbol.BELL, SlotSymbol.BELL, SlotSymbol.BELL,
     SlotSymbol.GRAPE, SlotSymbol.GRAPE, SlotSymbol.GRAPE, SlotSymbol.GRAPE,
     SlotSymbol.ORANGE, SlotSymbol.ORANGE, SlotSymbol.ORANGE, SlotSymbol.ORANGE, SlotSymbol.ORANGE,
-    SlotSymbol.CHERRY, SlotSymbol.CHERRY, SlotSymbol.CHERRY, SlotSymbol.CHERRY, SlotSymbol.CHERRY, SlotSymbol.CHERRY,
-    SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON
+    SlotSymbol.CHERRY, SlotSymbol.CHERRY, SlotSymbol.CHERRY, SlotSymbol.CHERRY,
+    SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON,
+    SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON
 ];
 
 const REEL_STRIP_2 = [
@@ -36,8 +68,9 @@ const REEL_STRIP_2 = [
     SlotSymbol.BELL, SlotSymbol.BELL, SlotSymbol.BELL,
     SlotSymbol.GRAPE, SlotSymbol.GRAPE, SlotSymbol.GRAPE, SlotSymbol.GRAPE,
     SlotSymbol.ORANGE, SlotSymbol.ORANGE, SlotSymbol.ORANGE, SlotSymbol.ORANGE, SlotSymbol.ORANGE,
-    SlotSymbol.CHERRY, SlotSymbol.CHERRY, SlotSymbol.CHERRY, SlotSymbol.CHERRY, SlotSymbol.CHERRY, SlotSymbol.CHERRY,
-    SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON
+    SlotSymbol.CHERRY, SlotSymbol.CHERRY, SlotSymbol.CHERRY, SlotSymbol.CHERRY,
+    SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON,
+    SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON
 ];
 
 const REEL_STRIP_3 = [
@@ -45,8 +78,9 @@ const REEL_STRIP_3 = [
     SlotSymbol.BELL, SlotSymbol.BELL, SlotSymbol.BELL,
     SlotSymbol.GRAPE, SlotSymbol.GRAPE, SlotSymbol.GRAPE, SlotSymbol.GRAPE,
     SlotSymbol.ORANGE, SlotSymbol.ORANGE, SlotSymbol.ORANGE, SlotSymbol.ORANGE, SlotSymbol.ORANGE,
-    SlotSymbol.CHERRY, SlotSymbol.CHERRY, SlotSymbol.CHERRY, SlotSymbol.CHERRY, SlotSymbol.CHERRY, SlotSymbol.CHERRY,
-    SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON
+    SlotSymbol.CHERRY, SlotSymbol.CHERRY, SlotSymbol.CHERRY, SlotSymbol.CHERRY,
+    SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON,
+    SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON, SlotSymbol.LEMON
 ];
 
 export const REELS = [REEL_STRIP_1, REEL_STRIP_2, REEL_STRIP_3];

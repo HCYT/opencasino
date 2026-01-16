@@ -6,6 +6,7 @@ import { GameButton } from '../ui/GameButton';
 import PillPanel from '../ui/PillPanel';
 import StackCard from '../ui/StackCard';
 import RangeSlider from '../ui/RangeSlider';
+import { playSound } from '../../services/sound';
 import {
   bottomDock,
   bottomDockInner,
@@ -185,7 +186,7 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
               </div>
 
               <GameButton
-                onClick={() => onAction('FOLD')}
+                onClick={() => { playSound('fold'); onAction('FOLD'); }}
                 variant="danger"
                 size="squareSm"
                 className="group flex flex-col items-center justify-center backdrop-blur-md"
@@ -197,7 +198,7 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
               </GameButton>
 
               <GameButton
-                onClick={() => onAction(callNeeded === 0 ? 'CHECK' : 'CALL')}
+                onClick={() => { playSound(callNeeded === 0 ? 'deal' : 'chip-place'); onAction(callNeeded === 0 ? 'CHECK' : 'CALL'); }}
                 variant="success"
                 size="squareLg"
                 className="group flex flex-col items-center justify-center backdrop-blur-md"
@@ -211,7 +212,7 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
               </GameButton>
 
               <GameButton
-                onClick={() => onAction('RAISE', raiseAmount)}
+                onClick={() => { playSound('chip-place'); onAction('RAISE', raiseAmount); }}
                 disabled={!canRaise}
                 variant="warning"
                 size="squareLg"
@@ -224,7 +225,7 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
               </GameButton>
 
               <GameButton
-                onClick={() => onAction('ALL_IN')}
+                onClick={() => { playSound('allin'); onAction('ALL_IN'); }}
                 variant="info"
                 size="squareSm"
                 className="group flex flex-col items-center justify-center backdrop-blur-md"
@@ -237,7 +238,7 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
             </div>
           ) : phase === GamePhase.RESULT ? (
             <GameButton
-              onClick={onStartNewHand}
+              onClick={() => { playSound('deal'); onStartNewHand(); }}
               variant="light"
               size="pillXl"
               className="text-xl animate-pulse transform hover:scale-105 uppercase tracking-wider"
