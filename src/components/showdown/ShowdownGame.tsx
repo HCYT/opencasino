@@ -22,6 +22,7 @@ interface ShowdownGameProps {
   handleAction: (action: ActionType, amount?: number) => void;
   startNewHand: () => void;
   playerSpeak: (text: string) => void;
+  onExit: () => void;
 }
 
 const ShowdownGame: React.FC<ShowdownGameProps> = ({
@@ -37,7 +38,8 @@ const ShowdownGame: React.FC<ShowdownGameProps> = ({
   playerQuotes,
   handleAction,
   startNewHand,
-  playerSpeak
+  playerSpeak,
+  onExit
 }) => {
   const {
     user,
@@ -116,6 +118,7 @@ const ShowdownGame: React.FC<ShowdownGameProps> = ({
         playerSpeak={playerSpeak}
         onAction={handleAction}
         onStartNewHand={startNewHand}
+        onExit={onExit}
       />
 
       {phase === GamePhase.RESULT && winners.length > 0 && (

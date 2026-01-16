@@ -38,7 +38,7 @@ const PlayerSeatCard: React.FC<PlayerSeatCardProps> = ({
     <div
       className={`bg-black/70 border ${isActive ? 'border-emerald-400/60' : 'border-white/10'} rounded-[24px] px-5 py-4 shadow-2xl min-w-[220px] max-w-[260px] ${vertical ? 'scale-95' : ''}`}
     >
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         <div className="flex items-center gap-3 min-w-0">
           <img src={avatar} alt={name} className="w-12 h-12 rounded-full border-2 border-yellow-400/40 object-cover" />
           <div>
@@ -46,11 +46,9 @@ const PlayerSeatCard: React.FC<PlayerSeatCardProps> = ({
               {name}
             </div>
             <div className="text-[10px] text-white/40 uppercase tracking-widest">{isAI ? 'NPC' : '玩家'}</div>
+            <div className="mt-1 text-emerald-300 font-black text-lg">{stat.value}</div>
+            <div className="text-[10px] text-white/40 uppercase tracking-widest">{stat.label}</div>
           </div>
-        </div>
-        <div className="text-right">
-          <div className="text-emerald-300 font-black text-lg">{stat.value}</div>
-          <div className="text-[10px] text-white/40 uppercase tracking-widest">{stat.label}</div>
         </div>
       </div>
       {quote && <QuoteBubble text={quote} className="mt-3" />}

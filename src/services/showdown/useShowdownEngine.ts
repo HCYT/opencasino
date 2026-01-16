@@ -731,11 +731,27 @@ export const useGameEngine = (initialRules: IPokerRules, options: ShowdownEngine
         };
     }, [gameState.activePlayerIndex, gameState.phase]);
 
+    const returnToLobby = () => {
+        setGameState({
+            players: [],
+            pot: 0,
+            deck: [],
+            phase: GamePhase.SETTING,
+            activePlayerIndex: 0,
+            currentMaxBet: 0,
+            winners: [],
+            log: [],
+            betMode: gameState.betMode,
+            buyInChips: gameState.buyInChips
+        });
+    };
+
     return {
         gameState,
         initGame,
         handleAction,
         startNewHand: () => startNewHand(gameState.players),
-        playerSpeak // Export this
+        playerSpeak,
+        returnToLobby
     };
 };

@@ -70,7 +70,7 @@ const App: React.FC = () => {
   const playerAvatar = 'https://picsum.photos/seed/me/200/200';
 
   // Initialize Engine with specific Rules
-  const { gameState, initGame, handleAction, startNewHand, playerSpeak } = useGameEngine(new ShowdownRules(), {
+  const { gameState, initGame, handleAction, startNewHand, playerSpeak, returnToLobby } = useGameEngine(new ShowdownRules(), {
     npcProfiles: NPC_PROFILES
   });
   const { phase, players, pot, currentMaxBet, activePlayerIndex, winners } = gameState;
@@ -582,6 +582,7 @@ const App: React.FC = () => {
       handleAction={handleAction}
       startNewHand={startNewHand}
       playerSpeak={playerSpeak}
+      onExit={returnToLobby}
     />
   );
 };

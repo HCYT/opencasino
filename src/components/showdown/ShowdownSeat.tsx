@@ -38,6 +38,24 @@ const ShowdownSeat: React.FC<ShowdownSeatProps> = ({
 
   return (
     <div className={`flex flex-col items-center gap-4 pointer-events-auto transition-all duration-700 ${player.isFolded ? 'opacity-20 grayscale scale-90' : 'opacity-100 scale-100'} relative`}>
+      <div
+        className="flex flex-row justify-center min-h-[100px] md:min-h-[120px] items-center"
+        style={dealVars}
+      >
+        {player.cards.map((c, i) => {
+          const isHidden = !isMe && i === 0 && phase !== GamePhase.SHOWDOWN && phase !== GamePhase.RESULT;
+          return (
+            <CardUI
+              key={i}
+              card={c}
+              hidden={isHidden}
+              className={`deal-card ${i > 0 ? '-ml-6 md:-ml-5' : ''}`}
+              style={{ zIndex: i + 1 }}
+            />
+          );
+        })}
+      </div>
+
       <PlayerSeatCard
         name={player.name}
         avatar={player.avatar}
@@ -58,24 +76,6 @@ const ShowdownSeat: React.FC<ShowdownSeatProps> = ({
             : [])
         ]}
       />
-
-      <div
-        className="flex flex-row justify-center min-h-[100px] md:min-h-[120px] items-center"
-        style={dealVars}
-      >
-        {player.cards.map((c, i) => {
-          const isHidden = !isMe && i === 0 && phase !== GamePhase.SHOWDOWN && phase !== GamePhase.RESULT;
-          return (
-            <CardUI
-              key={i}
-              card={c}
-              hidden={isHidden}
-              className={`deal-card ${i > 0 ? '-ml-6 md:-ml-5' : ''}`}
-              style={{ zIndex: i + 1 }}
-            />
-          );
-        })}
-      </div>
 
       {isWinner && phase === GamePhase.RESULT && (
         <div className="absolute -top-12 text-xs font-black text-yellow-400">WINNER</div>

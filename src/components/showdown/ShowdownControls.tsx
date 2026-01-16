@@ -24,6 +24,7 @@ interface ShowdownControlsProps {
   playerSpeak: (text: string) => void;
   onAction: (action: ActionType, amount?: number) => void;
   onStartNewHand: () => void;
+  onExit: () => void;
 }
 
 const ShowdownControls: React.FC<ShowdownControlsProps> = ({
@@ -45,12 +46,13 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
   setChatInput,
   playerSpeak,
   onAction,
-  onStartNewHand
+  onStartNewHand,
+  onExit
 }) => {
   return (
     <div className="absolute bottom-0 left-0 right-0 p-6 z-[60] pointer-events-none">
-      <div className="max-w-[1400px] mx-auto w-full h-full relative flex items-end justify-between">
-        <div className="flex flex-row items-end gap-3 pointer-events-auto">
+      <div className="max-w-[1400px] mx-auto w-full h-full relative">
+        <div className="absolute left-0 bottom-0 flex flex-col gap-3 pointer-events-auto">
           <div className="bg-black/80 backdrop-blur-xl px-6 py-4 rounded-[2rem] border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)] flex flex-col gap-1 min-w-[200px] md:min-w-[160px]">
             <div className="text-white/40 text-[10px] uppercase font-black tracking-[0.2em] flex items-center gap-2">
               <span>My Stack</span>
@@ -65,9 +67,16 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
               </div>
             )}
           </div>
+          <GameButton
+            onClick={onExit}
+            variant="ghost"
+            className="px-6 py-4 rounded-2xl uppercase tracking-widest"
+          >
+            返回大廳
+          </GameButton>
         </div>
 
-        <div className="pointer-events-auto flex items-end gap-4 h-[200px]">
+        <div className="absolute right-0 bottom-0 pointer-events-auto flex items-end justify-end gap-4 h-[200px]">
           {isUserTurn ? (
             <div className="flex items-end gap-3 animate-in slide-in-from-bottom-20 fade-in duration-300 relative">
               {showChatMenu && (
@@ -234,6 +243,7 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
               </span>
             </div>
           )}
+
         </div>
       </div>
     </div>
