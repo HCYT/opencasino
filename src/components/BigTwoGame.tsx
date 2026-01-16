@@ -5,14 +5,14 @@ import { GameButton } from './ui/GameButton';
 import PlayerSeatCard from './ui/PlayerSeatCard';
 import ResultCard from './ui/ResultCard';
 import StatusPanel from './ui/StatusPanel';
+import TableFrame from './table/TableFrame';
 import {
   bottomDock,
   bottomDockInnerFlex,
   seatWrapper,
   stackCardBase,
   stackLabel,
-  stackValueMd,
-  tableStyles
+  stackValueMd
 } from './ui/sharedStyles';
 import {
   RANK_ORDER,
@@ -206,87 +206,72 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, on
 
   return (
     <div className="game-container bg-[#052c16] relative overflow-visible select-none h-screen w-full">
-      <div className={tableStyles.wrapper}>
-        <div className={tableStyles.frame}>
-          <div className={tableStyles.surface}>
-            <div className={tableStyles.innerBorder}></div>
+      <TableFrame
+        title="慈善撲克王大賽 · 大老二"
+        statusText={phase === 'RESULT' ? '本局結束' : `${players[currentTurnIndex]?.name || ''} 出牌中...`}
+        overlay={
+          <>
+            {players.map((p, i) => {
+              let style: React.CSSProperties = {};
+              let vertical = false;
 
-            <div className={tableStyles.title}>慈善撲克王大賽 · 大老二</div>
+              if (p.id === 'player') {
+                style = { bottom: '2rem', left: '50%', transform: 'translateX(-50%)' };
+              } else if (i === 1) {
+                style = { left: '4rem', top: '50%', transform: 'translateY(-50%)' };
+                vertical = true;
+              } else if (i === 2) {
+                style = { top: '3rem', left: '50%', transform: 'translateX(-50%)' };
+              } else {
+                style = { right: '4rem', top: '50%', transform: 'translateY(-50%)' };
+                vertical = true;
+              }
 
-            <div className={tableStyles.statusWrap}>
-              <div className={tableStyles.statusBadge}>
-                <div className={tableStyles.statusDot}></div>
-                <span className={tableStyles.statusText}>
-                  {phase === 'RESULT'
-                    ? '本局結束'
-                    : `${players[currentTurnIndex]?.name || ''} 出牌中...`}
-                </span>
-              </div>
-            </div>
+              const isActiveSeat = phase === 'PLAYING' && currentTurnIndex === i;
 
-            <div className="text-center z-10">
-              <div className="text-yellow-500/40 font-black text-[10px] tracking-[0.5em] casino-font uppercase mb-2">桌面</div>
-              {currentTrick ? (
-                <div className="flex flex-wrap items-center justify-center gap-2">
-                  {currentTrick.cards.map((card, idx) => (
-                    <CardUI key={`trick-${idx}`} card={card} className="deal-card" />
-                  ))}
+              return (
+                <div key={p.id} className={seatWrapper} style={style}>
+                  <PlayerSeatCard
+                    name={p.name}
+                    avatar={p.avatar}
+                    isAI={p.isAI}
+                    isActive={isActiveSeat}
+                    vertical={vertical}
+                    stat={{ value: `${p.hand.length} 張`, label: '剩餘' }}
+                    quote={p.quote}
+                    lines={[
+                      ...(p.passed && !p.finished
+                        ? [{ text: 'PASS', className: 'text-red-300' }]
+                        : []),
+                      ...(p.finished
+                        ? [{ text: '已出完', className: 'text-yellow-300' }]
+                        : [])
+                    ]}
+                  />
                 </div>
-              ) : (
-                <div className="text-white/30 text-sm">等待出牌</div>
-              )}
-              {currentTrick && (
-                <div className="text-emerald-200 font-black text-xs uppercase tracking-widest mt-3">
-                  {currentTrick.type}
-                </div>
-              )}
+              );
+            })}
+          </>
+        }
+      >
+        <div className="text-center z-10">
+          <div className="text-yellow-500/40 font-black text-[10px] tracking-[0.5em] casino-font uppercase mb-2">桌面</div>
+          {currentTrick ? (
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {currentTrick.cards.map((card, idx) => (
+                <CardUI key={`trick-${idx}`} card={card} className="deal-card" />
+              ))}
             </div>
-          </div>
+          ) : (
+            <div className="text-white/30 text-sm">等待出牌</div>
+          )}
+          {currentTrick && (
+            <div className="text-emerald-200 font-black text-xs uppercase tracking-widest mt-3">
+              {currentTrick.type}
+            </div>
+          )}
         </div>
-
-        <div className={tableStyles.childrenWrap}>
-          {players.map((p, i) => {
-            let style: React.CSSProperties = {};
-            let vertical = false;
-
-            if (p.id === 'player') {
-              style = { bottom: '2rem', left: '50%', transform: 'translateX(-50%)' };
-            } else if (i === 1) {
-              style = { left: '4rem', top: '50%', transform: 'translateY(-50%)' };
-              vertical = true;
-            } else if (i === 2) {
-              style = { top: '3rem', left: '50%', transform: 'translateX(-50%)' };
-            } else {
-              style = { right: '4rem', top: '50%', transform: 'translateY(-50%)' };
-              vertical = true;
-            }
-
-            const isActiveSeat = phase === 'PLAYING' && currentTurnIndex === i;
-
-            return (
-              <div key={p.id} className={seatWrapper} style={style}>
-                <PlayerSeatCard
-                  name={p.name}
-                  avatar={p.avatar}
-                  isAI={p.isAI}
-                  isActive={isActiveSeat}
-                  vertical={vertical}
-                  stat={{ value: `${p.hand.length} 張`, label: '剩餘' }}
-                  quote={p.quote}
-                  lines={[
-                    ...(p.passed && !p.finished
-                      ? [{ text: 'PASS', className: 'text-red-300' }]
-                      : []),
-                    ...(p.finished
-                      ? [{ text: '已出完', className: 'text-yellow-300' }]
-                      : [])
-                  ]}
-                />
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      </TableFrame>
 
       <div className={bottomDock}>
         <div className={bottomDockInnerFlex}>
