@@ -62,7 +62,6 @@ const ProfileList: React.FC<ProfileListProps> = ({
   };
 
   const handleAvatarClick = (name: string) => {
-    if (uploadingFor) return; // Prevent double clicks
     setUploadingFor(name);
     if (fileInputRef.current) {
       fileInputRef.current.value = ''; // Reset input
