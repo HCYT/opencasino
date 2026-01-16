@@ -3,6 +3,17 @@ import { Card, NPCProfile, Rank } from '../types';
 import CardUI from './CardUI';
 import { GameButton } from './ui/GameButton';
 import PlayerSeatCard from './ui/PlayerSeatCard';
+import ResultCard from './ui/ResultCard';
+import StatusPanel from './ui/StatusPanel';
+import {
+  bottomDock,
+  bottomDockInnerFlex,
+  seatWrapper,
+  stackCardBase,
+  stackLabel,
+  stackValueMd,
+  tableStyles
+} from './ui/sharedStyles';
 import {
   RANK_ORDER,
   canSplitDragon,
@@ -195,17 +206,17 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, on
 
   return (
     <div className="game-container bg-[#052c16] relative overflow-visible select-none h-screen w-full">
-      <div className="table-area relative w-full h-full">
-        <div className="absolute inset-8 rounded-[120px] border-[20px] border-[#3d2414] shadow-[inset_0_0_120px_rgba(0,0,0,0.9),0_20px_40px_rgba(0,0,0,0.5)] overflow-hidden">
-          <div className="w-full h-full bg-[#0a4a27] relative flex items-center justify-center">
-            <div className="absolute inset-20 border-[2px] border-white/5 rounded-[80px]"></div>
+      <div className={tableStyles.wrapper}>
+        <div className={tableStyles.frame}>
+          <div className={tableStyles.surface}>
+            <div className={tableStyles.innerBorder}></div>
 
-            <div className="absolute top-6 left-10 text-yellow-500/80 font-black uppercase tracking-[0.3em] text-xs">慈善撲克王大賽 · 大老二</div>
+            <div className={tableStyles.title}>慈善撲克王大賽 · 大老二</div>
 
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-48 z-[40]">
-              <div className="bg-black/60 backdrop-blur-xl px-10 py-3 rounded-full border border-yellow-500/30 shadow-[0_10px_30px_rgba(0,0,0,0.5)] flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
-                <div className="w-2 h-2 bg-yellow-500 rounded-full animate-ping"></div>
-                <span className="text-yellow-400 font-black tracking-widest text-lg uppercase whitespace-nowrap drop-shadow-md">
+            <div className={tableStyles.statusWrap}>
+              <div className={tableStyles.statusBadge}>
+                <div className={tableStyles.statusDot}></div>
+                <span className={tableStyles.statusText}>
                   {phase === 'RESULT'
                     ? '本局結束'
                     : `${players[currentTurnIndex]?.name || ''} 出牌中...`}
@@ -233,7 +244,7 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, on
           </div>
         </div>
 
-        <div className="absolute inset-0 p-12 pointer-events-none">
+        <div className={tableStyles.childrenWrap}>
           {players.map((p, i) => {
             let style: React.CSSProperties = {};
             let vertical = false;
@@ -253,7 +264,7 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, on
             const isActiveSeat = phase === 'PLAYING' && currentTurnIndex === i;
 
             return (
-              <div key={p.id} className="absolute flex flex-col items-center" style={style}>
+              <div key={p.id} className={seatWrapper} style={style}>
                 <PlayerSeatCard
                   name={p.name}
                   avatar={p.avatar}
@@ -277,15 +288,15 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, on
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 p-6 z-[60] pointer-events-none">
-        <div className="max-w-[1400px] mx-auto w-full h-full relative flex items-end justify-between">
+      <div className={bottomDock}>
+        <div className={bottomDockInnerFlex}>
           <div className="flex flex-row items-end gap-3 pointer-events-auto">
-            <div className="bg-black/80 backdrop-blur-xl px-6 py-4 rounded-[2rem] border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)] flex flex-col gap-1 min-w-[220px]">
-              <div className="text-white/40 text-[10px] uppercase font-black tracking-[0.2em] flex items-center gap-2">
+            <div className={`${stackCardBase} min-w-[220px]`}>
+              <div className={stackLabel}>
                 <span>My Hand</span>
                 {isPlayerTurn && <span className="w-2 h-2 bg-yellow-500 rounded-full animate-ping"></span>}
               </div>
-              <div className="text-yellow-500 font-mono font-black text-2xl">{player?.hand.length || 0} 張</div>
+              <div className={stackValueMd}>{player?.hand.length || 0} 張</div>
               <div className="text-[10px] text-white/50 uppercase tracking-widest">每張 ${baseBet.toLocaleString()}</div>
               {mustIncludeThreeClubs && (
                 <div className="text-xs font-bold text-emerald-300 uppercase tracking-widest mt-1">
@@ -303,7 +314,8 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, on
                     <GameButton
                       onClick={handlePlay}
                       variant="success"
-                      className="w-24 h-24 rounded-[1.5rem] uppercase tracking-widest"
+                      size="squareMd"
+                      className="uppercase tracking-widest"
                     >
                       出牌
                     </GameButton>
@@ -311,15 +323,14 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, on
                       onClick={handlePass}
                       disabled={!currentTrick}
                       variant="danger"
-                      className="w-24 h-24 rounded-[1.5rem] uppercase tracking-widest"
+                      size="squareMd"
+                      className="uppercase tracking-widest"
                     >
                       過
                     </GameButton>
                   </div>
                 ) : (
-                  <div className="bg-black/60 backdrop-blur-md px-6 py-4 rounded-[1.5rem] border border-white/10 text-white/60 font-black uppercase tracking-widest">
-                    NPC 行動中
-                  </div>
+                  <StatusPanel>NPC 行動中</StatusPanel>
                 )}
               </div>
             )}
@@ -327,20 +338,19 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, on
             <GameButton
               onClick={() => setStatsOpen(true)}
               variant="ghost"
-              className="ml-2 px-6 py-4 rounded-2xl uppercase tracking-widest"
+              size="pill"
+              className="ml-2 uppercase tracking-widest"
             >
               牌局統計
             </GameButton>
 
             {phase === 'RESULT' && (
               <div className="flex items-end gap-3">
-                <div className="bg-black/60 backdrop-blur-md px-6 py-4 rounded-[1.5rem] border border-white/10 text-yellow-300 font-black">
-                  本局結束
-                </div>
+                <StatusPanel className="text-yellow-300">本局結束</StatusPanel>
                 <GameButton
                   onClick={initializeGame}
                   variant="light"
-                  className="px-10 py-5 rounded-2xl"
+                  size="pillLg"
                 >
                   再來一局
                 </GameButton>
@@ -350,7 +360,8 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, on
             <GameButton
               onClick={onExit}
               variant="ghost"
-              className="ml-4 px-6 py-4 rounded-2xl uppercase tracking-widest"
+              size="pill"
+              className="ml-4 uppercase tracking-widest"
             >
               返回大廳
             </GameButton>
@@ -365,7 +376,7 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, on
             <div className="text-2xl md:text-3xl font-black mb-6 text-emerald-400">大老二名次</div>
             <div className="flex flex-wrap items-center justify-center gap-6">
               {ranking.map((p, idx) => (
-                <div key={p.id} className="bg-black/60 border border-yellow-400/20 rounded-[2.5rem] px-8 py-6 shadow-2xl max-w-[340px]">
+                <ResultCard key={p.id} className="max-w-[340px]">
                   <div className="text-yellow-300 text-sm font-black uppercase tracking-widest">第 {idx + 1} 名</div>
                   <img
                     src={p.avatar}
@@ -373,7 +384,7 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, on
                     className="w-24 h-24 rounded-full object-cover border-4 border-yellow-400/40 shadow-[0_0_30px_rgba(234,179,8,0.35)] mx-auto mt-3"
                   />
                   <div className="text-white text-2xl font-black mt-4 tracking-tight">{p.name}</div>
-                </div>
+                </ResultCard>
               ))}
             </div>
             {payoutSummary && (
@@ -425,7 +436,8 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, on
                   }}
                   disabled={!isPlayerTurn}
                   variant="muted"
-                  className={`px-4 py-2 rounded-full text-xs uppercase tracking-widest ${isPlayerTurn ? 'hover:brightness-110' : ''}`}
+                  size="pillRoundSm"
+                  className={`text-xs uppercase tracking-widest ${isPlayerTurn ? 'hover:brightness-110' : ''}`}
                 >
                   {combo.label}
                 </GameButton>
@@ -462,7 +474,8 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, on
               <GameButton
                 onClick={() => setStatsOpen(false)}
                 variant="ghost"
-                className="px-4 py-2 rounded-xl text-xs"
+                size="pillSm"
+                className="text-xs"
               >
                 關閉
               </GameButton>

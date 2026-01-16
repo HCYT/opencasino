@@ -1,4 +1,5 @@
 import React from 'react';
+import { tableStyles } from '../ui/sharedStyles';
 
 interface ShowdownTableProps {
   statusText: string;
@@ -8,15 +9,15 @@ interface ShowdownTableProps {
 
 const ShowdownTable: React.FC<ShowdownTableProps> = ({ statusText, pot, children }) => {
   return (
-    <div className="table-area relative w-full h-full">
-      <div className="absolute inset-8 rounded-[120px] border-[20px] border-[#3d2414] shadow-[inset_0_0_120px_rgba(0,0,0,0.9),0_20px_40px_rgba(0,0,0,0.5)] overflow-hidden">
-        <div className="w-full h-full bg-[#0a4a27] relative flex items-center justify-center">
-          <div className="absolute inset-20 border-[2px] border-white/5 rounded-[80px]"></div>
+    <div className={tableStyles.wrapper}>
+      <div className={tableStyles.frame}>
+        <div className={tableStyles.surface}>
+          <div className={tableStyles.innerBorder}></div>
 
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-48 z-[40]">
-            <div className="bg-black/60 backdrop-blur-xl px-10 py-3 rounded-full border border-yellow-500/30 shadow-[0_10px_30px_rgba(0,0,0,0.5)] flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full animate-ping"></div>
-              <span className="text-yellow-400 font-black tracking-widest text-lg uppercase whitespace-nowrap drop-shadow-md">
+          <div className={tableStyles.statusWrap}>
+            <div className={tableStyles.statusBadge}>
+              <div className={tableStyles.statusDot}></div>
+              <span className={tableStyles.statusText}>
                 {statusText}
               </span>
             </div>
@@ -36,7 +37,7 @@ const ShowdownTable: React.FC<ShowdownTableProps> = ({ statusText, pot, children
         </div>
       </div>
 
-      <div className="absolute inset-0 p-12 pointer-events-none">
+      <div className={tableStyles.childrenWrap}>
         {children}
       </div>
     </div>

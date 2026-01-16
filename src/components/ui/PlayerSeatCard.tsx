@@ -1,5 +1,16 @@
 import React from 'react';
 import QuoteBubble from './QuoteBubble';
+import {
+  seatCardActiveBorder,
+  seatCardAvatar,
+  seatCardBase,
+  seatCardInactiveBorder,
+  seatCardLine,
+  seatCardMeta,
+  seatCardName,
+  seatCardStatValue,
+  seatCardVertical
+} from './sharedStyles';
 
 type SeatStat = {
   value: string;
@@ -36,24 +47,24 @@ const PlayerSeatCard: React.FC<PlayerSeatCardProps> = ({
 }) => {
   return (
     <div
-      className={`bg-black/70 border ${isActive ? 'border-emerald-400/60' : 'border-white/10'} rounded-[24px] px-5 py-4 shadow-2xl min-w-[220px] max-w-[260px] ${vertical ? 'scale-95' : ''}`}
+      className={`${seatCardBase} ${isActive ? seatCardActiveBorder : seatCardInactiveBorder} ${vertical ? seatCardVertical : ''}`}
     >
       <div className="flex items-center gap-3 min-w-0">
         <div className="flex items-center gap-3 min-w-0">
-          <img src={avatar} alt={name} className="w-12 h-12 rounded-full border-2 border-yellow-400/40 object-cover" />
+          <img src={avatar} alt={name} className={seatCardAvatar} />
           <div>
-            <div className="text-lg font-black text-white truncate whitespace-nowrap max-w-[120px]">
+            <div className={seatCardName}>
               {name}
             </div>
-            <div className="text-[10px] text-white/40 uppercase tracking-widest">{isAI ? 'NPC' : '玩家'}</div>
-            <div className="mt-1 text-emerald-300 font-black text-lg">{stat.value}</div>
-            <div className="text-[10px] text-white/40 uppercase tracking-widest">{stat.label}</div>
+            <div className={seatCardMeta}>{isAI ? 'NPC' : '玩家'}</div>
+            <div className={seatCardStatValue}>{stat.value}</div>
+            <div className={seatCardMeta}>{stat.label}</div>
           </div>
         </div>
       </div>
       {quote && <QuoteBubble text={quote} className="mt-3" />}
       {lines.map((line, index) => (
-        <div key={`${line.text}-${index}`} className={`mt-2 text-xs font-black uppercase tracking-widest ${line.className ?? 'text-white/60'}`}>
+        <div key={`${line.text}-${index}`} className={`${seatCardLine} ${line.className ?? 'text-white/60'}`}>
           {line.text}
         </div>
       ))}

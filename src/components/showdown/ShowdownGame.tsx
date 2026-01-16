@@ -5,8 +5,10 @@ import QuoteBubble from '../ui/QuoteBubble';
 import ShowdownControls from './ShowdownControls';
 import ShowdownSeat from './ShowdownSeat';
 import ShowdownTable from './ShowdownTable';
+import ResultCard from '../ui/ResultCard';
 import { useShowdownUIState } from './useShowdownUIState';
 import { getSeatLayout } from '../ui/seatLayout';
+import { seatWrapper } from '../ui/sharedStyles';
 
 interface ShowdownGameProps {
   phase: GamePhase;
@@ -83,7 +85,7 @@ const ShowdownGame: React.FC<ShowdownGameProps> = ({
           const { style, vertical, seatPosition } = getSeatLayout(i, p.id === 'player');
 
           return (
-            <div key={p.id} className="absolute flex flex-col items-center" style={style}>
+            <div key={p.id} className={seatWrapper} style={style}>
               <ShowdownSeat
                 player={p}
                 isActive={currentPlayer?.id === p.id}
@@ -130,7 +132,7 @@ const ShowdownGame: React.FC<ShowdownGameProps> = ({
             </div>
             <div className="flex flex-wrap items-center justify-center gap-6">
               {winnerPlayers.map(player => (
-                <div key={player.id} className="bg-black/60 border border-yellow-400/20 rounded-[2.5rem] px-8 py-6 shadow-2xl max-w-[380px]">
+                <ResultCard key={player.id} className="max-w-[380px]">
                   <img
                     src={player.avatar}
                     alt={player.name}
@@ -149,7 +151,7 @@ const ShowdownGame: React.FC<ShowdownGameProps> = ({
                       </div>
                     </div>
                   )}
-                </div>
+                </ResultCard>
               ))}
             </div>
             <div className="mt-6 text-white/60 text-sm font-bold uppercase tracking-widest">本局贏家</div>

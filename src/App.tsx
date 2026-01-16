@@ -247,6 +247,7 @@ const App: React.FC = () => {
           <GameButton
             onClick={() => setInitialChips(INITIAL_CHIPS_OPTIONS[0])}
             variant="ghost"
+            size="pillSm"
             className="mb-8 text-sm underline"
           >
             返回大廳
@@ -255,7 +256,8 @@ const App: React.FC = () => {
             <GameButton
               onClick={() => window.location.reload()}
               variant="primary"
-              className="w-full py-5 rounded-2xl text-2xl"
+              size="pillLg"
+              className="w-full text-2xl"
             >
               重新載入
             </GameButton>
@@ -293,7 +295,8 @@ const App: React.FC = () => {
                       key={val}
                       onClick={() => setInitialChips(val)}
                       variant={initialChips === val ? 'primary' : 'muted'}
-                      className={`py-4 rounded-2xl text-lg ${initialChips === val ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
+                      size="pill"
+                      className={`text-lg ${initialChips === val ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
                     >
                       ${val.toLocaleString()}
                     </GameButton>
@@ -314,21 +317,24 @@ const App: React.FC = () => {
                 <GameButton
                   onClick={() => setGameType('SHOWDOWN')}
                   variant={gameType === 'SHOWDOWN' ? 'primary' : 'muted'}
-                  className={`py-4 rounded-2xl text-xs md:text-sm ${gameType === 'SHOWDOWN' ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
+                  size="pill"
+                  className={`text-xs md:text-sm ${gameType === 'SHOWDOWN' ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
                 >
                   梭哈
                 </GameButton>
                 <GameButton
                   onClick={() => setGameType('BLACKJACK')}
                   variant={gameType === 'BLACKJACK' ? 'primary' : 'muted'}
-                  className={`py-4 rounded-2xl text-xs md:text-sm ${gameType === 'BLACKJACK' ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
+                  size="pill"
+                  className={`text-xs md:text-sm ${gameType === 'BLACKJACK' ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
                 >
                   21 點
                 </GameButton>
                 <GameButton
                   onClick={() => setGameType('BIG_TWO')}
                   variant={gameType === 'BIG_TWO' ? 'primary' : 'muted'}
-                  className={`py-4 rounded-2xl text-xs md:text-sm ${gameType === 'BIG_TWO' ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
+                  size="pill"
+                  className={`text-xs md:text-sm ${gameType === 'BIG_TWO' ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
                 >
                   大老二
                 </GameButton>
@@ -348,7 +354,8 @@ const App: React.FC = () => {
                         key={val}
                         onClick={() => setBlackjackDecks(val)}
                         variant={blackjackDecks === val ? 'primary' : 'muted'}
-                        className={`py-3 rounded-2xl text-xs md:text-sm ${blackjackDecks === val ? 'scale-105 shadow-[0_0_16px_rgba(234,179,8,0.25)] text-slate-900' : 'text-white/50'}`}
+                        size="pillSm"
+                        className={`text-xs md:text-sm ${blackjackDecks === val ? 'scale-105 shadow-[0_0_16px_rgba(234,179,8,0.25)] text-slate-900' : 'text-white/50'}`}
                       >
                         {val} 副牌
                       </GameButton>
@@ -363,7 +370,8 @@ const App: React.FC = () => {
                         key={preset.key}
                         onClick={() => setBlackjackCutPreset(preset.key)}
                         variant={blackjackCutPreset === preset.key ? 'primary' : 'muted'}
-                        className={`py-3 rounded-2xl text-[10px] md:text-xs ${blackjackCutPreset === preset.key ? 'scale-105 shadow-[0_0_16px_rgba(234,179,8,0.25)] text-slate-900' : 'text-white/50'}`}
+                        size="pillSm"
+                        className={`text-[10px] md:text-xs ${blackjackCutPreset === preset.key ? 'scale-105 shadow-[0_0_16px_rgba(234,179,8,0.25)] text-slate-900' : 'text-white/50'}`}
                       >
                         {preset.label}
                       </GameButton>
@@ -382,7 +390,8 @@ const App: React.FC = () => {
                       key={val}
                       onClick={() => setBigTwoBaseBet(val)}
                       variant={bigTwoBaseBet === val ? 'primary' : 'muted'}
-                      className={`py-4 rounded-2xl text-xs md:text-sm ${bigTwoBaseBet === val ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
+                      size="pill"
+                      className={`text-xs md:text-sm ${bigTwoBaseBet === val ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
                     >
                       每張 ${val.toLocaleString()}
                     </GameButton>
@@ -397,14 +406,16 @@ const App: React.FC = () => {
                   <GameButton
                     onClick={() => setBetMode('FIXED_LIMIT')}
                     variant={betMode === 'FIXED_LIMIT' ? 'primary' : 'muted'}
-                    className={`py-4 rounded-2xl text-xs md:text-sm ${betMode === 'FIXED_LIMIT' ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
+                    size="pill"
+                    className={`text-xs md:text-sm ${betMode === 'FIXED_LIMIT' ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
                   >
                     固定籌碼
                   </GameButton>
                   <GameButton
                     onClick={() => setBetMode('NO_LIMIT')}
                     variant={betMode === 'NO_LIMIT' ? 'primary' : 'muted'}
-                    className={`py-4 rounded-2xl text-xs md:text-sm ${betMode === 'NO_LIMIT' ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
+                    size="pill"
+                    className={`text-xs md:text-sm ${betMode === 'NO_LIMIT' ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
                   >
                     自由籌碼
                   </GameButton>
@@ -442,7 +453,8 @@ const App: React.FC = () => {
               onClick={handleStartGame}
               disabled={isNpcSelected}
               variant="primary"
-              className={`w-full py-5 rounded-2xl text-2xl ${isNpcSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
+              size="pillLg"
+              className={`w-full text-2xl ${isNpcSelected ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {gameType === 'BLACKJACK' ? '開始 21 點' : gameType === 'BIG_TWO' ? '開始大老二' : '踏入牌局'}
             </GameButton>
@@ -464,7 +476,8 @@ const App: React.FC = () => {
               <GameButton
                 onClick={handleLoan}
                 variant="success"
-                className="w-full py-2 rounded-2xl text-xs"
+                size="pillSm"
+                className="w-full text-xs"
               >
                 申請貸款 +${LOAN_AMOUNT.toLocaleString()}
               </GameButton>
@@ -480,7 +493,8 @@ const App: React.FC = () => {
                 <GameButton
                   onClick={handleRepay}
                   variant="warning"
-                  className="px-4 py-2 rounded-2xl text-xs"
+                  size="pillSm"
+                  className="text-xs"
                 >
                   還款
                 </GameButton>
@@ -501,6 +515,7 @@ const App: React.FC = () => {
                       <GameButton
                         onClick={() => setPlayerName(profile.name)}
                         variant="ghost"
+                        size="pillSm"
                         className={`text-sm ${playerName === profile.name ? 'text-yellow-300' : 'text-white/80'}`}
                       >
                         {profile.name}
@@ -515,7 +530,8 @@ const App: React.FC = () => {
                       <GameButton
                         onClick={() => handleDeleteProfile(profile.name)}
                         variant="danger"
-                        className="text-[10px] rounded-lg px-2 py-1"
+                        size="pillSm"
+                        className="text-[10px]"
                       >
                         刪除
                       </GameButton>
@@ -526,21 +542,24 @@ const App: React.FC = () => {
               <GameButton
                 onClick={handleCreateProfile}
                 variant="muted"
-                className="w-full py-2 rounded-2xl text-xs text-white/80"
+                size="pillSm"
+                className="w-full text-xs text-white/80"
               >
                 建立角色
               </GameButton>
               <GameButton
                 onClick={handleResetNpcProfiles}
                 variant="danger"
-                className="w-full py-2 rounded-2xl text-[10px]"
+                size="pillSm"
+                className="w-full text-[10px]"
               >
                 重設 NPC 資產
               </GameButton>
               <GameButton
                 onClick={handleResetAllProfiles}
                 variant="warning"
-                className="w-full py-2 rounded-2xl text-[10px]"
+                size="pillSm"
+                className="w-full text-[10px]"
               >
                 全部重設
               </GameButton>

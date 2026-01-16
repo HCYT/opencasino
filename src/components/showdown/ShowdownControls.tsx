@@ -3,6 +3,14 @@ import { ActionType, GamePhase, Player } from '../../types';
 import { PLAYER_QUOTES } from '../../constants';
 import { IconBolt, IconChat, IconCheck, IconCoin, IconFlag, IconTrendUp } from './ShowdownIcons';
 import { GameButton } from '../ui/GameButton';
+import PillPanel from '../ui/PillPanel';
+import {
+  bottomDock,
+  bottomDockInner,
+  stackCardBase,
+  stackLabel,
+  stackValueLg
+} from '../ui/sharedStyles';
 
 interface ShowdownControlsProps {
   phase: GamePhase;
@@ -50,15 +58,15 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
   onExit
 }) => {
   return (
-    <div className="absolute bottom-0 left-0 right-0 p-6 z-[60] pointer-events-none">
-      <div className="max-w-[1400px] mx-auto w-full h-full relative">
+    <div className={bottomDock}>
+      <div className={bottomDockInner}>
         <div className="absolute left-0 bottom-0 flex flex-col gap-3 pointer-events-auto">
-          <div className="bg-black/80 backdrop-blur-xl px-6 py-4 rounded-[2rem] border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)] flex flex-col gap-1 min-w-[200px] md:min-w-[160px]">
-            <div className="text-white/40 text-[10px] uppercase font-black tracking-[0.2em] flex items-center gap-2">
+          <div className={`${stackCardBase} min-w-[200px] md:min-w-[160px]`}>
+            <div className={stackLabel}>
               <span>My Stack</span>
               {isUserTurn && <span className="w-2 h-2 bg-yellow-500 rounded-full animate-ping"></span>}
             </div>
-            <div className="text-yellow-500 font-mono font-black text-3xl flex items-center gap-2">
+            <div className={stackValueLg}>
               <span className="text-2xl opacity-80">💵</span> ${user?.chips.toLocaleString() || 0}
             </div>
             {isUserTurn && (
@@ -70,7 +78,8 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
           <GameButton
             onClick={onExit}
             variant="ghost"
-            className="px-6 py-4 rounded-2xl uppercase tracking-widest"
+            size="pill"
+            className="uppercase tracking-widest"
           >
             返回大廳
           </GameButton>
@@ -107,7 +116,8 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
                         setShowChatMenu(false);
                       }}
                       variant="warning"
-                      className="px-3 py-2 rounded-xl text-xs"
+                      size="pillSm"
+                      className="text-xs"
                     >
                       送出
                     </GameButton>
@@ -127,7 +137,8 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
               <GameButton
                 onClick={() => setShowChatMenu(!showChatMenu)}
                 variant="muted"
-                className="group w-20 h-20 rounded-[1.5rem] flex flex-col items-center justify-center backdrop-blur-md"
+                size="squareSm"
+                className="group flex flex-col items-center justify-center backdrop-blur-md"
               >
                 <span className="mb-1 text-white/90 group-hover:scale-110 transition-transform">
                   <IconChat />
@@ -179,7 +190,8 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
               <GameButton
                 onClick={() => onAction('FOLD')}
                 variant="danger"
-                className="group w-20 h-20 rounded-[1.5rem] flex flex-col items-center justify-center backdrop-blur-md"
+                size="squareSm"
+                className="group flex flex-col items-center justify-center backdrop-blur-md"
               >
                 <span className="mb-1 text-red-100 group-hover:scale-110 transition-transform">
                   <IconFlag />
@@ -190,7 +202,8 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
               <GameButton
                 onClick={() => onAction(callNeeded === 0 ? 'CHECK' : 'CALL')}
                 variant="success"
-                className="group w-24 h-24 rounded-[1.8rem] flex flex-col items-center justify-center backdrop-blur-md"
+                size="squareLg"
+                className="group flex flex-col items-center justify-center backdrop-blur-md"
               >
                 <div className="mb-1 group-hover:scale-110 transition-transform">
                   {callNeeded === 0 ? <IconCheck /> : <IconCoin />}
@@ -204,7 +217,8 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
                 onClick={() => onAction('RAISE', raiseAmount)}
                 disabled={!canRaise}
                 variant="warning"
-                className="group w-24 h-24 rounded-[1.8rem] flex flex-col items-center justify-center backdrop-blur-md"
+                size="squareLg"
+                className="group flex flex-col items-center justify-center backdrop-blur-md"
               >
                 <div className="mb-1 group-hover:scale-110 transition-transform">
                   <IconTrendUp />
@@ -215,7 +229,8 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
               <GameButton
                 onClick={() => onAction('ALL_IN')}
                 variant="info"
-                className="group w-20 h-20 rounded-[1.5rem] flex flex-col items-center justify-center backdrop-blur-md"
+                size="squareSm"
+                className="group flex flex-col items-center justify-center backdrop-blur-md"
               >
                 <span className="mb-1 text-purple-100 group-hover:scale-110 transition-transform">
                   <IconBolt />
@@ -227,12 +242,13 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
             <GameButton
               onClick={onStartNewHand}
               variant="light"
-              className="px-12 py-6 rounded-3xl text-xl animate-pulse transform hover:scale-105 uppercase tracking-wider"
+              size="pillXl"
+              className="text-xl animate-pulse transform hover:scale-105 uppercase tracking-wider"
             >
               Play Again
             </GameButton>
           ) : (
-            <div className="flex items-center gap-3 bg-black/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/5 opacity-80">
+            <PillPanel className="opacity-80 flex items-center gap-3">
               <div className="flex gap-1">
                 <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce"></div>
                 <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full animate-bounce delay-100"></div>
@@ -241,7 +257,7 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
               <span className="text-white/40 font-bold uppercase tracking-widest text-xs whitespace-nowrap">
                 Waiting for opponents
               </span>
-            </div>
+            </PillPanel>
           )}
 
         </div>

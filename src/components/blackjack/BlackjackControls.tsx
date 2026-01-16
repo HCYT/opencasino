@@ -3,6 +3,14 @@ import { BlackjackPhase } from '../../services/blackjack/types';
 import { getHandValue } from '../../services/blackjack/rules';
 import { BlackjackHand, BlackjackPlayer } from '../../services/blackjack/types';
 import { GameButton } from '../ui/GameButton';
+import StatusPanel from '../ui/StatusPanel';
+import {
+  bottomDock,
+  bottomDockInnerFlex,
+  stackCardBase,
+  stackLabel,
+  stackValueLg
+} from '../ui/sharedStyles';
 
 interface BlackjackControlsProps {
   phase: BlackjackPhase;
@@ -42,15 +50,15 @@ const BlackjackControls: React.FC<BlackjackControlsProps> = ({
   onExit
 }) => {
   return (
-    <div className="absolute bottom-0 left-0 right-0 p-6 z-[60] pointer-events-none">
-      <div className="max-w-[1400px] mx-auto w-full h-full relative flex items-end justify-between">
+    <div className={bottomDock}>
+      <div className={bottomDockInnerFlex}>
         <div className="flex flex-row items-end gap-3 pointer-events-auto">
-          <div className="bg-black/80 backdrop-blur-xl px-6 py-4 rounded-[2rem] border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)] flex flex-col gap-1 min-w-[200px]">
-            <div className="text-white/40 text-[10px] uppercase font-black tracking-[0.2em] flex items-center gap-2">
+          <div className={`${stackCardBase} min-w-[200px]`}>
+            <div className={stackLabel}>
               <span>My Stack</span>
               {isPlayerTurn && <span className="w-2 h-2 bg-yellow-500 rounded-full animate-ping"></span>}
             </div>
-            <div className="text-yellow-500 font-mono font-black text-3xl flex items-center gap-2">
+            <div className={stackValueLg}>
               <span className="text-2xl opacity-80">💵</span> ${player?.chips.toLocaleString() || 0}
             </div>
             {activeHand && (
@@ -64,7 +72,7 @@ const BlackjackControls: React.FC<BlackjackControlsProps> = ({
         <div className="pointer-events-auto flex items-end gap-4 h-[160px]">
           {phase === 'BETTING' && (
             <div className="flex items-end gap-3">
-              <div className="bg-black/60 backdrop-blur-md px-6 py-4 rounded-[1.5rem] border border-white/5">
+              <StatusPanel className="border-white/5">
                 <div className="text-white/40 text-[10px] uppercase font-black tracking-[0.2em]">玩家下注</div>
                 <div className="text-yellow-400 font-black text-2xl">$ {playerBet.toLocaleString()}</div>
                 <input
@@ -77,12 +85,13 @@ const BlackjackControls: React.FC<BlackjackControlsProps> = ({
                   onChange={(e) => setPlayerBet(Number(e.target.value))}
                   className="w-52 accent-yellow-500"
                 />
-              </div>
+              </StatusPanel>
               <GameButton
                 onClick={onStartHand}
                 disabled={!canBet}
                 variant="primary"
-                className="px-10 py-5 rounded-2xl text-xl"
+                size="pillLg"
+                className="text-xl"
               >
                 發牌
               </GameButton>
@@ -96,14 +105,16 @@ const BlackjackControls: React.FC<BlackjackControlsProps> = ({
                   <GameButton
                     onClick={onHit}
                     variant="success"
-                    className="w-24 h-24 rounded-[1.5rem] uppercase tracking-widest"
+                    size="squareMd"
+                    className="uppercase tracking-widest"
                   >
                     要牌
                   </GameButton>
                   <GameButton
                     onClick={onStand}
                     variant="danger"
-                    className="w-24 h-24 rounded-[1.5rem] uppercase tracking-widest"
+                    size="squareMd"
+                    className="uppercase tracking-widest"
                   >
                     停牌
                   </GameButton>
@@ -111,35 +122,30 @@ const BlackjackControls: React.FC<BlackjackControlsProps> = ({
                     <GameButton
                       onClick={onSplit}
                       variant="info"
-                      className="w-24 h-24 rounded-[1.5rem] uppercase tracking-widest"
+                      size="squareMd"
+                      className="uppercase tracking-widest"
                     >
                       分牌
                     </GameButton>
                   )}
                 </div>
               ) : (
-                <div className="bg-black/60 backdrop-blur-md px-6 py-4 rounded-[1.5rem] border border-white/10 text-white/60 font-black uppercase tracking-widest">
-                  NPC 行動中
-                </div>
+                <StatusPanel>NPC 行動中</StatusPanel>
               )}
             </div>
           )}
 
           {phase === 'DEALER' && (
-            <div className="bg-black/60 backdrop-blur-md px-6 py-4 rounded-[1.5rem] border border-white/10 text-white/60 font-black uppercase tracking-widest">
-              莊家補牌中
-            </div>
+            <StatusPanel>莊家補牌中</StatusPanel>
           )}
 
           {phase === 'RESULT' && (
             <div className="flex items-end gap-3">
-              <div className="bg-black/60 backdrop-blur-md px-6 py-4 rounded-[1.5rem] border border-white/10 text-yellow-300 font-black">
-                {message || '本局結束'}
-              </div>
+              <StatusPanel className="text-yellow-300">{message || '本局結束'}</StatusPanel>
               <GameButton
                 onClick={onReset}
                 variant="light"
-                className="px-10 py-5 rounded-2xl"
+                size="pillLg"
               >
                 下一局
               </GameButton>
@@ -149,7 +155,8 @@ const BlackjackControls: React.FC<BlackjackControlsProps> = ({
           <GameButton
             onClick={onExit}
             variant="ghost"
-            className="ml-4 px-6 py-4 rounded-2xl uppercase tracking-widest"
+            size="pill"
+            className="ml-4 uppercase tracking-widest"
           >
             返回大廳
           </GameButton>
