@@ -121,22 +121,22 @@ const SlotMachineGame: React.FC<SlotMachineGameProps> = ({ playerName, onExit })
                     <PayTable />
                 </div>
 
-                <div className="flex-1 w-full max-w-4xl flex flex-col items-center">
-                    <div className={`relative z-10 mb-6 md:mb-10 text-center ${result?.isJackpot ? 'animate-jackpot-flash' : 'animate-pulse'} scale-110 mt-8 md:mt-0`}>
-                        <h2 className="text-yellow-500 font-black text-xs md:text-sm tracking-[0.5em] uppercase mb-2 drop-shadow-md">Grand Jackpot</h2>
-                        <div className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 via-yellow-500 to-yellow-800 drop-shadow-[0_0_50px_rgba(234,179,8,0.6)] font-mono animate-glow-pulse">
+                <div className="flex-1 w-full max-w-xl flex flex-col items-center">
+                    <div className={`relative z-10 mb-6 md:mb-10 text-center ${result?.isJackpot ? 'animate-jackpot-flash' : 'animate-pulse'} mt-8 md:mt-0`}>
+                        <h2 className="text-yellow-500 font-black text-xs md:text-sm tracking-[0.2em] uppercase mb-2 drop-shadow-md">Grand Jackpot</h2>
+                        <div className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 via-yellow-500 to-yellow-800 drop-shadow-[0_0_50px_rgba(234,179,8,0.6)] font-mono animate-glow-pulse">
                             ${jackpot.toLocaleString()}
                         </div>
                     </div>
 
-                    <Panel variant="glass" className="w-full p-6 md:p-12 rounded-[3rem] border-4 border-yellow-500/40 bg-black/80 shadow-[0_0_150px_rgba(168,85,247,0.25)] transform hover:scale-[1.01] transition-transform duration-500 mx-auto relative">
+                    <Panel variant="glass" className="w-full p-4 md:p-6 rounded-[3rem] border-4 border-yellow-500/40 bg-black/80 shadow-[0_0_150px_rgba(168,85,247,0.25)] transform hover:scale-[1.01] transition-transform duration-500 mx-auto relative">
                         <div className="absolute top-4 left-4 right-4 h-2 bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-full opacity-50" />
 
-                        <div className="relative mb-8 bg-[#151515] p-6 rounded-3xl shadow-[inset_0_0_50px_black] border border-white/5 flex flex-col items-center justify-center">
+                        <div className="relative mb-8 bg-[#151515] p-4 rounded-3xl shadow-[inset_0_0_50px_black] border border-white/5 flex flex-col items-center justify-center">
                             <div className="relative w-fit mx-auto">
-                                <div className="grid grid-cols-3 gap-3 md:gap-6 relative z-10">
+                                <div className="grid grid-cols-3 gap-2 md:gap-3 relative z-10">
                                     {displayColumns.map((col, colIndex) => (
-                                        <div key={colIndex} className="flex flex-col gap-3 md:gap-6">
+                                        <div key={colIndex} className="flex flex-col gap-2 md:gap-3">
                                             {col.map((symbol, rowIndex) => {
                                                 const isWinning = winningPositions.has(`${rowIndex}-${colIndex}`);
                                                 return (

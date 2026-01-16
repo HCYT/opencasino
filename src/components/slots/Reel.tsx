@@ -34,7 +34,7 @@ export const Reel: React.FC<ReelProps> = ({ symbol, isSpinning, stopDelay, isWin
 
     return (
         <div className={`
-            relative w-28 h-36 md:w-40 md:h-48 overflow-hidden
+            relative w-20 h-28 md:w-28 md:h-36 overflow-hidden
             rounded-2xl border-4 transition-all duration-300 transform
             ${internalSpinning ? 'bg-slate-800 border-slate-600' : `${symbolStyle.bg} ${symbolStyle.border}`}
             ${!internalSpinning && 'scale-100'}
@@ -46,7 +46,7 @@ export const Reel: React.FC<ReelProps> = ({ symbol, isSpinning, stopDelay, isWin
                 {internalSpinning && (
                     <div className="absolute top-0 left-0 w-full animate-slot-spin flex flex-col blur-[3px]">
                         {[...BLUR_STRIP, ...BLUR_STRIP, ...BLUR_STRIP].map((s, i) => (
-                            <div key={i} className="h-36 md:h-48 flex items-center justify-center text-7xl md:text-9xl opacity-90">
+                            <div key={i} className="h-28 md:h-36 flex items-center justify-center text-5xl md:text-7xl opacity-90">
                                 {SYMBOL_EMOJIS[s]}
                             </div>
                         ))}
@@ -55,7 +55,7 @@ export const Reel: React.FC<ReelProps> = ({ symbol, isSpinning, stopDelay, isWin
 
                 {!internalSpinning && showResult && (
                     <div className={`
-                        text-6xl md:text-8xl filter drop-shadow-[0_6px_12px_rgba(0,0,0,0.6)]
+                        text-4xl md:text-6xl filter drop-shadow-[0_6px_12px_rgba(0,0,0,0.6)]
                         ${isWinning ? 'animate-land-bounce' : ''}
                         relative z-10
                     `}>
