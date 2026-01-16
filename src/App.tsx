@@ -18,6 +18,7 @@ import { GateSeat, GateResult } from './services/showdownGate/types';
 import { GameButton } from './components/ui/GameButton';
 import Panel from './components/ui/Panel';
 import ToggleSwitch from './components/ui/ToggleSwitch';
+import VolumeControl from './components/ui/VolumeControl';
 
 const BLACKJACK_DECK_OPTIONS = [4, 6, 8];
 const BIG_TWO_BASE_BETS = [5, 50, 1000, 5000];
@@ -260,44 +261,59 @@ const App: React.FC = () => {
 
   if (bigTwoActive) {
     return (
-      <BigTwoGame
-        key={`big-two-${bigTwoSessionKey}`}
-        seats={bigTwoSeats}
-        baseBet={bigTwoBaseBet}
-        npcProfiles={NPC_PROFILES}
-        onExit={() => setBigTwoActive(false)}
-        onProfilesUpdate={handleBigTwoProfileUpdate}
-      />
+      <>
+        <div className="fixed top-4 right-4 z-[100] md:top-6 md:right-6">
+          <VolumeControl />
+        </div>
+        <BigTwoGame
+          key={`big-two-${bigTwoSessionKey}`}
+          seats={bigTwoSeats}
+          baseBet={bigTwoBaseBet}
+          npcProfiles={NPC_PROFILES}
+          onExit={() => setBigTwoActive(false)}
+          onProfilesUpdate={handleBigTwoProfileUpdate}
+        />
+      </>
     );
   }
 
   if (blackjackActive) {
     return (
-      <BlackjackGame
-        key={`blackjack-${blackjackSessionKey}`}
-        seats={blackjackSeats}
-        minBet={MIN_BET}
-        shoeDecks={blackjackDecks}
-        cutRatioRange={{ min: blackjackCutRange.min, max: blackjackCutRange.max }}
-        npcProfiles={NPC_PROFILES}
-        resolveChips={resolveChips}
-        onExit={() => setBlackjackActive(false)}
-        onProfilesUpdate={handleBlackjackProfileUpdate}
-      />
+      <>
+        <div className="fixed top-4 right-4 z-[100] md:top-6 md:right-6">
+          <VolumeControl />
+        </div>
+        <BlackjackGame
+          key={`blackjack-${blackjackSessionKey}`}
+          seats={blackjackSeats}
+          minBet={MIN_BET}
+          shoeDecks={blackjackDecks}
+          cutRatioRange={{ min: blackjackCutRange.min, max: blackjackCutRange.max }}
+          npcProfiles={NPC_PROFILES}
+          resolveChips={resolveChips}
+          onExit={() => setBlackjackActive(false)}
+          onProfilesUpdate={handleBlackjackProfileUpdate}
+        />
+      </>
     );
   }
 
   if (gateActive) {
     return (
-      <ShowdownGateGame
-        key={`gate-${gateSessionKey}`}
-        seats={gateSeats}
-        anteBet={gateAnteBet}
-        npcProfiles={NPC_PROFILES}
-        resolveChips={resolveChips}
-        onExit={() => setGateActive(false)}
-        onProfilesUpdate={handleGateProfileUpdate}
-      />
+      <>
+        <div className="fixed top-4 right-4 z-[100] md:top-6 md:right-6">
+          <VolumeControl />
+        </div>
+        <ShowdownGateGame
+          key={`gate-${gateSessionKey}`}
+          seats={gateSeats}
+          anteBet={gateAnteBet}
+          npcProfiles={NPC_PROFILES}
+          resolveChips={resolveChips}
+          onExit={() => setGateActive(false)}
+          onProfilesUpdate={handleGateProfileUpdate}
+        />
+      </>
     );
   }
 
@@ -305,6 +321,9 @@ const App: React.FC = () => {
     if (players.length > 0 && !isUserAlive) {
       return (
         <div className="h-screen w-full flex flex-col items-center justify-center bg-[#052c16] text-white p-4">
+          <div className="fixed top-4 right-4 z-[100] md:top-6 md:right-6">
+            <VolumeControl />
+          </div>
           <h1 className="text-4xl text-yellow-500 font-black mb-2">慈善撲克王大賽</h1>
           <div className="text-red-300 font-black mb-6">你已破產</div>
           <GameButton
@@ -331,6 +350,9 @@ const App: React.FC = () => {
 
     return (
       <div className="h-screen w-full flex flex-col items-center justify-start bg-[#052c16] text-white p-4 overflow-y-auto">
+        <div className="fixed top-4 right-4 z-[100] md:top-6 md:right-6">
+          <VolumeControl />
+        </div>
         <div className="relative mb-8 text-center pt-6">
           <h1 className="casino-font text-5xl md:text-7xl font-bold mb-4 text-yellow-500 drop-shadow-[0_0_20px_rgba(234,179,8,0.7)] tracking-tight italic">慈善撲克王大賽</h1>
           <div className="h-1 w-32 bg-yellow-500 mx-auto rounded-full mb-4"></div>
@@ -653,22 +675,27 @@ const App: React.FC = () => {
   }
 
   return (
-    <ShowdownGame
-      phase={phase}
-      players={players}
-      pot={pot}
-      currentPlayer={currentPlayer}
-      currentMaxBet={currentMaxBet}
-      minBet={MIN_BET}
-      winners={winners}
-      betMode={betMode}
-      npcProfiles={NPC_PROFILES}
-      playerQuotes={PLAYER_QUOTES}
-      handleAction={handleAction}
-      startNewHand={startNewHand}
-      playerSpeak={playerSpeak}
-      onExit={returnToLobby}
-    />
+    <>
+      <div className="fixed top-4 right-4 z-[100] md:top-6 md:right-6">
+        <VolumeControl />
+      </div>
+      <ShowdownGame
+        phase={phase}
+        players={players}
+        pot={pot}
+        currentPlayer={currentPlayer}
+        currentMaxBet={currentMaxBet}
+        minBet={MIN_BET}
+        winners={winners}
+        betMode={betMode}
+        npcProfiles={NPC_PROFILES}
+        playerQuotes={PLAYER_QUOTES}
+        handleAction={handleAction}
+        startNewHand={startNewHand}
+        playerSpeak={playerSpeak}
+        onExit={returnToLobby}
+      />
+    </>
   );
 };
 
