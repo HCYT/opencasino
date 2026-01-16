@@ -250,12 +250,12 @@ export const useBlackjackEngine = ({
       const blackjack = cards.length === 2 && isBlackjack(cards);
       const hands: BlackjackHand[] = canJoin
         ? [{
-            id: `${p.id}-hand-1`,
-            cards,
-            bet,
-            status: blackjack ? 'BLACKJACK' : 'PLAYING',
-            isSplitHand: false
-          }]
+          id: `${p.id}-hand-1`,
+          cards,
+          bet,
+          status: blackjack ? 'BLACKJACK' : 'PLAYING',
+          isSplitHand: false
+        }]
         : [];
 
       return {
@@ -428,6 +428,7 @@ export const useBlackjackEngine = ({
     splitAt(currentTurn);
   };
 
+
   useEffect(() => {
     if (phase !== 'PLAYING' || !currentTurn) return;
     const current = players[currentTurn.playerIndex];
@@ -466,6 +467,7 @@ export const useBlackjackEngine = ({
       const nextPlayers = standAt(currentTurn);
       if (nextPlayers) advanceTurn(nextPlayers, currentTurn);
     }, 650);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, players, currentTurn, deck, dealerUpValue, dealerUpCard]);
 
   const resetToBetting = () => {

@@ -390,6 +390,7 @@ export const useGameEngine = (initialRules: IPokerRules, options: ShowdownEngine
     // But we rely on 'handleAction' > 'nextPhase' to normally trigger phase changes.
     // If 'nextPhase' set us to a betting round (e.g. Turn), but everyone is All-In, we can't bet.
     // So we must detect this deadlock and advance.
+
     useEffect(() => {
         // Condition: Game is in progress (not SETTING, not RESULT)
         if (gameState.phase === GamePhase.SETTING || gameState.phase === GamePhase.RESULT || gameState.phase === GamePhase.SHOWDOWN) return;
@@ -428,7 +429,8 @@ export const useGameEngine = (initialRules: IPokerRules, options: ShowdownEngine
                 });
             }, 2000); // 2 Second Delay for drama
         }
-    }, [gameState.phase, gameState.players, gameState.currentMaxBet, nextPhase]); // Re-run when phase changes or players update (e.g. someone went all-in)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [gameState.phase, gameState.players, gameState.currentMaxBet]); // Re-run when phase changes or players update (e.g. someone went all-in)
 
     const handleAction = async (action: ActionType, amount: number = 0, taunt?: string, actorId?: string) => {
         let queuedQuote: { playerId: string; quote: string } | null = null;
@@ -653,6 +655,7 @@ export const useGameEngine = (initialRules: IPokerRules, options: ShowdownEngine
         }));
     };
 
+
     useEffect(() => {
         if (!gameState.phase.startsWith('BETTING')) return;
         const current = gameState.players[gameState.activePlayerIndex];
@@ -695,7 +698,8 @@ export const useGameEngine = (initialRules: IPokerRules, options: ShowdownEngine
         return () => {
             if (gameLoopTimeout.current) clearTimeout(gameLoopTimeout.current);
         };
-    }, [gameState.activePlayerIndex, gameState.phase, gameState.players, handleAction]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [gameState.activePlayerIndex, gameState.phase, gameState.players]);
 
     const returnToLobby = () => {
         setGameState({

@@ -68,7 +68,7 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate 
     playersRef.current = players;
   }, [players]);
 
-  const buildRoundStat = (snapshotPlayers: BigTwoPlayer[]): RoundStat => {
+  const buildRoundStat = useCallback((snapshotPlayers: BigTwoPlayer[]): RoundStat => {
     return snapshotPlayers.reduce<RoundStat>((acc, p) => {
       acc.twos += p.hand.filter(card => card.rank === '2').length;
       acc.pairs += getPlayablePairs(p.hand, -1).length;
@@ -91,9 +91,9 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate 
       straightFlushes: 0,
       dragons: 0
     });
-  };
+  }, [baseBet]);
 
-  const initializeGame = () => {
+  const initializeGame = useCallback(() => {
     const deck = createDeck();
     const handBuckets: Card[][] = seats.map(() => []);
     deck.forEach((card, idx) => {
@@ -132,20 +132,20 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate 
       saveRoundStats(next);
       return next;
     });
-  };
+  }, [seats, npcProfiles, buildRoundStat]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     initializeGame();
     return () => {
       if (aiTimerRef.current) window.clearTimeout(aiTimerRef.current);
       Object.values(quoteTimeoutRef.current).forEach(timer => window.clearTimeout(timer as number));
       quoteTimeoutRef.current = {};
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const updateFinishedOrder = (nextPlayers: BigTwoPlayer[], newFinished: number[]) => {
+  const updateFinishedOrder = useCallback((nextPlayers: BigTwoPlayer[], newFinished: number[]) => {
     const completed = [...newFinished];
     nextPlayers.forEach((p, idx) => {
       if (!p.finished && p.hand.length === 0) {
@@ -154,14 +154,14 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate 
       }
     });
     return completed;
-  };
+  }, []);
 
-  const advanceTurn = (nextPlayers: BigTwoPlayer[], startFrom: number) => {
+  const advanceTurn = useCallback((nextPlayers: BigTwoPlayer[], startFrom: number) => {
     const nextIndex = getNextActiveIndex(nextPlayers, startFrom);
     setCurrentTurnIndex(nextIndex);
-  };
+  }, []);
 
-  const resolveEndIfNeeded = (nextPlayers: BigTwoPlayer[], newFinished: number[]) => {
+  const resolveEndIfNeeded = useCallback((nextPlayers: BigTwoPlayer[], newFinished: number[]) => {
     if (newFinished.length >= nextPlayers.length - 1) {
       const remaining = nextPlayers
         .map((p, idx) => ({ p, idx }))
@@ -173,7 +173,7 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate 
       return true;
     }
     return false;
-  };
+  }, []);
 
   const hasMonsterInHand = (hand: Card[]) => {
     if (canSplitDragon(hand)) return true;
@@ -236,7 +236,7 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate 
     };
   }, [phase, currentTurnIndex, players, setNpcQuote]);
 
-  const settlePayout = (winnerIdx: number, winningPlay: Card[], snapshotPlayers: BigTwoPlayer[]) => {
+  const settlePayout = useCallback((winnerIdx: number, winningPlay: Card[], snapshotPlayers: BigTwoPlayer[]) => {
     const winningEval = evaluateCombo(winningPlay);
     const winningIsMonster = winningEval?.type === 'FOUR_KIND' || winningEval?.type === 'STRAIGHT_FLUSH' || winningEval?.type === 'DRAGON';
     const winningTwos = winningPlay.filter(card => card.rank === '2').length;
@@ -294,9 +294,9 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate 
     if (updated[winnerIdx]?.isAI) {
       setNpcQuote(updated[winnerIdx].name, 'WIN');
     }
-  };
+  }, [baseBet, onProfilesUpdate, setNpcQuote]);
 
-  const applyPlay = (playerIdx: number, cards: Card[]) => {
+  const applyPlay = useCallback((playerIdx: number, cards: Card[]) => {
     const wasFirstFinish = finishedOrder.length === 0;
     const combo = evaluateCombo(cards);
     if (!combo) {
@@ -362,7 +362,18 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate 
     }
 
     return true;
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    finishedOrder,
+    mustIncludeThreeClubs,
+    currentTrick,
+    players,
+    payoutSettled,
+    setNpcQuote,
+    settlePayout,
+    resolveEndIfNeeded,
+    advanceTurn
+  ]);
 
   const handlePass = useCallback(() => {
     if (phase !== 'PLAYING') return;
@@ -406,12 +417,8 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate 
     currentTrick,
     players,
     currentTurnIndex,
-    setPlayers,
-    setMessage,
     setNpcQuote,
-    advanceTurn,
-    setCurrentTrick,
-    setCurrentTurnIndex
+    advanceTurn
   ]);
 
   useEffect(() => {

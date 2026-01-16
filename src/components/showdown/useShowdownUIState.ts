@@ -57,7 +57,7 @@ export const useShowdownUIState = ({
   useEffect(() => {
     if (betMode !== 'NO_LIMIT') return;
     if (!phase.startsWith('BETTING')) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setCustomRaiseAmount(minBet);
   }, [phase, betMode, minBet]);
 
@@ -65,7 +65,7 @@ export const useShowdownUIState = ({
     if (betMode !== 'NO_LIMIT') return;
     if (maxRaise < minBet) return;
     if (customRaiseAmount > maxRaise) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setCustomRaiseAmount(maxRaise);
     } else if (customRaiseAmount < minBet) {
       setCustomRaiseAmount(minBet);
@@ -123,7 +123,7 @@ export const useShowdownUIState = ({
         quotes[id] = p.currentQuote;
       }
     });
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setWinnerQuotes(quotes);
   }, [phase, winners, players, npcProfiles, playerQuotes]);
 
