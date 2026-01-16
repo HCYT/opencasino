@@ -40,16 +40,18 @@ const SlotMachineGame: React.FC<SlotMachineGameProps> = ({ playerName, onExit })
         result,
         message,
         isAutoSpin,
-        toggleAutoSpin
+        toggleAutoSpin,
+        freeSpinsRemaining,
+        isFreeSpinMode
     } = useSlotMachineEngine(playerName);
 
     const [showCoins, setShowCoins] = useState(false);
     const [winAmount, setWinAmount] = useState(0);
 
     const rawGrid = result?.grid || [
-        [SlotSymbol.SEVEN, SlotSymbol.SEVEN, SlotSymbol.SEVEN],
-        [SlotSymbol.SEVEN, SlotSymbol.SEVEN, SlotSymbol.SEVEN],
-        [SlotSymbol.SEVEN, SlotSymbol.SEVEN, SlotSymbol.SEVEN]
+        [SlotSymbol.LEMON, SlotSymbol.CHERRY, SlotSymbol.ORANGE],
+        [SlotSymbol.GRAPE, SlotSymbol.WILD, SlotSymbol.BELL],
+        [SlotSymbol.BAR, SlotSymbol.SCATTER, SlotSymbol.LEMON]
     ];
 
     const displayColumns = [0, 1, 2].map(colIdx =>
@@ -136,12 +138,26 @@ const SlotMachineGame: React.FC<SlotMachineGameProps> = ({ playerName, onExit })
                         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
                         {/* Integrated Jackpot Display */}
-                        <div className={`relative z-10 mb-8 text-center ${result?.isJackpot ? 'animate-jackpot-flash' : 'animate-pulse'}`}>
-                            <h2 className="text-yellow-500 font-black text-xs md:text-sm tracking-[0.2em] uppercase mb-2 drop-shadow-md">Grand Jackpot</h2>
-                            <div className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 via-yellow-500 to-yellow-800 drop-shadow-[0_0_50px_rgba(234,179,8,0.6)] font-mono animate-glow-pulse">
+                        <div className={`relative z-10 mb-4 text-center ${result?.isJackpot ? 'animate-jackpot-flash' : ''}`}>
+                            <h2 className="text-yellow-500/80 font-black text-xs md:text-sm tracking-[0.3em] uppercase mb-1">Grand Jackpot</h2>
+                            <div
+                                className="text-4xl md:text-5xl font-black font-mono text-yellow-400 animate-pulse"
+                                style={{
+                                    textShadow: '0 0 20px rgba(250, 204, 21, 0.5), 0 0 40px rgba(250, 204, 21, 0.3), 0 2px 4px rgba(0,0,0,0.5)'
+                                }}
+                            >
                                 ${jackpot.toLocaleString()}
                             </div>
                         </div>
+
+                        {/* Free Spins Indicator */}
+                        {(isFreeSpinMode || freeSpinsRemaining > 0) && (
+                            <div className="relative z-10 mb-4 px-6 py-2 bg-gradient-to-r from-yellow-500/20 via-yellow-500/30 to-yellow-500/20 rounded-full border border-yellow-500/50 animate-pulse">
+                                <span className="text-yellow-300 font-black text-lg tracking-wider">
+                                    ⭐ FREE SPINS: {freeSpinsRemaining} ⭐
+                                </span>
+                            </div>
+                        )}
 
                         {/* Main Machine Area */}
                         <div className="relative mb-10 bg-black/40 p-6 rounded-[2rem] border border-white/5 shadow-inner flex flex-col items-center justify-center backdrop-blur-sm">
