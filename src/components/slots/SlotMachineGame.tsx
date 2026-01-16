@@ -220,7 +220,7 @@ const SlotMachineGame: React.FC<SlotMachineGameProps> = ({ playerName, onExit })
                             </div>
                         )}
 
-                        <div className="text-center h-14 mb-6 flex items-center justify-center bg-black/40 rounded-full border border-white/5 backdrop-blur-md animate-slide-up">
+                        <div className="text-center h-14 mb-6 flex items-center justify-center">
                             <span className={`text-xl md:text-3xl font-black ${message.includes('贏') || message.includes('Win') || message.includes('大獎') ? 'text-yellow-400 animate-bounce' : 'text-white/90'}`}>
                                 {message}
                             </span>

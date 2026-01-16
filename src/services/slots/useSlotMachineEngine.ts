@@ -3,8 +3,9 @@ import { loadProfiles, saveProfiles, loadJackpot, saveJackpot } from '../profile
 import { SlotRules, SpinResult, NUM_PAYLINES } from './SlotRules';
 import { playSound } from '../sound';
 
-// Industry standard: 1-3% of bet goes to jackpot
-const JACKPOT_CONTRIBUTION_RATE = 0.02;
+// Jackpot contribution: 5% of bet goes to jackpot pool
+// Higher than industry standard (1-3%) for more exciting gameplay
+const JACKPOT_CONTRIBUTION_RATE = 0.05;
 
 export interface SlotEngineState {
     credits: number;

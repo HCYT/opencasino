@@ -19,6 +19,11 @@ opencasino 是一個純前端、單機娛樂向的牌桌合集。主打桌面臨
 - **射龍門（Showdown Gate）**
   - 經典撞柱與賠率計算
   - 快速節奏賭運氣
+- **角子老虎機（Slot Machine）**
+  - 3×3 經典老虎機，5 條勝線
+  - 94% RTP（業界標準回報率）
+  - WILD 百搭、SCATTER 免費旋轉
+  - 累進式 Grand Jackpot
 
 ## 特色
 
@@ -48,7 +53,7 @@ opencasino 是一個純前端、單機娛樂向的牌桌合集。主打桌面臨
 
 ## 專案結構（重點）
 
-- `src/components`：遊戲 UI 元件（包含 `showdown`, `blackjack`, `bigTwo`, `showdownGate`）
+- `src/components`：遊戲 UI 元件（包含 `showdown`, `blackjack`, `bigTwo`, `showdownGate`, `slots`）
 - `src/services`：遊戲規則、引擎與 AI
 - `src/config`：NPC 設定
 - `src/types.ts`：共用型別
