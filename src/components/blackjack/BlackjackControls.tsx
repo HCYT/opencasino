@@ -97,7 +97,7 @@ const BlackjackControls: React.FC<BlackjackControlsProps> = ({
                 />
               </StatusPanel>
               <GameButton
-                onClick={() => { playSound('deal'); onStartHand(); }}
+                onClick={() => { playSound('card-deal'); onStartHand(); }}
                 disabled={!canBet}
                 variant="primary"
                 size="pillLg"
@@ -121,7 +121,7 @@ const BlackjackControls: React.FC<BlackjackControlsProps> = ({
                     要牌
                   </GameButton>
                   <GameButton
-                    onClick={() => { playSound('fold'); onStand(); }}
+                    onClick={() => { playSound('chip-fold'); onStand(); }}
                     variant="danger"
                     size="squareMd"
                     className="uppercase tracking-widest"
@@ -153,7 +153,7 @@ const BlackjackControls: React.FC<BlackjackControlsProps> = ({
             <div className="flex items-end gap-3">
               <StatusPanel className="text-yellow-300">{message || '本局結束'}</StatusPanel>
               <GameButton
-                onClick={() => { playSound('deal'); onReset(); }}
+                onClick={() => { playSound('card-deal'); onReset(); }}
                 variant="light"
                 size="pillLg"
               >

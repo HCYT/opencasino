@@ -1,20 +1,15 @@
 import { useState, useEffect } from 'react';
 
 const sounds: Record<string, string> = {
-  deal: 'https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3',
-  win: 'https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3',
-  lose: 'https://assets.mixkit.co/active_storage/sfx/2056/2056-preview.mp3',
-  fold: 'https://assets.mixkit.co/active_storage/sfx/2056/2056-preview.mp3',
-  allin: 'https://assets.mixkit.co/active_storage/sfx/1118/1118-preview.mp3',
-  mortgage: 'https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3',
-  replace: 'https://assets.mixkit.co/active_storage/sfx/2017/2017-preview.mp3',
-  'slot-win': '/sounds/mixkit-slot-machine-win-siren-1929.wav',
-  'slot-jackpot': '/sounds/mixkit-slot-machine-win-siren-1929.wav',
+  'slot-win': '/sounds/mixkit-slot-machine-win-siren.wav',
+  'slot-jackpot': '/sounds/mixkit-slot-machine-win-siren.wav',
   'card-deal': '/sounds/card-slide-1.ogg',
   'card-place': '/sounds/card-place-1.ogg',
   'card-shuffle': '/sounds/card-shuffle.ogg',
   'chip-place': '/sounds/chip-lay-1.ogg',
   'chip-stack': '/sounds/chips-stack-1.ogg',
+  'chip-allin': '/sounds/chips-stack-1.ogg',
+  'chip-fold': '/sounds/chips-collide-1.ogg',
   'dice-shake': '/sounds/dice-shake-1.ogg',
   'dice-throw': '/sounds/dice-throw-1.ogg',
 };
@@ -32,6 +27,7 @@ const variantSounds: Record<string, string[]> = {
     '/sounds/card-place-3.ogg',
     '/sounds/card-place-4.ogg',
   ],
+  'card-shuffle': ['/sounds/card-shuffle.ogg'],
   'chip-place': [
     '/sounds/chip-lay-1.ogg',
     '/sounds/chip-lay-2.ogg',
@@ -43,6 +39,17 @@ const variantSounds: Record<string, string[]> = {
     '/sounds/chips-stack-3.ogg',
     '/sounds/chips-stack-4.ogg',
     '/sounds/chips-stack-5.ogg',
+  ],
+  'chip-allin': [
+    '/sounds/chips-stack-1.ogg',
+    '/sounds/chips-stack-2.ogg',
+    '/sounds/chips-stack-3.ogg',
+  ],
+  'chip-fold': [
+    '/sounds/chips-collide-1.ogg',
+    '/sounds/chips-collide-2.ogg',
+    '/sounds/chips-collide-3.ogg',
+    '/sounds/chips-collide-4.ogg',
   ],
   'dice-shake': [
     '/sounds/dice-shake-1.ogg',
@@ -64,15 +71,10 @@ const volumes: Record<string, number> = {
   'card-shuffle': 0.5,
   'chip-place': 0.5,
   'chip-stack': 0.4,
+  'chip-allin': 0.7,
+  'chip-fold': 0.3,
   'dice-shake': 0.5,
   'dice-throw': 0.4,
-  deal: 0.4,
-  win: 0.6,
-  lose: 0.4,
-  fold: 0.4,
-  allin: 0.7,
-  mortgage: 0.5,
-  replace: 0.4,
 };
 
 let volume = 0.4;

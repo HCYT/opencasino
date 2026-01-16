@@ -186,7 +186,7 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
               </div>
 
               <GameButton
-                onClick={() => { playSound('fold'); onAction('FOLD'); }}
+                onClick={() => { playSound('chip-fold'); onAction('FOLD'); }}
                 variant="danger"
                 size="squareSm"
                 className="group flex flex-col items-center justify-center backdrop-blur-md"
@@ -198,7 +198,7 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
               </GameButton>
 
               <GameButton
-                onClick={() => { playSound(callNeeded === 0 ? 'deal' : 'chip-place'); onAction(callNeeded === 0 ? 'CHECK' : 'CALL'); }}
+                onClick={() => { playSound(callNeeded === 0 ? 'card-deal' : 'chip-place'); onAction(callNeeded === 0 ? 'CHECK' : 'CALL'); }}
                 variant="success"
                 size="squareLg"
                 className="group flex flex-col items-center justify-center backdrop-blur-md"
@@ -225,7 +225,7 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
               </GameButton>
 
               <GameButton
-                onClick={() => { playSound('allin'); onAction('ALL_IN'); }}
+                onClick={() => { playSound('chip-allin'); onAction('ALL_IN'); }}
                 variant="info"
                 size="squareSm"
                 className="group flex flex-col items-center justify-center backdrop-blur-md"
@@ -238,7 +238,7 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
             </div>
           ) : phase === GamePhase.RESULT ? (
             <GameButton
-              onClick={() => { playSound('deal'); onStartNewHand(); }}
+              onClick={() => { playSound('card-deal'); onStartNewHand(); }}
               variant="light"
               size="pillXl"
               className="text-xl animate-pulse transform hover:scale-105 uppercase tracking-wider"

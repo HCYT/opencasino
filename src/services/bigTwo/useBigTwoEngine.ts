@@ -277,7 +277,7 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate,
     updated[winnerIdx] = { ...updated[winnerIdx], chips: updated[winnerIdx].chips + totalGain };
     setPlayers(updated);
     setPayoutSettled(true);
-    playSound('win');
+    playSound('slot-win');
     setPayoutSummary({
       winnerName: updated[winnerIdx].name,
       baseBet,
@@ -350,7 +350,7 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate,
       setNpcQuote(nextPlayers[playerIdx].name, quoteType);
     }
     setPlayedCards(prev => [...prev, ...cards]);
-    playSound('deal');
+    playSound('card-place');
     setMessage('');
 
     if (!payoutSettled && wasFirstFinish && nextPlayers[playerIdx].hand.length === 0) {

@@ -160,7 +160,7 @@ export function useShowdownGateEngine({
 
         setPlayers(updatedPlayers);
         setDeck(workingDeck);
-        playSound('deal');
+        playSound('card-deal');
 
         const targetPlayer = updatedPlayers[targetIndex];
         setMessage(`${targetPlayer.name} 的門柱牌已發`);
@@ -280,7 +280,7 @@ export function useShowdownGateEngine({
         setPlayers(updatedPlayers);
         setDeck(result.deck);
         setPot(safePot);
-        playSound(payout > 0 ? 'win' : 'lose');
+        playSound(payout > 0 ? 'slot-win' : 'chip-fold');
 
         // 結果訊息
         const resultMessages: Record<GateResult, string> = {
@@ -324,7 +324,7 @@ export function useShowdownGateEngine({
         );
         setPlayers(afterBetPlayers);
         setMessage(`${aiPlayer.name} 下注 $${amount}`);
-        playSound('chip');
+        playSound('chip-place');
 
         // 延遲後開第三張牌
         npcTimerRef.current = window.setTimeout(() => {
@@ -368,11 +368,10 @@ export function useShowdownGateEngine({
 
         setPlayers(updatedPlayers);
         setPot(safePot);
-        setDeck(newDeck);
         setPhase('PLAYER_TURN');
         setCurrentPlayerIndex(0);
         setMessage(`新回合開始，彩池 $${safePot.toLocaleString()}`);
-        playSound('chip');
+        playSound('chip-place');
 
         // 發第一位玩家的門柱牌
         dealGateCards(updatedPlayers, newDeck, 0, safePot);
@@ -395,7 +394,7 @@ export function useShowdownGateEngine({
         );
         setPlayers(updatedPlayers);
         setMessage(`${currentPlayer.name} 下注 $${validAmount}`);
-        playSound('chip');
+        playSound('chip-place');
 
         // 開第三張牌 - 保存當前 pot 值
         const currentPot = pot;

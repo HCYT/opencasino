@@ -259,7 +259,7 @@ export const useGameEngine = (initialRules: IPokerRules, options: ShowdownEngine
                 winners: winner ? [winner.id] : [],
                 log: [`🏆 最終大贏家：${winner ? winner.name : '平局'}`, ...prev.log]
             }));
-            playSound('win');
+            playSound('slot-win');
             return;
         }
 
@@ -294,7 +294,7 @@ export const useGameEngine = (initialRules: IPokerRules, options: ShowdownEngine
         };
         const firstToAct = getNextActiveIndex(resetPlayers, bringInIndex);
 
-        playSound('deal');
+        playSound('card-deal');
 
         // Reset turn tracking
         roundStartIndex.current = firstToAct;
@@ -337,7 +337,7 @@ export const useGameEngine = (initialRules: IPokerRules, options: ShowdownEngine
                 const gain = payouts[p.id] || 0;
                 return gain > 0 ? { ...p, chips: p.chips + gain } : p;
             });
-            playSound('win');
+            playSound('slot-win');
 
             // Trigger WIN/LOSE Quotes
             const updatedPlayersWithQuotes = updatedPlayers.map(p => {
@@ -358,7 +358,7 @@ export const useGameEngine = (initialRules: IPokerRules, options: ShowdownEngine
             };
         }
 
-        playSound('deal');
+        playSound('card-deal');
         const { updatedDeck, updatedPlayers } = rulesRef.current.dealCards(deck, players, nextP);
 
         // Reset Bets for new round
@@ -487,7 +487,7 @@ export const useGameEngine = (initialRules: IPokerRules, options: ShowdownEngine
             // Log Interaction
             if (resolvedAction === 'FOLD') {
                 newPlayers[activePlayerIndex] = { ...p, isFolded: true, lastAction: '棄牌', currentQuote: quote || p.currentQuote };
-                playSound('fold');
+                playSound('chip-fold');
 
                 if (lastAggressorIndex.current === activePlayerIndex) {
                     lastAggressorIndex.current = null;
@@ -532,7 +532,7 @@ export const useGameEngine = (initialRules: IPokerRules, options: ShowdownEngine
                     lastAggressorIndex.current = activePlayerIndex;
                     raiseCount.current += 1;
                 }
-                playSound('allin');
+                playSound('chip-allin');
             } else if (resolvedAction === 'CALL' || resolvedAction === 'CHECK') {
                 const needed = newMaxBet - p.currentBet;
                 const amt = Math.min(p.chips, needed);
@@ -546,7 +546,7 @@ export const useGameEngine = (initialRules: IPokerRules, options: ShowdownEngine
                     currentQuote: quote || p.currentQuote
                 };
                 newPot += amt;
-                playSound(wentAllIn ? 'allin' : 'chip');
+                playSound(wentAllIn ? 'chip-allin' : 'chip-place');
             } else if (resolvedAction === 'RAISE') {
                 // Raise Cap Logic: Eliminate infinite raise wars
                 // Check how many raises happened? complex to track. 
@@ -576,7 +576,7 @@ export const useGameEngine = (initialRules: IPokerRules, options: ShowdownEngine
                     lastAggressorIndex.current = activePlayerIndex;
                     if (currentMaxBet > 0) raiseCount.current += 1;
                 }
-                playSound(actualRaise > 0 ? 'chip' : (wentAllIn ? 'allin' : 'chip'));
+                playSound(actualRaise > 0 ? 'chip-place' : (wentAllIn ? 'chip-allin' : 'chip-place'));
             }
 
             // --- DEADLOCK RECOVERY ---
@@ -621,7 +621,7 @@ export const useGameEngine = (initialRules: IPokerRules, options: ShowdownEngine
             if (phaseDone) {
                 return nextPhase(nextState);
             } else {
-                playSound('turn');
+                playSound('card-deal');
                 return { ...nextState, activePlayerIndex: nextIdx };
             }
         });

@@ -83,9 +83,9 @@ const ShowdownGame: React.FC<ShowdownGameProps> = ({
   useEffect(() => {
     if (phase === GamePhase.RESULT && winners.length > 0) {
       if (userWon) {
-        playSound('win');
+        playSound('slot-win');
       } else {
-        playSound('lose');
+        playSound('chip-fold');
       }
     }
   }, [phase, winners, userWon]);
