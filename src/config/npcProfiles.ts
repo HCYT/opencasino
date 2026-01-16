@@ -3,7 +3,7 @@ import { NPCProfile } from '../types';
 export const NPC_PROFILES: NPCProfile[] = [
   {
     name: '高進',
-    avatar: new URL('../image/賭神.jpeg', import.meta.url).href,
+    avatar: '/image/高進.png',
     quotes: {
       WIN: ['我不喜歡跟死人要錢。', '這才叫賭神！', '年輕人終究是年輕人。'],
       LOSE: ['還好，只是個小數目。', '運氣也是實力的一種。'],
@@ -23,8 +23,29 @@ export const NPC_PROFILES: NPCProfile[] = [
     }
   },
   {
+    name: '陳金城',
+    avatar: '/image/陳金城.png',
+    quotes: {
+      WIN: ['年輕人，你還太嫩了！', '老夫縱橫賭壇幾十年，豈會輸給你？'],
+      LOSE: ['這...這不可能！', '我的牌怎麽會輸？'],
+      FOLD: ['留得青山在。', '不跟。'],
+      CHECK: ['過。', '看看再說。'],
+      CALL: ['跟了。', '我倒要看看你有什麽花樣。'],
+      RAISE: ['加注！', '老夫跟你玩到底！'],
+      ALL_IN: ['梭哈！', '你敢跟老夫賭？'],
+      WAITING: ['這副牌有問題嗎？', '別浪費時間。']
+    },
+    tacticWeights: { DECEPTIVE: 0.6, CONSERVATIVE: 0.2, BAIT: 0.1, AGGRESSIVE: 0.1 },
+    tacticQuotes: {
+      CONSERVATIVE: ['留得青山在。', '不跟。'],
+      DECEPTIVE: ['我倒要看看你有什麽花樣。', '年輕人，你還太嫩了！'],
+      BAIT: ['過。', '看看再說。'],
+      AGGRESSIVE: ['梭哈！', '老夫跟你玩到底！']
+    }
+  },
+  {
     name: '陳小刀',
-    avatar: new URL('../image/陳小刀.jpeg', import.meta.url).href,
+    avatar: '/image/陳小刀.png',
     quotes: {
       WIN: ['師父教的這招果然有用！', '二十塊贏兩千萬！'],
       LOSE: ['師父，我給您丟人了...', '這把不算，重來！'],
@@ -45,7 +66,7 @@ export const NPC_PROFILES: NPCProfile[] = [
   },
   {
     name: '周星祖',
-    avatar: new URL('../image/周星祖.jpeg', import.meta.url).href,
+    avatar: '/image/周星祖.png',
     quotes: {
       WIN: ['各位觀眾！五隻煙！', '哈哈哈哈！我贏啦！'],
       LOSE: ['我看不到...我看不到...', '哎呀，特異功能失靈了。'],
@@ -66,7 +87,7 @@ export const NPC_PROFILES: NPCProfile[] = [
   },
   {
     name: '龍五',
-    avatar: new URL('../image/龍五.jpeg', import.meta.url).href,
+    avatar: '/image/龍五.png',
     quotes: {
       WIN: ['... (點頭)', '贏了。'],
       LOSE: ['...', '下次討回來。'],
@@ -87,7 +108,7 @@ export const NPC_PROFILES: NPCProfile[] = [
   },
   {
     name: '海珊',
-    avatar: new URL('../image/海珊.jpg', import.meta.url).href,
+    avatar: '/image/海珊.png',
     quotes: {
       WIN: ['所有人都可以投降，除了你。', '想跟我鬥？你還嫩了點！'],
       LOSE: ['不可能！你出千！', '這不科學！'],
@@ -108,7 +129,7 @@ export const NPC_PROFILES: NPCProfile[] = [
   },
   {
     name: '海棠',
-    avatar: new URL('../image/海棠.jpeg', import.meta.url).href,
+    avatar: '/image/海棠.png',
     quotes: {
       WIN: ['這局我收下。', '漂亮。'],
       LOSE: ['輸了也要優雅。', '下把再來。'],
@@ -129,7 +150,7 @@ export const NPC_PROFILES: NPCProfile[] = [
   },
   {
     name: '仇笑癡',
-    avatar: new URL('../image/仇笑癡.jpeg', import.meta.url).href,
+    avatar: '/image/仇笑癡.png',
     quotes: {
       WIN: ['哈哈，這才是賭局！', '你們都不夠看！'],
       LOSE: ['不可能！', '再來！'],
@@ -150,7 +171,7 @@ export const NPC_PROFILES: NPCProfile[] = [
   },
   {
     name: '大軍',
-    avatar: new URL('../image/大軍.jpeg', import.meta.url).href,
+    avatar: '/image/大軍.png',
     quotes: {
       WIN: ['我的特異功能比你強！', '獨眼龍大軍在此！'],
       LOSE: ['我的眼睛！我的眼睛！', '可惡，被破功了！'],

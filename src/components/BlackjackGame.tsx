@@ -100,7 +100,7 @@ const BlackjackGame: React.FC<BlackjackGameProps> = ({
     .join(' / ');
 
   return (
-    <div className="game-container bg-[#052c16] relative overflow-visible select-none h-screen w-full">
+    <div className="game-container premium-table-bg relative overflow-visible select-none h-screen w-full">
       <BlackjackTable
         statusText={statusText}
         dealerCards={dealerCards}

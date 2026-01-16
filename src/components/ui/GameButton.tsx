@@ -20,14 +20,14 @@ type GameButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 const base = 'inline-flex items-center justify-center gap-2 border-0 font-black transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200/60';
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-gradient-to-b from-yellow-200 via-yellow-400 to-amber-500 text-slate-900 shadow-[0_0_40px_rgba(255,214,102,0.65),0_12px_24px_rgba(0,0,0,0.35)] hover:brightness-110',
-  success: 'bg-gradient-to-b from-emerald-300 to-emerald-700 text-white shadow-[0_0_34px_rgba(16,185,129,0.55),0_10px_22px_rgba(0,0,0,0.3)] hover:brightness-110',
-  danger: 'bg-gradient-to-b from-rose-400 to-red-700 text-white shadow-[0_0_34px_rgba(248,113,113,0.55),0_10px_22px_rgba(0,0,0,0.3)] hover:brightness-110',
-  info: 'bg-gradient-to-b from-sky-300 to-indigo-700 text-white shadow-[0_0_34px_rgba(96,165,250,0.55),0_10px_22px_rgba(0,0,0,0.3)] hover:brightness-110',
-  warning: 'bg-gradient-to-b from-amber-200 to-orange-500 text-slate-900 shadow-[0_0_32px_rgba(251,191,36,0.55),0_10px_22px_rgba(0,0,0,0.3)] hover:brightness-110',
-  ghost: 'bg-black/45 text-white/75 shadow-none hover:text-white hover:bg-black/60',
-  muted: 'bg-black/55 text-white/60 shadow-none hover:text-white/85 hover:bg-black/70',
-  light: 'bg-gradient-to-b from-white via-slate-50 to-slate-200 text-slate-900 shadow-[0_0_30px_rgba(255,255,255,0.5),0_10px_20px_rgba(0,0,0,0.2)] hover:brightness-105'
+  primary: 'bg-gradient-to-b from-yellow-300 via-amber-500 to-amber-700 text-slate-900 border-2 border-amber-200/80 shadow-[0_4px_0_rgba(180,83,9,1),0_8px_20px_rgba(245,158,11,0.6),inset_0_2px_0_rgba(255,255,255,0.5)] active:translate-y-[4px] active:shadow-none hover:brightness-110 tracking-widest',
+  success: 'bg-gradient-to-b from-emerald-400 via-emerald-600 to-emerald-800 text-white border-2 border-emerald-300/60 shadow-[0_4px_0_rgba(6,95,70,1),0_8px_20px_rgba(16,185,129,0.5),inset_0_2px_0_rgba(255,255,255,0.4)] active:translate-y-[4px] active:shadow-none hover:brightness-110 tracking-widest',
+  danger: 'bg-gradient-to-b from-rose-500 via-red-600 to-red-800 text-white border-2 border-rose-300/60 shadow-[0_4px_0_rgba(153,27,27,1),0_8px_20px_rgba(244,63,94,0.5),inset_0_2px_0_rgba(255,255,255,0.4)] active:translate-y-[4px] active:shadow-none hover:brightness-110 tracking-widest',
+  info: 'bg-gradient-to-b from-sky-400 via-blue-500 to-blue-700 text-white border-2 border-sky-300/60 shadow-[0_4px_0_rgba(7,89,133,1),0_8px_20px_rgba(14,165,233,0.5),inset_0_2px_0_rgba(255,255,255,0.4)] active:translate-y-[4px] active:shadow-none hover:brightness-110 tracking-widest',
+  warning: 'bg-gradient-to-b from-orange-300 via-orange-500 to-orange-700 text-white border-2 border-orange-200/60 shadow-[0_4px_0_rgba(154,52,18,1),0_8px_20px_rgba(249,115,22,0.5),inset_0_2px_0_rgba(255,255,255,0.4)] active:translate-y-[4px] active:shadow-none hover:brightness-110 tracking-widest',
+  ghost: 'bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10 hover:text-white hover:border-white/30 transition-all font-bold tracking-wider',
+  muted: 'bg-black/40 text-slate-500 border border-white/5 font-bold tracking-wider',
+  light: 'bg-gradient-to-b from-slate-100 to-slate-300 text-slate-900 border-2 border-white shadow-[0_4px_0_rgba(148,163,184,1)] active:translate-y-[4px] active:shadow-none tracking-widest'
 };
 
 const sizes: Record<Size, string> = {

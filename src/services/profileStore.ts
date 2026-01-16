@@ -5,6 +5,7 @@ export type StoredProfile = {
   losses: number;
   games: number;
   debt: number;
+  avatar?: string;
 };
 
 const STORAGE_KEY = 'cosglint_profiles';

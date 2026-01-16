@@ -9,7 +9,6 @@ import {
     bottomDockInner,
     lobbyExitButton
 } from '../ui/sharedStyles';
-import { RANK_VALUE } from '../../constants';
 
 interface GateControlsProps {
     player: GatePlayer;
@@ -67,7 +66,7 @@ const GateControls: React.FC<GateControlsProps> = ({
                 <div className="absolute left-0 bottom-0 flex flex-col gap-3 pointer-events-auto">
                     <StackCard
                         label="My Stack"
-                        value={<><span className="text-2xl opacity-80">💵</span> ${player?.chips.toLocaleString() || 0}</>}
+                        value={<><span className="text-2xl opacity-80">💵</span> ${(player?.chips ?? 0).toLocaleString()}</>}
                         showPing={isPlayerTurn}
                         className="min-w-[200px] md:min-w-[160px]"
                     >
