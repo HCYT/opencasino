@@ -4,12 +4,12 @@ import { PLAYER_QUOTES } from '../../constants';
 import { IconBolt, IconChat, IconCheck, IconCoin, IconFlag, IconTrendUp } from './ShowdownIcons';
 import { GameButton } from '../ui/GameButton';
 import PillPanel from '../ui/PillPanel';
+import StackCard from '../ui/StackCard';
+import RangeSlider from '../ui/RangeSlider';
 import {
   bottomDock,
   bottomDockInner,
-  stackCardBase,
-  stackLabel,
-  stackValueLg
+  lobbyExitButton
 } from '../ui/sharedStyles';
 
 interface ShowdownControlsProps {
@@ -61,25 +61,23 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
     <div className={bottomDock}>
       <div className={bottomDockInner}>
         <div className="absolute left-0 bottom-0 flex flex-col gap-3 pointer-events-auto">
-          <div className={`${stackCardBase} min-w-[200px] md:min-w-[160px]`}>
-            <div className={stackLabel}>
-              <span>My Stack</span>
-              {isUserTurn && <span className="w-2 h-2 bg-yellow-500 rounded-full animate-ping"></span>}
-            </div>
-            <div className={stackValueLg}>
-              <span className="text-2xl opacity-80">💵</span> ${user?.chips.toLocaleString() || 0}
-            </div>
+          <StackCard
+            label="My Stack"
+            value={<><span className="text-2xl opacity-80">💵</span> ${user?.chips.toLocaleString() || 0}</>}
+            showPing={isUserTurn}
+            className="min-w-[200px] md:min-w-[160px]"
+          >
             {isUserTurn && (
               <div className="text-xs font-bold text-yellow-400 uppercase tracking-widest animate-pulse mt-1">
                 Your Turn
               </div>
             )}
-          </div>
+          </StackCard>
           <GameButton
             onClick={onExit}
             variant="ghost"
             size="pill"
-            className="uppercase tracking-widest"
+            className={lobbyExitButton}
           >
             返回大廳
           </GameButton>
@@ -157,14 +155,13 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
                       <div className="text-[10px] text-white/40 font-bold uppercase tracking-widest">
                         加注額 $ {raiseAmount.toLocaleString()}
                       </div>
-                      <input
-                        type="range"
+                      <RangeSlider
                         min={minBet}
                         max={maxRaise}
                         step={minBet}
                         value={customRaiseAmount}
                         onChange={(e) => setCustomRaiseAmount(parseInt(e.target.value, 10))}
-                        className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-yellow-500 hover:accent-yellow-400"
+                        className="w-full"
                       />
                     </>
                   ) : (

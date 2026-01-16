@@ -62,3 +62,12 @@ export const seatCardLine = 'mt-2 text-xs font-black uppercase tracking-widest';
 
 export const resultCardBase =
   'bg-black/60 border border-yellow-400/20 rounded-[2.5rem] px-8 py-6 shadow-2xl';
+
+export const panelStyles = {
+  glass:
+    'bg-black/60 backdrop-blur-xl p-10 rounded-[40px] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)]',
+  soft: 'bg-white/5 border border-white/10 rounded-2xl p-4',
+  dark: 'bg-black/50 border border-white/10 rounded-[30px] p-6'
+};
+
+export const lobbyExitButton = 'uppercase tracking-widest';

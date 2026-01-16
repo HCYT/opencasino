@@ -14,6 +14,8 @@ import BlackjackGame, { BlackjackResult, BlackjackSeat } from './components/Blac
 import BigTwoGame, { BigTwoResult, BigTwoSeat } from './components/BigTwoGame';
 import ShowdownGame from './components/showdown/ShowdownGame';
 import { GameButton } from './components/ui/GameButton';
+import Panel from './components/ui/Panel';
+import ToggleSwitch from './components/ui/ToggleSwitch';
 
 const BLACKJACK_DECK_OPTIONS = [4, 6, 8];
 const BIG_TWO_BASE_BETS = [5, 50, 1000, 5000];
@@ -252,7 +254,7 @@ const App: React.FC = () => {
           >
             返回大廳
           </GameButton>
-          <div className="bg-black/60 backdrop-blur-xl p-10 rounded-[40px] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] max-w-md w-full space-y-8">
+          <Panel variant="glass" className="max-w-md w-full space-y-8">
             <GameButton
               onClick={() => window.location.reload()}
               variant="primary"
@@ -261,7 +263,7 @@ const App: React.FC = () => {
             >
               重新載入
             </GameButton>
-          </div>
+          </Panel>
         </div>
       );
     }
@@ -274,7 +276,7 @@ const App: React.FC = () => {
           <p className="text-xl text-emerald-100 font-light tracking-[0.4em] uppercase opacity-70">慈 善 撲 克 王 大 賽</p>
         </div>
         <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-8 pb-10">
-          <div className="bg-black/60 backdrop-blur-xl p-10 rounded-[40px] border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.6)] space-y-8">
+          <Panel variant="glass" className="space-y-8">
             <div>
               <label className="block text-[10px] font-black uppercase text-yellow-500/60 mb-3 tracking-widest">輸入您的名號</label>
               <input
@@ -433,12 +435,7 @@ const App: React.FC = () => {
                     <span className="text-white font-bold text-sm">惡夢模式</span>
                     <span className="text-white/40 text-[10px] uppercase tracking-wider">NPC 聯合行動</span>
                   </div>
-                  <button
-                    onClick={() => setTeamingEnabled(!teamingEnabled)}
-                    className={`w-12 h-7 rounded-full transition-all duration-300 relative ${teamingEnabled ? 'bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.5)]' : 'bg-slate-700'}`}
-                  >
-                    <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-all duration-300 ${teamingEnabled ? 'translate-x-5' : 'translate-x-0'}`}></div>
-                  </button>
+                  <ToggleSwitch checked={teamingEnabled} onChange={setTeamingEnabled} />
                 </div>
               </div>
             )}
@@ -458,10 +455,10 @@ const App: React.FC = () => {
             >
               {gameType === 'BLACKJACK' ? '開始 21 點' : gameType === 'BIG_TWO' ? '開始大老二' : '踏入牌局'}
             </GameButton>
-          </div>
+          </Panel>
 
           <div className="space-y-6">
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
+            <Panel variant="soft" className="space-y-3">
               <div className="text-[10px] font-black uppercase text-yellow-500/60 tracking-widest">真實餘額</div>
               <div className="flex items-center justify-between">
                 <div>
@@ -499,9 +496,9 @@ const App: React.FC = () => {
                   還款
                 </GameButton>
               </div>
-            </div>
+            </Panel>
 
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
+            <Panel variant="soft" className="space-y-3">
               <div className="text-[10px] font-black uppercase text-yellow-500/60 tracking-widest">角色列表</div>
               <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                 {leaderboard.length === 0 && (
@@ -563,12 +560,12 @@ const App: React.FC = () => {
               >
                 全部重設
               </GameButton>
-            </div>
+            </Panel>
           </div>
         </div>
 
         {leaderboard.length > 0 && (
-          <div className="mt-10 w-full max-w-2xl bg-black/50 border border-white/10 rounded-[30px] p-6">
+          <Panel variant="dark" className="mt-10 w-full max-w-2xl">
             <div className="text-yellow-500 font-black text-xs uppercase tracking-[0.4em] mb-4 text-center">戰績排行榜</div>
             <div className="space-y-2">
               {leaderboard.map(profile => (
@@ -580,7 +577,7 @@ const App: React.FC = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </Panel>
         )}
       </div>
     );
