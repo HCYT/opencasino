@@ -1,10 +1,12 @@
 import React from 'react';
 import { ActionType, GamePhase, NPCProfile, Player } from '../../types';
 import CardUI from '../CardUI';
+import QuoteBubble from '../ui/QuoteBubble';
 import ShowdownControls from './ShowdownControls';
 import ShowdownSeat from './ShowdownSeat';
 import ShowdownTable from './ShowdownTable';
 import { useShowdownUIState } from './useShowdownUIState';
+import { getSeatLayout } from '../ui/seatLayout';
 
 interface ShowdownGameProps {
   phase: GamePhase;
@@ -76,28 +78,7 @@ const ShowdownGame: React.FC<ShowdownGameProps> = ({
     <div className="game-container bg-[#052c16] relative overflow-visible select-none h-screen w-full">
       <ShowdownTable statusText={statusText} pot={pot}>
         {players.map((p, i) => {
-          let style: React.CSSProperties = {};
-          let vertical = false;
-
-          if (p.id === 'player') {
-            style = { bottom: '2rem', left: '50%', transform: 'translateX(-50%)' };
-          } else if (i === 1) {
-            style = { left: '4rem', top: '50%', transform: 'translateY(-50%)' };
-            vertical = true;
-          } else if (i === 2) {
-            style = { top: '3rem', left: '50%', transform: 'translateX(-50%)' };
-          } else {
-            style = { right: '4rem', top: '50%', transform: 'translateY(-50%)' };
-            vertical = true;
-          }
-
-          const seatPosition = p.id === 'player'
-            ? 'bottom'
-            : i === 1
-              ? 'left'
-              : i === 2
-                ? 'top'
-                : 'right';
+          const { style, vertical, seatPosition } = getSeatLayout(i, p.id === 'player');
 
           return (
             <div key={p.id} className="absolute flex flex-col items-center" style={style}>
@@ -154,9 +135,7 @@ const ShowdownGame: React.FC<ShowdownGameProps> = ({
                   />
                   <div className="text-white text-3xl font-black mt-4 tracking-tight">{player.name}</div>
                   {winnerQuotes[player.id] && (
-                    <div className="mt-3 text-amber-200 text-sm font-black bg-black/40 px-4 py-3 rounded-2xl border border-white/10">
-                      「{winnerQuotes[player.id]}」
-                    </div>
+                    <QuoteBubble text={winnerQuotes[player.id]} className="mt-3" />
                   )}
                   {player.cards.length > 0 && (
                     <div className="mt-4">

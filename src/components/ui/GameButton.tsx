@@ -6,17 +6,17 @@ type GameButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: Variant;
 };
 
-const base = 'font-black transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed';
+const base = 'inline-flex items-center justify-center gap-2 border-0 font-black transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200/60';
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-gradient-to-b from-yellow-400 to-amber-600 text-slate-900 shadow-xl',
-  success: 'bg-emerald-600 text-white shadow-lg',
-  danger: 'bg-red-600 text-white shadow-lg',
-  info: 'bg-blue-600 text-white shadow-lg',
-  warning: 'bg-amber-500 text-white shadow-lg',
-  ghost: 'bg-black/50 border border-white/10 text-white/70 hover:text-white hover:border-white/40',
-  muted: 'bg-black/60 backdrop-blur-md border border-white/10 text-white/60',
-  light: 'bg-white text-slate-900 shadow-xl'
+  primary: 'bg-gradient-to-b from-yellow-200 via-yellow-400 to-amber-500 text-slate-900 shadow-[0_0_40px_rgba(255,214,102,0.65),0_12px_24px_rgba(0,0,0,0.35)] hover:brightness-110',
+  success: 'bg-gradient-to-b from-emerald-300 to-emerald-700 text-white shadow-[0_0_34px_rgba(16,185,129,0.55),0_10px_22px_rgba(0,0,0,0.3)] hover:brightness-110',
+  danger: 'bg-gradient-to-b from-rose-400 to-red-700 text-white shadow-[0_0_34px_rgba(248,113,113,0.55),0_10px_22px_rgba(0,0,0,0.3)] hover:brightness-110',
+  info: 'bg-gradient-to-b from-sky-300 to-indigo-700 text-white shadow-[0_0_34px_rgba(96,165,250,0.55),0_10px_22px_rgba(0,0,0,0.3)] hover:brightness-110',
+  warning: 'bg-gradient-to-b from-amber-200 to-orange-500 text-slate-900 shadow-[0_0_32px_rgba(251,191,36,0.55),0_10px_22px_rgba(0,0,0,0.3)] hover:brightness-110',
+  ghost: 'bg-black/45 text-white/75 shadow-none hover:text-white hover:bg-black/60',
+  muted: 'bg-black/55 text-white/60 shadow-none hover:text-white/85 hover:bg-black/70',
+  light: 'bg-gradient-to-b from-white via-slate-50 to-slate-200 text-slate-900 shadow-[0_0_30px_rgba(255,255,255,0.5),0_10px_20px_rgba(0,0,0,0.2)] hover:brightness-105'
 };
 
 export const GameButton: React.FC<GameButtonProps> = ({

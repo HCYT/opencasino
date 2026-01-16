@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Card, NPCProfile, Rank } from '../types';
 import CardUI from './CardUI';
 import { GameButton } from './ui/GameButton';
+import PlayerSeatCard from './ui/PlayerSeatCard';
 import {
   RANK_ORDER,
   canSplitDragon,
@@ -253,32 +254,23 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, on
 
             return (
               <div key={p.id} className="absolute flex flex-col items-center" style={style}>
-                <div className={`bg-black/70 border ${isActiveSeat ? 'border-emerald-400/60' : 'border-white/10'} rounded-[24px] px-5 py-4 shadow-2xl min-w-[220px] max-w-[260px] ${vertical ? 'scale-95' : ''}`}>
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <img src={p.avatar} alt={p.name} className="w-12 h-12 rounded-full border-2 border-yellow-400/40 object-cover" />
-                      <div>
-                        <div className="text-lg font-black text-white">{p.name}</div>
-                        <div className="text-[10px] text-white/40 uppercase tracking-widest">{p.isAI ? 'NPC' : '玩家'}</div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-emerald-300 font-black text-lg">{p.hand.length} 張</div>
-                      <div className="text-[10px] text-white/40 uppercase tracking-widest">剩餘</div>
-                    </div>
-                  </div>
-                  {p.quote && (
-                    <div className="mt-3 bg-white text-slate-900 text-xs font-black rounded-xl px-3 py-2 shadow-lg">
-                      {p.quote}
-                    </div>
-                  )}
-                  {p.passed && !p.finished && (
-                    <div className="mt-2 text-xs text-red-300 font-black uppercase tracking-widest">PASS</div>
-                  )}
-                  {p.finished && (
-                    <div className="mt-2 text-xs text-yellow-300 font-black uppercase tracking-widest">已出完</div>
-                  )}
-                </div>
+                <PlayerSeatCard
+                  name={p.name}
+                  avatar={p.avatar}
+                  isAI={p.isAI}
+                  isActive={isActiveSeat}
+                  vertical={vertical}
+                  stat={{ value: `${p.hand.length} 張`, label: '剩餘' }}
+                  quote={p.quote}
+                  lines={[
+                    ...(p.passed && !p.finished
+                      ? [{ text: 'PASS', className: 'text-red-300' }]
+                      : []),
+                    ...(p.finished
+                      ? [{ text: '已出完', className: 'text-yellow-300' }]
+                      : [])
+                  ]}
+                />
               </div>
             );
           })}
@@ -421,7 +413,7 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, on
           {player && suggestedCombos.length > 0 && (
             <div className="absolute bottom-[9.5rem] left-1/2 -translate-x-1/2 flex flex-wrap justify-center gap-2 px-6 pl-[220px] pr-[260px] w-[92vw] max-w-[1400px] pointer-events-auto z-[85]">
               {suggestedCombos.map(combo => (
-                <button
+                <GameButton
                   key={combo.label}
                   onClick={() => {
                     if (!isPlayerTurn) return;
@@ -431,10 +423,12 @@ const BigTwoGame: React.FC<BigTwoGameProps> = ({ seats, baseBet, npcProfiles, on
                       selectCards(combo.cards);
                     }
                   }}
-                  className={`px-4 py-2 rounded-full bg-black/60 border text-white/80 text-xs font-black uppercase tracking-widest transition-all ${isPlayerTurn ? 'border-white/10 hover:border-yellow-400/60 hover:text-yellow-200' : 'border-white/5 opacity-50 cursor-not-allowed'}`}
+                  disabled={!isPlayerTurn}
+                  variant="muted"
+                  className={`px-4 py-2 rounded-full text-xs uppercase tracking-widest ${isPlayerTurn ? 'hover:brightness-110' : ''}`}
                 >
                   {combo.label}
-                </button>
+                </GameButton>
               ))}
             </div>
           )}
