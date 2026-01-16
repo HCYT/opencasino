@@ -2,6 +2,7 @@ import { NPCProfile, Player } from '../../types';
 import { StoredProfile } from '../profileStore';
 import { BlackjackSeat } from '../blackjack/types';
 import { BigTwoSeat } from '../bigTwo/types';
+import { GateSeat } from '../showdownGate/types';
 
 interface SeatBuilderParams {
   playerName: string;
@@ -115,4 +116,35 @@ export const buildShowdownPlayers = ({
     withStats({ id: 'ai2', name: ai2.name, chips: initialChips, currentBet: 0, cards: [], isFolded: false, isAI: true, avatar: ai2.avatar, lastAction: '', teamId: 'AI_TEAM' }, 0),
     withStats({ id: 'ai3', name: ai3.name, chips: initialChips, currentBet: 0, cards: [], isFolded: false, isAI: true, avatar: ai3.avatar, lastAction: '', teamId: 'AI_TEAM' }, 0)
   ];
+};
+
+export const buildGateSeats = ({
+  playerName,
+  playerChips,
+  playerAvatar,
+  initialChips,
+  profiles,
+  aiProfiles
+}: SeatBuilderParams) => {
+  // 過濾掉沒有籌碼的 NPC（至少需要底注金額）
+  const minChipsRequired = 100; // MIN_BET for ante
+  const validAiProfiles = aiProfiles.filter(ai => {
+    const chips = profiles[ai.name]?.chips ?? initialChips;
+    return chips >= minChipsRequired;
+  });
+
+  const seats: GateSeat[] = [
+    { id: 'player', name: playerName, chips: playerChips, avatar: playerAvatar, isAI: false },
+    ...validAiProfiles.slice(0, 3).map((ai, index) => ({
+      id: `ai${index + 1}` as const,
+      name: ai.name,
+      chips: profiles[ai.name]?.chips ?? initialChips,
+      avatar: ai.avatar,
+      isAI: true as const
+    }))
+  ];
+  return {
+    seats,
+    updatedProfiles: upsertProfilesFromSeats(profiles, seats)
+  };
 };

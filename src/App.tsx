@@ -4,7 +4,7 @@ import { INITIAL_CHIPS_OPTIONS, LOAN_AMOUNT, MIN_BET, PLAYER_QUOTES } from './co
 import { NPC_PROFILES } from './config/npcProfiles';
 import { saveProfiles } from './services/profileStore';
 import { useLobbyState } from './services/lobby/useLobbyState';
-import { buildBigTwoSeats, buildBlackjackSeats, buildShowdownPlayers } from './services/lobby/gameStarters';
+import { buildBigTwoSeats, buildBlackjackSeats, buildGateSeats, buildShowdownPlayers } from './services/lobby/gameStarters';
 import { validateLobbyEntry } from './services/lobby/entryValidation';
 import { pickNpcTriplet } from './services/lobby/npcPicker';
 import { useShowdownProfileSync } from './services/showdown/useShowdownProfileSync';
@@ -13,6 +13,8 @@ import { ShowdownRules } from './services/showdown/ShowdownRules';
 import BlackjackGame, { BlackjackResult, BlackjackSeat } from './components/BlackjackGame';
 import BigTwoGame, { BigTwoResult, BigTwoSeat } from './components/BigTwoGame';
 import ShowdownGame from './components/showdown/ShowdownGame';
+import ShowdownGateGame from './components/showdownGate/ShowdownGateGame';
+import { GateSeat, GateResult } from './services/showdownGate/types';
 import { GameButton } from './components/ui/GameButton';
 import Panel from './components/ui/Panel';
 import ToggleSwitch from './components/ui/ToggleSwitch';
@@ -55,7 +57,7 @@ const App: React.FC = () => {
     handleResetAllProfiles
   } = useLobbyState({ npcProfiles: NPC_PROFILES });
   const [betMode, setBetMode] = useState<'FIXED_LIMIT' | 'NO_LIMIT'>('FIXED_LIMIT');
-  const [gameType, setGameType] = useState<'SHOWDOWN' | 'BLACKJACK' | 'BIG_TWO'>('SHOWDOWN');
+  const [gameType, setGameType] = useState<'SHOWDOWN' | 'BLACKJACK' | 'BIG_TWO' | 'GATE'>('SHOWDOWN');
   const [blackjackActive, setBlackjackActive] = useState(false);
   const [blackjackSessionKey, setBlackjackSessionKey] = useState(0);
   const [blackjackSeats, setBlackjackSeats] = useState<BlackjackSeat[]>([]);
@@ -65,6 +67,10 @@ const App: React.FC = () => {
   const [bigTwoSessionKey, setBigTwoSessionKey] = useState(0);
   const [bigTwoSeats, setBigTwoSeats] = useState<BigTwoSeat[]>([]);
   const [bigTwoBaseBet, setBigTwoBaseBet] = useState(BIG_TWO_BASE_BETS[0]);
+  const [gateActive, setGateActive] = useState(false);
+  const [gateSessionKey, setGateSessionKey] = useState(0);
+  const [gateSeats, setGateSeats] = useState<GateSeat[]>([]);
+  const [gateAnteBet, setGateAnteBet] = useState(MIN_BET);
   const [teamingEnabled, setTeamingEnabled] = useState(false); // Default OFF
   const [startError, setStartError] = useState<string | null>(null);
   const playerAvatar = 'https://picsum.photos/seed/me/200/200';
@@ -137,6 +143,23 @@ const App: React.FC = () => {
       setBigTwoActive(true);
     };
 
+    const startGate = () => {
+      const [ai1, ai2, ai3] = pickNpcTriplet(NPC_PROFILES);
+      const { seats, updatedProfiles } = buildGateSeats({
+        playerName,
+        playerChips,
+        playerAvatar,
+        initialChips,
+        profiles,
+        aiProfiles: [ai1, ai2, ai3]
+      });
+      saveProfiles(updatedProfiles);
+      setProfiles(updatedProfiles);
+      setGateSeats(seats);
+      setGateSessionKey(prev => prev + 1);
+      setGateActive(true);
+    };
+
     if (gameType === 'BLACKJACK') {
       startBlackjack();
       return;
@@ -144,6 +167,11 @@ const App: React.FC = () => {
 
     if (gameType === 'BIG_TWO') {
       startBigTwo();
+      return;
+    }
+
+    if (gameType === 'GATE') {
+      startGate();
       return;
     }
 
@@ -205,6 +233,29 @@ const App: React.FC = () => {
 
   // showdown profile sync handled by useShowdownProfileSync
 
+  const handleGateProfileUpdate = (updates: Array<{ name: string; chips: number; result: GateResult }>) => {
+    const updated = { ...profiles };
+    updates.forEach(payload => {
+      const prev = updated[payload.name];
+      const wins = prev?.wins ?? 0;
+      const losses = prev?.losses ?? 0;
+      const games = prev?.games ?? 0;
+      const debt = prev?.debt ?? 0;
+      const win = payload.result === 'WIN';
+      const loss = payload.result === 'LOSE' || payload.result === 'POST' || payload.result === 'TRIPLE_POST';
+      updated[payload.name] = {
+        name: payload.name,
+        chips: payload.chips,
+        wins: wins + (win ? 1 : 0),
+        losses: losses + (loss ? 1 : 0),
+        games: games + 1,
+        debt
+      };
+    });
+    saveProfiles(updated);
+    setProfiles(updated);
+  };
+
   const blackjackCutRange = BLACKJACK_CUT_PRESETS.find(preset => preset.key === blackjackCutPreset) ?? BLACKJACK_CUT_PRESETS[1];
 
   if (bigTwoActive) {
@@ -232,6 +283,20 @@ const App: React.FC = () => {
         resolveChips={resolveChips}
         onExit={() => setBlackjackActive(false)}
         onProfilesUpdate={handleBlackjackProfileUpdate}
+      />
+    );
+  }
+
+  if (gateActive) {
+    return (
+      <ShowdownGateGame
+        key={`gate-${gateSessionKey}`}
+        seats={gateSeats}
+        anteBet={gateAnteBet}
+        npcProfiles={NPC_PROFILES}
+        resolveChips={resolveChips}
+        onExit={() => setGateActive(false)}
+        onProfilesUpdate={handleGateProfileUpdate}
       />
     );
   }
@@ -311,7 +376,7 @@ const App: React.FC = () => {
 
             <div>
               <label className="block text-[10px] font-black uppercase text-yellow-500/60 mb-3 tracking-widest">遊戲選擇</label>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 gap-3">
                 <GameButton
                   onClick={() => setGameType('SHOWDOWN')}
                   variant={gameType === 'SHOWDOWN' ? 'primary' : 'muted'}
@@ -336,9 +401,17 @@ const App: React.FC = () => {
                 >
                   大老二
                 </GameButton>
+                <GameButton
+                  onClick={() => setGameType('GATE')}
+                  variant={gameType === 'GATE' ? 'primary' : 'muted'}
+                  size="pill"
+                  className={`text-xs md:text-sm ${gameType === 'GATE' ? 'scale-105 shadow-[0_0_20px_rgba(234,179,8,0.3)] text-slate-900' : 'text-white/50'}`}
+                >
+                  射龍門
+                </GameButton>
               </div>
               <div className="text-[10px] text-white/40 uppercase tracking-widest mt-2">
-                {gameType === 'SHOWDOWN' ? '經典五張梭哈' : gameType === 'BLACKJACK' ? '經典 21 點，挑戰莊家' : '臺灣玩法大老二'}
+                {gameType === 'SHOWDOWN' ? '經典五張梭哈' : gameType === 'BLACKJACK' ? '經典 21 點，挑戰莊家' : gameType === 'BIG_TWO' ? '臺灣玩法大老二' : '經典射龍門，賭運氣'}
               </div>
             </div>
 
