@@ -35,12 +35,16 @@ export const Reel: React.FC<ReelProps> = ({ symbol, isSpinning, stopDelay, isWin
     return (
         <div className={`
             relative w-20 h-28 md:w-28 md:h-36 overflow-hidden
-            rounded-2xl border-4 transition-all duration-300 transform
-            ${internalSpinning ? 'bg-slate-800 border-slate-600' : `${symbolStyle.bg} ${symbolStyle.border}`}
+            rounded-2xl border-[3px] transition-all duration-300 transform
+            shadow-[inset_0_2px_8px_rgba(0,0,0,0.8),_0_2px_5px_rgba(0,0,0,0.5)]
+            ${internalSpinning ? 'bg-slate-900 border-slate-700' : `${symbolStyle.bg} ${symbolStyle.border}`}
             ${!internalSpinning && 'scale-100'}
-            ${isWinning && !internalSpinning ? 'animate-win-pulse z-20' : 'z-10'}
+            ${isWinning && !internalSpinning ? 'animate-win-pulse z-20 ring-4 ring-yellow-400/50' : 'z-10'}
             ${symbolStyle.glow}
         `}>
+            {/* Reel convex highlight */}
+            <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-white/20 to-transparent pointer-events-none z-20 rounded-t-xl" />
+            <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent pointer-events-none z-20 rounded-b-xl" />
             <div className="w-full h-full flex items-center justify-center relative">
 
                 {internalSpinning && (

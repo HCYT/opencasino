@@ -21,14 +21,14 @@ export const SYMBOL_EMOJIS: Record<SlotSymbol, string> = {
 };
 
 export const SYMBOL_COLORS: Record<SlotSymbol, { bg: string; border: string; glow: string }> = {
-    [SlotSymbol.WILD]: { bg: 'bg-purple-900', border: 'border-purple-400', glow: 'shadow-purple-500/50' },
-    [SlotSymbol.SEVEN]: { bg: 'bg-red-900', border: 'border-red-500', glow: 'shadow-red-500/50' },
-    [SlotSymbol.BAR]: { bg: 'bg-cyan-900', border: 'border-cyan-400', glow: 'shadow-cyan-500/50' },
-    [SlotSymbol.BELL]: { bg: 'bg-yellow-800', border: 'border-yellow-400', glow: 'shadow-yellow-500/50' },
-    [SlotSymbol.GRAPE]: { bg: 'bg-fuchsia-900', border: 'border-fuchsia-500', glow: 'shadow-fuchsia-500/50' },
-    [SlotSymbol.ORANGE]: { bg: 'bg-orange-900', border: 'border-orange-500', glow: 'shadow-orange-500/50' },
-    [SlotSymbol.CHERRY]: { bg: 'bg-rose-900', border: 'border-rose-500', glow: 'shadow-rose-500/50' },
-    [SlotSymbol.LEMON]: { bg: 'bg-yellow-900/50', border: 'border-yellow-200', glow: 'shadow-yellow-300/30' }
+    [SlotSymbol.WILD]: { bg: 'bg-purple-500/20', border: 'border-purple-400/50', glow: 'shadow-purple-500/30' },
+    [SlotSymbol.SEVEN]: { bg: 'bg-red-500/20', border: 'border-red-400/50', glow: 'shadow-red-500/30' },
+    [SlotSymbol.BAR]: { bg: 'bg-blue-500/20', border: 'border-blue-400/50', glow: 'shadow-blue-500/30' },
+    [SlotSymbol.BELL]: { bg: 'bg-slate-700/30', border: 'border-white/10', glow: 'shadow-yellow-500/10' },
+    [SlotSymbol.GRAPE]: { bg: 'bg-slate-700/30', border: 'border-white/10', glow: 'shadow-purple-500/10' },
+    [SlotSymbol.ORANGE]: { bg: 'bg-slate-700/30', border: 'border-white/10', glow: 'shadow-orange-500/10' },
+    [SlotSymbol.CHERRY]: { bg: 'bg-slate-700/30', border: 'border-white/10', glow: 'shadow-red-500/10' },
+    [SlotSymbol.LEMON]: { bg: 'bg-slate-700/30', border: 'border-white/10', glow: 'shadow-yellow-500/10' }
 };
 
 export const SYMBOL_VALUES: Record<SlotSymbol, number> = {

@@ -112,27 +112,39 @@ const SlotMachineGame: React.FC<SlotMachineGameProps> = ({ playerName, onExit })
     }
 
     return (
-        <div className="min-h-screen w-full bg-[#0a0f1c] flex flex-col items-center justify-center p-4 relative overflow-x-hidden overflow-y-auto">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-[#0a0f1c] to-[#0a0f1c] pointer-events-none fixed" />
+        <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 relative overflow-x-hidden overflow-y-auto">
+            <div className="fixed inset-0 -z-20">
+                <img
+                    src="/image/bg1.png"
+                    alt="Slot Machine Background"
+                    className="w-full h-full object-cover"
+                />
+            </div>
+            <div className="fixed inset-0 bg-gradient-to-br from-purple-950/80 via-black/60 to-black/80 -z-10 pointer-events-none" />
 
             <div className="relative z-10 flex flex-col xl:flex-row gap-8 items-start justify-center w-full max-w-[1400px]">
 
-                <div className="hidden xl:block w-80 sticky top-10">
+                <div className="hidden xl:flex w-80 sticky top-10 h-fit">
                     <PayTable />
                 </div>
 
                 <div className="flex-1 w-full max-w-xl flex flex-col items-center">
-                    <div className={`relative z-10 mb-6 md:mb-10 text-center ${result?.isJackpot ? 'animate-jackpot-flash' : 'animate-pulse'} mt-8 md:mt-0`}>
-                        <h2 className="text-yellow-500 font-black text-xs md:text-sm tracking-[0.2em] uppercase mb-2 drop-shadow-md">Grand Jackpot</h2>
-                        <div className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 via-yellow-500 to-yellow-800 drop-shadow-[0_0_50px_rgba(234,179,8,0.6)] font-mono animate-glow-pulse">
-                            ${jackpot.toLocaleString()}
+                    <Panel variant="glass" className="w-full p-6 md:p-10 rounded-[2.5rem] border border-white/10 bg-slate-900/40 backdrop-blur-xl shadow-2xl mx-auto relative overflow-hidden group flex flex-col items-center">
+
+                        {/* Glass Reflections */}
+                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+                        {/* Integrated Jackpot Display */}
+                        <div className={`relative z-10 mb-8 text-center ${result?.isJackpot ? 'animate-jackpot-flash' : 'animate-pulse'}`}>
+                            <h2 className="text-yellow-500 font-black text-xs md:text-sm tracking-[0.2em] uppercase mb-2 drop-shadow-md">Grand Jackpot</h2>
+                            <div className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 via-yellow-500 to-yellow-800 drop-shadow-[0_0_50px_rgba(234,179,8,0.6)] font-mono animate-glow-pulse">
+                                ${jackpot.toLocaleString()}
+                            </div>
                         </div>
-                    </div>
 
-                    <Panel variant="glass" className="w-full p-4 md:p-6 rounded-[3rem] border-4 border-yellow-500/40 bg-black/80 shadow-[0_0_150px_rgba(168,85,247,0.25)] transform hover:scale-[1.01] transition-transform duration-500 mx-auto relative">
-                        <div className="absolute top-4 left-4 right-4 h-2 bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-full opacity-50" />
-
-                        <div className="relative mb-8 bg-[#151515] p-4 rounded-3xl shadow-[inset_0_0_50px_black] border border-white/5 flex flex-col items-center justify-center">
+                        {/* Main Machine Area */}
+                        <div className="relative mb-10 bg-black/40 p-6 rounded-[2rem] border border-white/5 shadow-inner flex flex-col items-center justify-center backdrop-blur-sm">
                             <div className="relative w-fit mx-auto">
                                 <div className="grid grid-cols-3 gap-2 md:gap-3 relative z-10">
                                     {displayColumns.map((col, colIndex) => (
@@ -253,9 +265,10 @@ const SlotMachineGame: React.FC<SlotMachineGameProps> = ({ playerName, onExit })
                                     onClick={() => { playSound('chip-place'); toggleAutoSpin(); }}
                                     variant={isAutoSpin ? 'warning' : 'secondary'}
                                     size="pill"
-                                    className={`flex-1 text-base md:text-lg font-bold tracking-wider relative overflow-hidden ${isAutoSpin ? 'text-black' : 'text-white border-2 border-white/20 hover:border-white/50'}`}
+                                    className={`flex-1 text-base md:text-lg font-bold tracking-wider relative overflow-hidden group whitespace-nowrap flex items-center justify-center gap-2 ${isAutoSpin ? 'text-black' : 'text-white border-2 border-white/20 hover:border-white/50'}`}
                                 >
-                                    {isAutoSpin ? '⛔ STOP AUTO' : '🔄 AUTO SPIN'}
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg] translate-x-[-200%] group-hover:animate-shine transition-all duration-1000" />
+                                    <span>{isAutoSpin ? '⛔ STOP' : '🔄 AUTO'}</span>
                                     {isAutoSpin && <div className="absolute inset-0 bg-yellow-500/20 animate-pulse" />}
                                 </GameButton>
 
@@ -264,8 +277,9 @@ const SlotMachineGame: React.FC<SlotMachineGameProps> = ({ playerName, onExit })
                                     variant="success"
                                     size="pillLg"
                                     disabled={isSpinning || credits < betAmount || isAutoSpin}
-                                    className="flex-[2] text-2xl md:text-4xl font-black tracking-[0.2em] shadow-[0_0_30px_rgba(34,197,94,0.4)] hover:shadow-[0_0_60px_rgba(34,197,94,0.6)] hover:scale-105 transition-all active:scale-95 bg-gradient-to-t from-green-700 to-green-500 border-t border-green-400"
+                                    className="relative flex-[2] text-2xl md:text-4xl font-black tracking-[0.2em] shadow-[0_0_30px_rgba(34,197,94,0.4)] hover:shadow-[0_0_60px_rgba(34,197,94,0.6)] hover:scale-105 transition-all active:scale-95 bg-gradient-to-t from-green-700 to-green-500 border-t border-green-400 overflow-hidden group"
                                 >
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-[-20deg] translate-x-[-200%] group-hover:animate-shine transition-all duration-700" />
                                     {isSpinning ? '...' : 'SPIN'}
                                 </GameButton>
                             </div>

@@ -4,7 +4,7 @@ import Panel from '../ui/Panel';
 
 export const PayTable: React.FC = () => {
     return (
-        <Panel variant="glass" className="p-4 md:p-6 rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md max-w-sm w-full">
+        <Panel variant="glass" className="p-6 rounded-[2.5rem] border border-white/10 bg-slate-900/40 backdrop-blur-xl w-full h-full flex flex-col shadow-2xl">
             <h3 className="text-yellow-500 font-bold uppercase tracking-widest text-center mb-4 text-sm md:text-base border-b border-white/10 pb-2 drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]">
                 Winning Combinations
             </h3>
@@ -31,7 +31,7 @@ export const PayTable: React.FC = () => {
                 </div>
             </div>
 
-            <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
+            <div className="space-y-2 pr-2">
                 {Object.values(SlotSymbol).map(symbol => (
                     <div key={symbol} className="flex items-center justify-between bg-gradient-to-r from-white/5 to-transparent p-3 rounded-xl border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all cursor-default group">
                         <div className="flex items-center gap-3">
@@ -47,8 +47,12 @@ export const PayTable: React.FC = () => {
                 ))}
             </div>
 
-            <div className="mt-4 text-[10px] text-white/30 text-center border-t border-white/5 pt-3">
-                🃏 Wild 可替代任何符號
+            <div className="mt-6 flex items-center justify-center gap-3 bg-purple-500/10 border border-purple-500/20 rounded-xl p-3">
+                <span className="text-2xl filter drop-shadow-[0_0_5px_rgba(168,85,247,0.5)]">🃏</span>
+                <div className="flex flex-col text-left">
+                    <span className="text-purple-300 font-black text-xs uppercase tracking-wider">Wild Card</span>
+                    <span className="text-[10px] text-purple-200/50">WILD 可替代任意其他符號連線</span>
+                </div>
             </div>
         </Panel>
     );
