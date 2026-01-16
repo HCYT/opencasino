@@ -27,7 +27,7 @@ const BalancePanel: React.FC<BalancePanelProps> = ({
         真實餘額
       </label>
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 gap-4 mb-6">
         <div className="bg-emerald-500/10 border-2 border-emerald-500/30 rounded-2xl p-4 shadow-inner">
           <div className="text-[11px] text-emerald-200/60 uppercase tracking-widest font-medium mb-1">
             可用籌碼
