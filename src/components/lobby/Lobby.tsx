@@ -103,22 +103,38 @@ const Lobby: React.FC<LobbyProps> = ({ onGameStart }) => {
 
   return (
     <>
-      <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-900 to-emerald-950 -z-10"></div>
-      <ParticleBackground />
+      <div className="fixed inset-0 -z-10">
+        <img
+          src="/image/bg.png"
+          alt="Casino Background"
+          className="w-full h-full object-cover brightness-[0.6]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40" />
+      </div>
+
       <div className="fixed top-4 right-4 z-[100] md:top-6 md:right-6">
         <VolumeControl />
       </div>
 
-      <div className="w-full flex flex-col items-center text-white py-8">
+      <div className="w-full min-h-screen flex flex-col items-center py-8 overflow-y-auto">
         <LobbyHeader />
 
-        <div className="w-full max-w-6xl px-4 py-8 space-y-12">
-          <div className="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-8">
-            <div className="space-y-6">
+        <div className="w-full max-w-7xl px-4 py-8 space-y-12">
+
+          <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-8 items-start">
+            {/* Left Panel: Game Selection */}
+            <div className="space-y-8 bg-black/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/10 shadow-2xl">
+              <div className="flex items-center gap-4 mb-2">
+                <div className="w-1 h-8 bg-amber-500 rounded-full" />
+                <h2 className="text-2xl font-black text-white/90 tracking-widest uppercase">進入賭廳</h2>
+              </div>
+
               <PlayerInput
                 playerName={playerName}
                 setPlayerName={setPlayerName}
               />
+
+              <div className="h-px bg-white/10 my-6" />
 
               <GameSelector
                 gameType={gameType}
@@ -140,9 +156,9 @@ const Lobby: React.FC<LobbyProps> = ({ onGameStart }) => {
               />
 
               {(isNpcSelected || startError) && (
-                <div className="text-center py-3 px-4 bg-red-500/10 border border-red-500/30 rounded-xl">
-                  <div className="text-red-300 font-black text-sm">
-                    {isNpcSelected ? '不能使用 NPC 名稱進場' : startError}
+                <div className="text-center py-4 px-6 bg-red-500/10 border border-red-500/30 rounded-xl animate-pulse">
+                  <div className="text-red-300 font-bold text-base tracking-wide">
+                    {isNpcSelected ? '⚠️ 不能使用 NPC 名稱進場' : startError}
                   </div>
                 </div>
               )}
@@ -152,7 +168,7 @@ const Lobby: React.FC<LobbyProps> = ({ onGameStart }) => {
                 disabled={isNpcSelected}
                 variant="primary"
                 size="pillLg"
-                className={`w-full text-2xl ${isNpcSelected ? 'opacity-50 cursor-not-allowed' : ''
+                className={`w-full text-2xl py-6 shadow-[0_0_30px_rgba(234,179,8,0.4)] ${isNpcSelected ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
               >
                 {gameType === 'BLACKJACK' ? '開始 21 點' :
@@ -161,61 +177,85 @@ const Lobby: React.FC<LobbyProps> = ({ onGameStart }) => {
               </GameButton>
             </div>
 
-            <div className="space-y-6">
-              <BalancePanel
-                displayedChips={displayedChips}
-                displayedDebt={displayedDebt}
-                repayAmount={repayAmount}
-                setRepayAmount={setRepayAmount}
-                handleLoan={handleLoan}
-                handleRepay={handleRepay}
-                resolveChips={resolveChips}
-              />
+            {/* Right Panel: Player Status & Leaderboard */}
+            <div className="space-y-8">
+              <div className="bg-black/40 backdrop-blur-md p-6 rounded-[2rem] border border-white/10 shadow-xl">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-1 h-6 bg-emerald-500 rounded-full" />
+                  <h2 className="text-lg font-black text-white/90 tracking-widest uppercase">資產管理</h2>
+                </div>
+                <BalancePanel
+                  displayedChips={displayedChips}
+                  displayedDebt={displayedDebt}
+                  repayAmount={repayAmount}
+                  setRepayAmount={setRepayAmount}
+                  handleLoan={handleLoan}
+                  handleRepay={handleRepay}
+                  resolveChips={resolveChips}
+                />
+              </div>
 
-              <ProfileList
-                leaderboard={leaderboard}
-                playerName={playerName}
-                setPlayerName={setPlayerName}
-                npcNames={npcNames}
-                handleDeleteProfile={handleDeleteProfile}
-                handleCreateProfile={handleCreateProfile}
-                handleResetNpcProfiles={handleResetNpcProfiles}
-                handleResetAllProfiles={handleResetAllProfiles}
-              />
+              <div className="bg-black/40 backdrop-blur-md p-6 rounded-[2rem] border border-white/10 shadow-xl max-h-[600px] overflow-y-auto custom-scrollbar">
+                <div className="flex items-center justify-between mb-6 sticky top-0 bg-transparent z-10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-1 h-6 bg-blue-500 rounded-full" />
+                    <h2 className="text-lg font-black text-white/90 tracking-widest uppercase">玩家檔案</h2>
+                  </div>
+                  <span className="text-xs font-bold text-white/30 uppercase">{leaderboard.length} PROFILES</span>
+                </div>
+
+                <ProfileList
+                  leaderboard={leaderboard}
+                  playerName={playerName}
+                  setPlayerName={setPlayerName}
+                  npcNames={npcNames}
+                  handleDeleteProfile={handleDeleteProfile}
+                  handleCreateProfile={handleCreateProfile}
+                  handleResetNpcProfiles={handleResetNpcProfiles}
+                  handleResetAllProfiles={handleResetAllProfiles}
+                />
+              </div>
             </div>
           </div>
 
-          <div className="pt-12 border-t border-slate-700/30">
+          <div className="pt-12 border-t border-white/5">
             <NPCProfiles />
           </div>
 
           {leaderboard.length > 0 && (
-            <div className="pt-12 border-t border-slate-700/30">
-              <div className="text-amber-400 font-black text-sm uppercase tracking-[0.4em] mb-6 text-center relative z-10">
-                戰績排行榜
+            <div className="pt-12">
+              <div className="text-center relative mb-8">
+                <span className="text-amber-500 font-black text-2xl uppercase tracking-[0.5em] relative z-10 drop-shadow-[0_2px_10px_rgba(245,158,11,0.5)]">
+                  戰績排行榜
+                </span>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-1 bg-amber-500/20 blur-sm rounded-full" />
               </div>
-              <div className="grid gap-2 max-w-3xl mx-auto relative z-10">
+
+              <div className="grid gap-3 max-w-4xl mx-auto relative z-10">
                 {leaderboard.map((profile, index) => (
                   <div
                     key={profile.name}
-                    className="flex items-center justify-between bg-gradient-to-r from-slate-800/80 to-slate-900/80 border border-slate-700/50 backdrop-blur-sm rounded-xl px-6 py-4 text-white/90 hover:border-amber-400/30 transition-all"
+                    className="group flex items-center justify-between bg-gradient-to-r from-black/60 to-black/40 border border-white/5 backdrop-blur-md rounded-2xl px-6 py-5 hover:border-amber-500/50 hover:bg-black/60 transition-all duration-300 shadow-lg"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-base shadow-lg ${index === 0 ? 'bg-gradient-to-br from-yellow-400 to-amber-500 text-slate-900' :
-                        index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-slate-900' :
-                          index === 2 ? 'bg-gradient-to-br from-amber-600 to-amber-700 text-white' :
-                            'bg-slate-700/50 text-slate-400'
+                    <div className="flex items-center gap-6">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black text-xl shadow-lg transform group-hover:scale-110 transition-transform ${index === 0 ? 'bg-gradient-to-br from-yellow-300 to-amber-600 text-black ring-2 ring-yellow-500/50' :
+                        index === 1 ? 'bg-gradient-to-br from-slate-200 to-slate-400 text-slate-800 ring-2 ring-slate-400/50' :
+                          index === 2 ? 'bg-gradient-to-br from-orange-400 to-amber-800 text-white ring-2 ring-orange-500/50' :
+                            'bg-white/5 text-white/30'
                         }`}>
                         {index + 1}
                       </div>
-                      <div className="font-black text-base truncate">{profile.name}</div>
-                    </div>
-                    <div className="flex items-center gap-6">
-                      <div className="text-xs text-slate-400 font-bold uppercase tracking-wide">
-                        W {profile.wins} / L {profile.losses} / G {profile.games}
+                      <div className="flex flex-col">
+                        <div className="font-black text-lg text-white group-hover:text-amber-400 transition-colors">{profile.name}</div>
+                        <div className="text-[10px] text-white/30 uppercase tracking-widest font-bold">Player Rank</div>
                       </div>
-                      <div className="text-base font-black text-emerald-300">
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <div className="text-xl font-black text-emerald-400 tabular-nums tracking-wide group-hover:scale-105 transition-transform origin-right">
                         ${profile.chips.toLocaleString()}
+                      </div>
+                      <div className="text-xs text-white/40 font-bold uppercase tracking-wider bg-white/5 px-2 py-0.5 rounded-md">
+                        Win {((profile.wins / (profile.games || 1)) * 100).toFixed(0)}%
                       </div>
                     </div>
                   </div>
@@ -225,8 +265,10 @@ const Lobby: React.FC<LobbyProps> = ({ onGameStart }) => {
           )}
         </div>
 
-        <div className="w-full text-center py-8 text-slate-600 text-xs">
-          <p>慈善撲克王大賽 © 2026</p>
+        <div className="w-full text-center py-12">
+          <p className="text-white/20 text-xs font-bold tracking-[0.2em] hover:text-white/40 transition-colors cursor-default">
+            慈善撲克王大賽 © 2026
+          </p>
         </div>
       </div>
     </>
