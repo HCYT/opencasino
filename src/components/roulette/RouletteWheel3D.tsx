@@ -30,7 +30,12 @@ const DAMP_FREE = 0.993;       // Damping when outside pocket
 const DAMP_POCKET = 0.985;     // Damping inside pocket (stronger to slow down)
 const LOCK_SPEED = 0.15;       // Lock when angular speed below this
 
-// Combined geometry rotation offset
+// MAPPING PARAMETERS (Calibrated from User Logs)
+// Log showed: Sys 19 (Idx 26) -> User 27 (Idx 20) => Mirror(26)=12, 12+8=20.
+// Log showed: Sys 23 (Idx 34) -> User 34 (Idx 12) => Mirror(34)=4, 4+8=12.
+const INDEX_OFFSET = 8;
+const MIRROR_MAPPING = true;
+
 const GEOM_ROT = VISUAL_ROT + WEDGE_CENTER_SHIFT + BASE_ROT;
 
 export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
@@ -131,11 +136,33 @@ export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
                 rel = rel % TWO_PI;
                 if (rel < 0) rel += TWO_PI;
 
-                // Calculate which segment
-                const idx = ((Math.floor(rel / SEGMENT_ANGLE) % WHEEL_SIZE) + WHEEL_SIZE) % WHEEL_SIZE;
+                // Calculate raw structure index (CCW from 0)
+                let idx = ((Math.floor(rel / SEGMENT_ANGLE) % WHEEL_SIZE) + WHEEL_SIZE) % WHEEL_SIZE;
+
+                // Debug Raw Index
+                const rawIdx = idx;
+
+                // Apply Mapping Correction
+                if (MIRROR_MAPPING) {
+                    idx = (WHEEL_SIZE - idx) % WHEEL_SIZE;
+                }
+                idx = (idx + INDEX_OFFSET) % WHEEL_SIZE;
+
+                // DEBUG LOG
+                console.log('🎰 ROULETTE RESULT:', {
+                    relDeg: (rel * 180 / Math.PI).toFixed(1),
+                    rawIdx,
+                    mirror: MIRROR_MAPPING,
+                    offset: INDEX_OFFSET,
+                    finalIdx: idx,
+                    winner: WHEEL_ORDER[idx]
+                });
 
                 finalIndexRef.current = idx;
                 setCalculatedWinner(WHEEL_ORDER[idx]);
+
+                // Store the ACTUAL angle (not snapped center) for natural stop
+                landedAngleRef.current = rel; // Segments frame angle
 
                 // Store the ACTUAL angle (not snapped center) for natural stop
                 landedAngleRef.current = rel; // Segments frame angle
