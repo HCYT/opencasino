@@ -258,8 +258,39 @@ const GameSelector: React.FC<GameSelectorProps> = ({
               </div>
             )}
 
+            {/* SEVENS SETTINGS */}
+            {gameType === 'SEVENS' && (
+              <div className="space-y-5 animate-slide-up">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.15em] ml-1">底注 Base Bet</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {BIG_TWO_BASE_BETS.map(val => (
+                      <button
+                        key={val}
+                        onClick={() => setBigTwoBaseBet(val)}
+                        className={`py-2 rounded-xl text-[11px] font-black transition-all ${bigTwoBaseBet === val
+                          ? 'bg-amber-600 text-white shadow-lg shadow-amber-900/40'
+                          : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+                          }`}
+                      >
+                        ${val}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between bg-red-500/5 p-4 rounded-xl border border-red-500/10">
+                  <div className="flex flex-col">
+                    <span className="text-red-400 font-black text-sm">惡夢模式</span>
+                    <span className="text-red-500/40 text-[10px] font-bold uppercase tracking-wider">NPC 聯合圍剿</span>
+                  </div>
+                  <ToggleSwitch checked={teamingEnabled} onChange={setTeamingEnabled} />
+                </div>
+              </div>
+            )}
+
             {/* DEFAULT / NO SETTINGS */}
-            {['GATE', 'SLOTS'].includes(gameType) && (
+            {['GATE', 'SLOTS', 'BACCARAT', 'SICBO', 'ROULETTE'].includes(gameType) && (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 opacity-40">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 mb-2 text-amber-500/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></svg>
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em]">無需額外設定</span>

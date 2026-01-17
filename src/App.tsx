@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { GamePhase, UserProfile } from './types';
 import { MIN_BET, PLAYER_QUOTES } from './constants';
 import { NPC_PROFILES } from './config/npcProfiles';
-import { BIG_TWO_BASE_BETS, BLACKJACK_CUT_PRESETS, BACCARAT_MIN_BETS, SICBO_MIN_BETS, GameType, BetMode, BlackjackCutPresetKey } from './config/gameConfig';
+import { BIG_TWO_BASE_BETS, BLACKJACK_CUT_PRESETS, BACCARAT_MIN_BETS, SICBO_MIN_BETS, SEVENS_BASE_BETS, GameType, BetMode, BlackjackCutPresetKey } from './config/gameConfig';
 import { saveProfiles } from './services/profileStore';
-import { buildBigTwoSeats, buildBlackjackSeats, buildGateSeats, buildShowdownPlayers, buildBaccaratSeats, buildSicBoSeats } from './services/lobby/gameStarters';
+import { buildBigTwoSeats, buildBlackjackSeats, buildGateSeats, buildShowdownPlayers, buildBaccaratSeats, buildSicBoSeats, buildSevensSeats } from './services/lobby/gameStarters';
 import { pickNpcTriplet } from './services/lobby/npcPicker';
 import { useGameEngine } from './services/showdown/useShowdownEngine';
 import { ShowdownRules } from './services/showdown/ShowdownRules';
@@ -19,6 +19,7 @@ import { BaccaratSeat } from './services/baccarat/types';
 import SicBoGame from './components/sicBo/SicBoGame';
 import { SicBoSeat } from './services/sicBo/types';
 import RouletteGame from './components/roulette/RouletteGame';
+import SevensGame, { SevensSeat, SevensResult } from './components/sevens/SevensGame';
 import { GameButton } from './components/ui/GameButton';
 import VolumeControl from './components/ui/VolumeControl';
 import Lobby from './components/lobby/Lobby';
@@ -50,6 +51,11 @@ const App: React.FC = () => {
   const [sicBoMinBet] = useState(SICBO_MIN_BETS[1]);
   const [rouletteActive, setRouletteActive] = useState(false);
   const [rouletteSessionKey, setRouletteSessionKey] = useState(0);
+  const [sevensActive, setSevensActive] = useState(false);
+  const [sevensSessionKey, setSevensSessionKey] = useState(0);
+  const [sevensSeats, setSevensSeats] = useState<SevensSeat[]>([]);
+  const [sevensBaseBet, setSevensBaseBet] = useState(SEVENS_BASE_BETS[0]);
+  const [nightmareModeEnabled, setNightmareModeEnabled] = useState(false);
   const [currentActivePlayer, setCurrentActivePlayer] = useState('');
   const playerAvatar = 'https://picsum.photos/seed/me/200/200';
 
@@ -69,6 +75,7 @@ const App: React.FC = () => {
     profiles: Record<string, UserProfile>;
     betMode: BetMode;
     teamingEnabled: boolean;
+    nightmareMode: boolean;
     bigTwoBaseBet: number;
     gateAnteBet: number;
     blackjackDecks: number;
@@ -82,6 +89,7 @@ const App: React.FC = () => {
       profiles,
       betMode,
       teamingEnabled,
+      nightmareMode,
       bigTwoBaseBet: configBigTwoBaseBet,
       gateAnteBet: configGateAnteBet,
       blackjackDecks: configBlackjackDecks,
@@ -93,6 +101,7 @@ const App: React.FC = () => {
     setGateAnteBet(configGateAnteBet);
     setBlackjackDecks(configBlackjackDecks);
     setBlackjackCutPreset(configBlackjackCutPreset);
+    setNightmareModeEnabled(nightmareMode);
     setProfiles(profiles);
 
     const currentUserProfile = profiles[playerName];
@@ -216,6 +225,28 @@ const App: React.FC = () => {
       return;
     }
 
+    const startSevens = () => {
+      const [ai1, ai2, ai3] = pickNpcTriplet(NPC_PROFILES);
+      const { seats, updatedProfiles } = buildSevensSeats({
+        playerName,
+        playerChips,
+        playerAvatar: dynamicAvatar,
+        initialChips,
+        profiles,
+        aiProfiles: [ai1, ai2, ai3]
+      });
+      saveProfiles(updatedProfiles);
+      setSevensSeats(seats);
+      setSevensBaseBet(configBigTwoBaseBet); // Use the bet selected in Lobby
+      setSevensSessionKey(prev => prev + 1);
+      setSevensActive(true);
+    };
+
+    if (gameType === 'SEVENS') {
+      startSevens();
+      return;
+    }
+
     if (gameType === 'ROULETTE') {
       setRouletteSessionKey(prev => prev + 1);
       setRouletteActive(true);
@@ -300,6 +331,27 @@ const App: React.FC = () => {
     setProfiles(updated);
   };
 
+  const handleSevensProfileUpdate = (updates: Array<{ name: string; chips: number; result: SevensResult }>) => {
+    const updated = { ...profiles };
+    updates.forEach(payload => {
+      const prev = updated[payload.name];
+      const wins = prev?.wins ?? 0;
+      const losses = prev?.losses ?? 0;
+      const games = prev?.games ?? 0;
+      const debt = prev?.debt ?? 0;
+      updated[payload.name] = {
+        name: payload.name,
+        chips: payload.chips,
+        wins: wins + (payload.result === 'WIN' ? 1 : 0),
+        losses: losses + (payload.result === 'LOSE' ? 1 : 0),
+        games: games + 1,
+        debt
+      };
+    });
+    saveProfiles(updated);
+    setProfiles(updated);
+  };
+
   const blackjackCutRange = BLACKJACK_CUT_PRESETS.find(preset => preset.key === blackjackCutPreset) ?? BLACKJACK_CUT_PRESETS[1];
 
   if (bigTwoActive) {
@@ -315,7 +367,7 @@ const App: React.FC = () => {
           npcProfiles={NPC_PROFILES}
           onExit={() => setBigTwoActive(false)}
           onProfilesUpdate={handleBigTwoProfileUpdate}
-          nightmareMode={false}
+          nightmareMode={nightmareModeEnabled}
         />
       </>
     );
@@ -483,6 +535,26 @@ const App: React.FC = () => {
             onExit={() => setRouletteActive(false)}
           />
         </div>
+      </>
+    );
+  }
+
+  if (sevensActive) {
+    return (
+      <>
+        <div className="fixed top-4 right-4 z-[100] md:top-6 md:right-6">
+          <VolumeControl />
+        </div>
+        <SevensGame
+          key={`sevens-${sevensSessionKey}`}
+          seats={sevensSeats}
+          baseBet={sevensBaseBet}
+          variant="STANDARD"
+          npcProfiles={NPC_PROFILES}
+          nightmareMode={nightmareModeEnabled}
+          onExit={() => setSevensActive(false)}
+          onProfilesUpdate={handleSevensProfileUpdate}
+        />
       </>
     );
   }

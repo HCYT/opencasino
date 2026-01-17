@@ -27,6 +27,7 @@ interface GameStartConfig {
   profiles: Record<string, UserProfile>;
   betMode: BetMode;
   teamingEnabled: boolean;
+  nightmareMode: boolean;
   bigTwoBaseBet: number;
   gateAnteBet: number;
   blackjackDecks: number;
@@ -105,6 +106,7 @@ const Lobby: React.FC<LobbyProps> = ({ onGameStart }) => {
       profiles,
       betMode,
       teamingEnabled,
+      nightmareMode: teamingEnabled, // SEVENS and BIG_TWO share this setting
       bigTwoBaseBet,
       gateAnteBet: MIN_BET, // Gate uses MIN_BET as ante
       blackjackDecks,

@@ -1,9 +1,10 @@
-export type GameType = 'SHOWDOWN' | 'BLACKJACK' | 'BIG_TWO' | 'GATE' | 'SLOTS' | 'BACCARAT' | 'SICBO' | 'ROULETTE';
+export type GameType = 'SHOWDOWN' | 'BLACKJACK' | 'BIG_TWO' | 'GATE' | 'SLOTS' | 'BACCARAT' | 'SICBO' | 'ROULETTE' | 'SEVENS';
 export type BetMode = 'FIXED_LIMIT' | 'NO_LIMIT';
 export type BlackjackCutPresetKey = 'DEEP' | 'STANDARD' | 'SHALLOW';
 
 export const BLACKJACK_DECK_OPTIONS = [4, 6, 8];
 export const BIG_TWO_BASE_BETS = [5, 50, 1000, 5000];
+export const SEVENS_BASE_BETS = [5, 10, 50, 100];
 export const BACCARAT_MIN_BETS = [10, 100, 500, 1000];
 export const SICBO_MIN_BETS = [10, 50, 100, 500];
 
@@ -13,7 +14,7 @@ export const BLACKJACK_CUT_PRESETS = [
     { key: 'SHALLOW' as BlackjackCutPresetKey, label: '淺 (30%)', min: 0.25, max: 0.3 }
 ] as const;
 
-import { CircleDashed, Spade, Layers, Club, Target, Cherry, Crown, Dice5 } from 'lucide-react';
+import { CircleDashed, Spade, Layers, Club, Target, Cherry, Crown, Dice5, Grid3X3 } from 'lucide-react';
 
 export interface GameInfo {
     type: GameType;
@@ -117,6 +118,17 @@ export const GAMES: GameInfo[] = [
             ...UNIFIED_THEME,
             from: 'from-green-900/40',
             text: 'text-green-400'
+        }
+    },
+    {
+        type: 'SEVENS',
+        name: '牌七',
+        icon: <Grid3X3 size={48} strokeWidth={1.5} className="text-sky-300" />,
+        desc: '接龍排七',
+        theme: {
+            ...UNIFIED_THEME,
+            from: 'from-sky-900/40',
+            text: 'text-sky-400'
         }
     }
 ];

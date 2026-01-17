@@ -5,6 +5,7 @@ import { BigTwoSeat } from '../bigTwo/types';
 import { GateSeat } from '../showdownGate/types';
 import { BaccaratSeat } from '../baccarat/types';
 import { SicBoSeat } from '../sicBo/types';
+import { SevensSeat } from '../sevens/types';
 
 interface SeatBuilderParams {
   playerName: string;
@@ -193,3 +194,25 @@ export const buildSicBoSeats = ({
     updatedProfiles: upsertProfilesFromSeats(profiles, seats)
   };
 };
+
+export const buildSevensSeats = ({
+  playerName,
+  playerChips,
+  playerAvatar,
+  initialChips,
+  profiles,
+  aiProfiles
+}: SeatBuilderParams) => {
+  const [ai1, ai2, ai3] = aiProfiles;
+  const seats: SevensSeat[] = [
+    { id: 'player', name: playerName, chips: playerChips, avatar: playerAvatar, isAI: false },
+    { id: 'ai1', name: ai1.name, chips: profiles[ai1.name]?.chips ?? initialChips, avatar: ai1.avatar, isAI: true },
+    { id: 'ai2', name: ai2.name, chips: profiles[ai2.name]?.chips ?? initialChips, avatar: ai2.avatar, isAI: true },
+    { id: 'ai3', name: ai3.name, chips: profiles[ai3.name]?.chips ?? initialChips, avatar: ai3.avatar, isAI: true }
+  ];
+  return {
+    seats,
+    updatedProfiles: upsertProfilesFromSeats(profiles, seats)
+  };
+};
+
