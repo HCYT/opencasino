@@ -1,6 +1,6 @@
 import React, { useRef, useMemo, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Float } from '@react-three/drei';
+import { Float, RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
 
 
@@ -8,48 +8,17 @@ import * as THREE from 'three';
 const createDiceTextures = (number: number, color: string, dotColor: string) => {
     const size = 256;
     const canvasColor = document.createElement('canvas');
-    const canvasBump = document.createElement('canvas');
-    canvasColor.width = canvasBump.width = size;
-    canvasColor.height = canvasBump.height = size;
+    canvasColor.width = size;
+    canvasColor.height = size;
 
     const ctxColor = canvasColor.getContext('2d');
-    const ctxBump = canvasBump.getContext('2d');
 
-    if (!ctxColor || !ctxBump) return { map: null, bumpMap: null };
+    if (!ctxColor) return { map: null };
 
-    // 1. 背景
-    ctxColor.fillStyle = color;
-    ctxColor.fillRect(0, 0, size, size);
+    // 1. 背景透明 (Clear)
+    ctxColor.clearRect(0, 0, size, size);
 
-    // Bump
-    ctxBump.fillStyle = '#FFFFFF';
-    ctxBump.fillRect(0, 0, size, size);
-
-    // 2. 模擬圓角 (Bevel) - 在 Bump Map 邊緣繪製漸層
-    //這會讓標準立方體的邊緣在光照下看起來是圓的
-    const bevelSize = size * 0.15; // 圓角大小
-    const bevelGradient = ctxBump.createLinearGradient(0, 0, bevelSize, 0);
-    bevelGradient.addColorStop(0, '#000000'); // 邊緣最深
-    bevelGradient.addColorStop(1, '#FFFFFF'); // 內部平坦
-
-    // 畫四個邊的漸層
-    ctxBump.fillStyle = '#000000'; // 先填黑底確保邊緣黑
-    ctxBump.fillRect(0, 0, size, size);
-
-    // 中間填白 (高原)
-    ctxBump.fillStyle = '#FFFFFF';
-    ctxBump.fillRect(bevelSize, bevelSize, size - bevelSize * 2, size - bevelSize * 2);
-
-    // 繪製四邊漸層 (這裡簡化，直接用陰影模糊來模擬平滑圓角)
-    ctxBump.shadowColor = '#000000';
-    ctxBump.shadowBlur = bevelSize;
-    ctxBump.shadowOffsetX = 0;
-    ctxBump.shadowOffsetY = 0;
-    ctxBump.fillStyle = '#FFFFFF';
-    ctxBump.fillRect(bevelSize, bevelSize, size - bevelSize * 2, size - bevelSize * 2);
-    ctxBump.shadowColor = 'transparent'; // Reset
-
-    // 3. 點數位置配置 (0~1)
+    // 2. 點數位置配置 (0~1)
     const dotPositions: Record<number, number[][]> = {
         1: [[0.5, 0.5]],
         2: [[0.2, 0.2], [0.8, 0.8]],
@@ -60,7 +29,7 @@ const createDiceTextures = (number: number, color: string, dotColor: string) => 
     };
 
     const dots = dotPositions[number] || [];
-    const radius = size * 0.1;
+    const radius = size * 0.12; // 稍微加大點數
 
     dots.forEach(([x, y]) => {
         const cx = x * size;
@@ -71,46 +40,27 @@ const createDiceTextures = (number: number, color: string, dotColor: string) => 
         ctxColor.arc(cx, cy, radius, 0, Math.PI * 2);
         ctxColor.fillStyle = dotColor;
         ctxColor.fill();
-
-        // Bump Map Gradient
-        const grad = ctxBump.createRadialGradient(cx, cy, radius * 0.8, cx, cy, radius * 1.2);
-        grad.addColorStop(0, '#000000');
-        grad.addColorStop(1, '#FFFFFF');
-
-        ctxBump.beginPath();
-        ctxBump.arc(cx, cy, radius * 1.2, 0, Math.PI * 2);
-        ctxBump.fillStyle = grad;
-        ctxBump.fill();
     });
 
     return {
         map: new THREE.CanvasTexture(canvasColor),
-        bumpMap: new THREE.CanvasTexture(canvasBump)
     };
 };
 
 const Die = ({ value, isRolling }: { value: number, isRolling: boolean }) => {
-    const meshRef = useRef<THREE.Mesh>(null);
+    const groupRef = useRef<THREE.Group>(null);
 
     // 材質生成
-    const materials = useMemo(() => {
-        const baseColor = '#f5f5f5';
+    const textures = useMemo(() => {
+        const baseColor = '#f5f5f5'; // unused in texture now, effectively
         const redDot = '#dc2626';
         const blackDot = '#171717';
-        const faceNumbers = [1, 6, 3, 4, 2, 5];
+        const faceNumbers = [1, 6, 3, 4, 2, 5]; // +x, -x, +y, -y, +z, -z
 
         return faceNumbers.map(n => {
             const isRed = n === 1 || n === 4;
-            const { map, bumpMap } = createDiceTextures(n, baseColor, isRed ? redDot : blackDot);
-
-            return new THREE.MeshStandardMaterial({
-                map,
-                bumpMap,
-                bumpScale: 0.8, // 增加深度讓圓角更明顯
-                color: baseColor,
-                roughness: 0.1, // 更光滑，像高級壓克力
-                metalness: 0.1, // 一點點金屬感增加反光
-            });
+            const { map } = createDiceTextures(n, baseColor, isRed ? redDot : blackDot);
+            return map;
         });
     }, []);
 
@@ -135,14 +85,14 @@ const Die = ({ value, isRolling }: { value: number, isRolling: boolean }) => {
     });
 
     useFrame((state, delta) => {
-        if (!meshRef.current) return;
+        if (!groupRef.current) return;
         if (isRolling) {
-            meshRef.current.rotation.x += delta * spinSpeed.x;
-            meshRef.current.rotation.y += delta * spinSpeed.y;
-            meshRef.current.rotation.z += delta * spinSpeed.z;
+            groupRef.current.rotation.x += delta * spinSpeed.x;
+            groupRef.current.rotation.y += delta * spinSpeed.y;
+            groupRef.current.rotation.z += delta * spinSpeed.z;
         } else {
             const target = targetRotations[value];
-            const current = meshRef.current.rotation;
+            const current = groupRef.current.rotation;
             const lerpAngle = (curr: number, dest: number, speed: number) => {
                 let diff = (dest - curr) % (Math.PI * 2);
                 if (diff < -Math.PI) diff += Math.PI * 2;
@@ -150,24 +100,57 @@ const Die = ({ value, isRolling }: { value: number, isRolling: boolean }) => {
                 return curr + diff * speed;
             };
             const t = Math.min(1, delta * 8);
-            meshRef.current.rotation.x = lerpAngle(current.x, target[0], t);
-            meshRef.current.rotation.y = lerpAngle(current.y, target[1], t);
-            meshRef.current.rotation.z = lerpAngle(current.z, target[2], t);
+            groupRef.current.rotation.x = lerpAngle(current.x, target[0], t);
+            groupRef.current.rotation.y = lerpAngle(current.y, target[1], t);
+            groupRef.current.rotation.z = lerpAngle(current.z, target[2], t);
         }
     });
 
+    // Face configurations matching BoxGeometry order: +x, -x, +y, -y, +z, -z
+    // Cube size 1.6. Half = 0.8. Offset slightly to 0.802 to avoid z-fighting on flat areas (though RoundedBox is flat there).
+    const faces = [
+        { pos: [0.802, 0, 0], rot: [0, Math.PI / 2, 0] },  // Right (+x)
+        { pos: [-0.802, 0, 0], rot: [0, -Math.PI / 2, 0] }, // Left (-x)
+        { pos: [0, 0.802, 0], rot: [-Math.PI / 2, 0, 0] },  // Top (+y)
+        { pos: [0, -0.802, 0], rot: [Math.PI / 2, 0, 0] },  // Bottom (-y)
+        { pos: [0, 0, 0.802], rot: [0, 0, 0] },             // Front (+z)
+        { pos: [0, 0, -0.802], rot: [0, Math.PI, 0] },      // Back (-z)
+    ];
 
     return (
-        <mesh
-            ref={meshRef}
-            // 移除 props 傳入的 position/rotation，改由外層 Float 控制位置，內層只負責自轉
-            rotation={new THREE.Euler(0, 0, 0)}
-        >
-            <boxGeometry args={[1.6, 1.6, 1.6]} />
-            {materials.map((mat, i) => (
-                <primitive key={i} object={mat} attach={`material-${i}`} />
+        <group ref={groupRef}>
+            {/* Main Rounded Body */}
+            <RoundedBox
+                args={[1.6, 1.6, 1.6]}
+                radius={0.25}
+                smoothness={8}
+                receiveShadow
+                castShadow
+            >
+                <meshStandardMaterial
+                    color="#f5f5f5"
+                    roughness={0.1}
+                    metalness={0.1}
+                />
+            </RoundedBox>
+
+            {/* Face Decals */}
+            {faces.map((face, i) => (
+                <mesh
+                    key={i}
+                    position={face.pos as [number, number, number]}
+                    rotation={face.rot as [number, number, number]}
+                >
+                    <planeGeometry args={[1.3, 1.3]} />
+                    <meshStandardMaterial
+                        map={textures[i]}
+                        transparent
+                        depthWrite={false} // Avoid z-fighting artifacts
+                        roughness={0.1}
+                    />
+                </mesh>
             ))}
-        </mesh>
+        </group>
     );
 };
 
