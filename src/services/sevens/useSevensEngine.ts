@@ -216,8 +216,8 @@ export const useSevensEngine = ({
         const scores = finalPlayers.map((p, idx) => ({
             idx,
             name: p.name,
-            passedScore: calculateScore(p.passedCards),
-            passedCount: p.passedCards.length
+            passedScore: calculateScore([...p.passedCards, ...p.hand]),
+            passedCount: p.passedCards.length + p.hand.length
         }));
 
         // Sort by: 1) finished order (earlier = better), 2) lower pass score

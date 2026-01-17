@@ -115,7 +115,30 @@ const SevensGame: React.FC<SevensGameProps> = ({
         }
     };
 
-    const ranking = finishedOrder.map(idx => players[idx]).filter(Boolean);
+    // Sort players for ranking: Finished players (in order) followed by unfinished players (sorted by current score)
+    const ranking = useMemo(() => {
+        if (phase !== 'RESULT') return [];
+
+        const sorted = [...players].sort((a, b) => {
+            const aFinishOrder = finishedOrder.indexOf(players.indexOf(a));
+            const bFinishOrder = finishedOrder.indexOf(players.indexOf(b));
+            const aFinished = aFinishOrder >= 0;
+            const bFinished = bFinishOrder >= 0;
+
+            if (aFinished && !bFinished) return -1;
+            if (!aFinished && bFinished) return 1;
+            if (aFinished && bFinished) return aFinishOrder - bFinishOrder;
+
+            // For unfinished, higher score (penalty) is worse (lower rank)
+            // But actually we want 1st, 2nd, 3rd... so Losers are last.
+            // Within losers, lower penalty is better? Or doesn't matter much as usually 1 loser.
+            const aScore = calculateScore([...a.passedCards, ...a.hand]);
+            const bScore = calculateScore([...b.passedCards, ...b.hand]);
+            return aScore - bScore;
+        });
+
+        return sorted;
+    }, [phase, players, finishedOrder]);
 
     return (
         <div className="game-container premium-table-bg relative overflow-visible select-none h-screen w-full">
@@ -277,7 +300,7 @@ const SevensGame: React.FC<SevensGameProps> = ({
                                 />
                                 <div className="text-white text-2xl font-black mt-4 tracking-tight">{p.name}</div>
                                 <div className="text-white/60 text-sm mt-2">
-                                    蓋牌 {p.passedCards.length} 張 · {calculateScore(p.passedCards)} 點
+                                    蓋牌 {p.passedCards.length + p.hand.length} 張 · {calculateScore([...p.passedCards, ...p.hand])} 點
                                 </div>
                             </ResultCard>
                         ))}
