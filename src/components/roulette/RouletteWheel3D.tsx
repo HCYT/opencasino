@@ -3,6 +3,7 @@ import React, { useRef, useMemo, useEffect, useState, useCallback } from 'react'
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { WHEEL_ORDER, getNumberColor } from '../../services/roulette/constants';
+import { Environment } from '@react-three/drei';
 
 interface RouletteWheel3DProps {
     spinning: boolean;
@@ -213,8 +214,20 @@ export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
 
     // Generate segments
     const segments = useMemo(() => {
-        const extrudeSettings = { depth: 0.04, bevelEnabled: false };
-        const pocketSettings = { depth: 0.02, bevelEnabled: false };
+        const extrudeSettings = {
+            depth: 0.05,
+            bevelEnabled: true,
+            bevelThickness: 0.01,
+            bevelSize: 0.008,
+            bevelSegments: 2
+        };
+        const pocketSettings = {
+            depth: 0.025,
+            bevelEnabled: true,
+            bevelThickness: 0.006,
+            bevelSize: 0.004,
+            bevelSegments: 1
+        };
 
         return WHEEL_ORDER.map((num, i) => {
             // COLOR FIX (Blind Patch):
@@ -226,14 +239,14 @@ export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
 
             let hex, emissiveHex;
             if (color === 'green') {
-                hex = '#10b981';
-                emissiveHex = '#065f46';
+                hex = '#15803d'; // Deeper Green (Casino style)
+                emissiveHex = '#064e3b';
             } else if (color === 'red') {
-                hex = '#ef4444';
-                emissiveHex = '#991b1b';
+                hex = '#b91c1c'; // Deep Red
+                emissiveHex = '#7f1d1d';
             } else {
-                hex = '#171717';
-                emissiveHex = '#222222';
+                hex = '#0f0f0f'; // Jet Black
+                emissiveHex = '#000000';
             }
 
             // Rotate the group to center the wedge in the grid
@@ -241,10 +254,15 @@ export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
 
             return (
                 <group key={num} rotation={[0, rotY, 0]}>
-                    {/* 1. Number Ring Wedge (Solid Extruded) - Lifted to 0.1 */}
-                    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.1, 0]}>
+                    {/* 1. Number Ring Wedge (Solid Extruded) - Lifted to 0.10 */}
+                    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.10, 0]} receiveShadow castShadow>
                         <extrudeGeometry args={[numberShape, extrudeSettings]} />
-                        <meshBasicMaterial color={hex} />
+                        <meshStandardMaterial
+                            color={hex}
+                            roughness={0.45}
+                            metalness={0.05}
+                            envMapIntensity={1.2}
+                        />
                     </mesh>
 
                     {/* Number Label - Lifted to 0.15 */}
@@ -256,27 +274,40 @@ export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
                         ]}
                         rotation={[-Math.PI / 2, 0, Math.PI / 2 - USABLE_ANGLE / 2]}
                     >
+                        {/* Backing plate for shadow/depth */}
+                        <mesh position={[0, -0.001, 0]}>
+                            <planeGeometry args={[0.62, 0.62]} />
+                            <meshStandardMaterial color="#0b0b0b" roughness={0.9} metalness={0} />
+                        </mesh>
                         {/* Label uses the TRUE number for this slot */}
                         <NumberLabel number={num} color={color} />
                     </group>
 
-                    {/* 2. Pocket Floor - Lifted to 0.1 */}
-                    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.1, 0]}>
+                    {/* 2. Pocket Floor - Lifted to 0.06 to avoid z-fighting */}
+                    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]} receiveShadow castShadow>
                         <extrudeGeometry args={[pocketShape, pocketSettings]} />
-                        <meshBasicMaterial color={hex} />
+                        <meshStandardMaterial
+                            color={hex}
+                            roughness={0.45}
+                            metalness={0.05}
+                            envMapIntensity={1.2}
+                        />
                     </mesh>
 
-                    {/* Separator / Fret (Radial Metal Bar) - Lifted to 0.15 */}
+                    {/* Separator / Fret (Radial Metal Bar) - Lifted to 0.12 */}
                     <mesh
-                        position={[3.0, 0.15, 0]}
+                        position={[3.0, 0.12, 0]}
                         rotation={[0, -GAP / 2, 0]}
                         renderOrder={10}
+                        castShadow
+                        receiveShadow
                     >
                         <boxGeometry args={[2.4, 0.1, 0.04]} />
                         <meshStandardMaterial
                             color="#e5e7eb"
-                            metalness={0.9}
-                            roughness={0.2}
+                            metalness={1}
+                            roughness={0.18}
+                            envMapIntensity={1.8}
                         />
                     </mesh>
 
@@ -301,10 +332,47 @@ export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
             <mesh position={[0, -1.2, 0]}>
                 <cylinderGeometry args={[4.8, 2.2, 1.0, 64]} />
                 <meshStandardMaterial
-                    color="#2d1b0e"
-                    roughness={0.8}
+                    color="#2d1810" // Very Dark Wood
+                    roughness={0.5}
+                    metalness={0.1}
                 />
             </mesh>
+
+            {/* OUTER GOLD TRIM */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.2, 0]}>
+                <torusGeometry args={[4.85, 0.15, 16, 100]} />
+                <meshStandardMaterial color="#d97706" metalness={0.9} roughness={0.15} />
+            </mesh>
+
+            {/* INNER WOOD ACCENT */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.18, 0]}>
+                <torusGeometry args={[4.6, 0.05, 16, 100]} />
+                <meshStandardMaterial color="#451a03" roughness={0.8} />
+            </mesh>
+
+            <Environment preset="warehouse" background={false} blur={0.35} />
+
+            <ambientLight intensity={0.25} />
+            <directionalLight
+                position={[6, 8, 4]}
+                intensity={1.4}
+                castShadow
+                shadow-mapSize-width={2048}
+                shadow-mapSize-height={2048}
+                shadow-camera-near={1}
+                shadow-camera-far={30}
+                shadow-camera-left={-8}
+                shadow-camera-right={8}
+                shadow-camera-top={8}
+                shadow-camera-bottom={-8}
+            />
+            <spotLight
+                position={[-6, 10, -4]}
+                intensity={1.0}
+                angle={0.35}
+                penumbra={0.6}
+                castShadow
+            />
 
             {/* Deflectors */}
             {Array.from({ length: 8 }).map((_, i) => {
@@ -369,9 +437,16 @@ export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
                 </mesh>
 
                 {/* Ball - Now Child of Wheel (No coordinate sync issues) */}
-                <mesh ref={ballRef} castShadow>
+                <mesh ref={ballRef} castShadow receiveShadow>
                     <sphereGeometry args={[0.1, 32, 32]} />
-                    <meshStandardMaterial color="#fff" metalness={0.2} roughness={0} />
+                    <meshPhysicalMaterial
+                        color="#ffffff"
+                        roughness={0.05}
+                        metalness={0.0}
+                        clearcoat={1}
+                        clearcoatRoughness={0.05}
+                        envMapIntensity={1.5}
+                    />
                 </mesh>
 
             </group>

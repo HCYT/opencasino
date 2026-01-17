@@ -101,7 +101,7 @@ export default function RouletteGame({ playerBalance, onBalanceUpdate, onExit }:
         <div className="w-full h-screen bg-[#0f172a] overflow-hidden relative flex flex-col font-sans">
             {/* 3D Viewport */}
             <div className="flex-1 min-h-[45vh] relative bg-gradient-to-b from-slate-900 to-[#1a1a2e]">
-                <Canvas shadows dpr={[1, 2]}>
+                <Canvas shadows dpr={[1, 2]} gl={{ antialias: true }}>
                     <PerspectiveCamera makeDefault position={[0, 10, 9]} fov={45} />
                     <OrbitControls
                         target={[0, 0, 0]}
@@ -110,11 +110,7 @@ export default function RouletteGame({ playerBalance, onBalanceUpdate, onExit }:
                         maxDistance={18}
                         enablePan={false}
                     />
-                    <Environment preset="city" /> {/* Brighter preset */}
-                    <ambientLight intensity={0.8} />
-                    <spotLight position={[5, 15, 5]} angle={0.4} penumbra={1} castShadow intensity={2.0} color="#ffeebb" />
-                    {/* Top-down light for metallic reflections */}
-                    <pointLight position={[0, 5, 0]} intensity={1.5} color="white" distance={20} />
+                    {/* Lights and Environment moved to RouletteWheel3D for better control */}
 
                     <RouletteWheel3D
                         spinning={gameState === 'SPINNING'}
