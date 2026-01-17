@@ -1,6 +1,6 @@
 # opencasino - Charity Casino
 
-opencasino 是一個純前端、單機娛樂向的牌桌合集。主打桌面臨場感與玩法節奏，涵蓋梭哈、21 點、大老二與射龍門，並提供角色資產與戰績紀錄。
+opencasino 是一個純前端、單機娛樂向的牌桌合集。主打桌面臨場感與玩法節奏，涵蓋梭哈、21 點、大老二、射龍門、骰寶與輪盤，並提供角色資產與戰績紀錄。
 
 ## 遊戲內容
 
@@ -28,6 +28,14 @@ opencasino 是一個純前端、單機娛樂向的牌桌合集。主打桌面臨
   - 免傭規則（Banker 1:0.95）
   - **專業路單系統**：實時生成珠盤路（Bead Plate）與大路（Big Road）
   - 完整對子與例牌（Natural）判定
+- **骰寶（Sic Bo）**
+  - 3D 物理骰子滾動動畫
+  - 經典下注盤面（大小、圍色、單點、對子等）
+  - 智慧 NPC 自動下注系統
+- **輪盤（Roulette）**
+  - 歐式單零輪盤（European Roulette）
+  - 3D 物理滾球與落點計算
+  - 完整與跑道（Racetrack）下注盤面
 
 ## 特色
 
@@ -58,7 +66,7 @@ opencasino 是一個純前端、單機娛樂向的牌桌合集。主打桌面臨
 
 ## 專案結構（重點）
 
-- `src/components`：遊戲 UI 元件（包含 `showdown`, `blackjack`, `bigTwo`, `showdownGate`, `slots`, `baccarat`）
+- `src/components`：遊戲 UI 元件（包含 `showdown`, `blackjack`, `bigTwo`, `showdownGate`, `slots`, `baccarat`, `sicBo`, `roulette`）
 - `src/services`：遊戲規則、引擎與 AI
 - `src/config`：NPC 設定
 - `src/types.ts`：共用型別
