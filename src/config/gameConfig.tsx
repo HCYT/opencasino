@@ -13,12 +13,12 @@ export const BLACKJACK_CUT_PRESETS = [
     { key: 'SHALLOW' as BlackjackCutPresetKey, label: '淺 (30%)', min: 0.25, max: 0.3 }
 ] as const;
 
-import { CircleDashed } from 'lucide-react';
+import { CircleDashed, Spade, Layers, Club, Target, Cherry, Crown, Dice5 } from 'lucide-react';
 
 export interface GameInfo {
     type: GameType;
     name: string;
-    icon: React.ReactNode | string;
+    icon: React.ReactNode;
     desc: string;
     theme: {
         from: string;
@@ -29,109 +29,95 @@ export interface GameInfo {
     };
 }
 
+// Unified gold accent theme for all games
+const UNIFIED_THEME = {
+    from: 'from-amber-900/40',
+    to: 'to-slate-900',
+    border: 'border-amber-500/60',
+    shadow: 'shadow-[0_0_25px_rgba(202,138,4,0.35)]',
+    text: 'text-amber-400'
+};
+
 export const GAMES: GameInfo[] = [
     {
         type: 'SHOWDOWN',
         name: '梭哈',
-        icon: '♠️',
+        icon: <Spade size={48} strokeWidth={1.5} className="text-amber-300" />,
         desc: '經典五張',
-        theme: {
-            from: 'from-blue-900',
-            to: 'to-slate-900',
-            border: 'border-blue-500',
-            shadow: 'shadow-[0_0_25px_rgba(59,130,246,0.3)]',
-            text: 'text-blue-400'
-        }
+        theme: UNIFIED_THEME
     },
     {
         type: 'BLACKJACK',
         name: '21 點',
-        icon: '🃏',
+        icon: <Layers size={48} strokeWidth={1.5} className="text-slate-200" />,
         desc: '挑戰莊家',
         theme: {
-            from: 'from-slate-800',
-            to: 'to-slate-900',
-            border: 'border-white/20',
-            shadow: 'shadow-[0_0_25px_rgba(255,255,255,0.1)]',
+            ...UNIFIED_THEME,
+            from: 'from-slate-800/60',
             text: 'text-slate-200'
         }
     },
     {
         type: 'BIG_TWO',
         name: '大老二',
-        icon: '♣️',
+        icon: <Club size={48} strokeWidth={1.5} className="text-emerald-300" />,
         desc: '台灣玩法',
         theme: {
-            from: 'from-emerald-900',
-            to: 'to-slate-900',
-            border: 'border-emerald-500',
-            shadow: 'shadow-[0_0_25px_rgba(16,185,129,0.3)]',
+            ...UNIFIED_THEME,
+            from: 'from-emerald-900/40',
             text: 'text-emerald-400'
         }
     },
     {
         type: 'GATE',
         name: '射龍門',
-        icon: '🥅',
+        icon: <Target size={48} strokeWidth={1.5} className="text-red-300" />,
         desc: '運氣對決',
         theme: {
-            from: 'from-red-900',
-            to: 'to-slate-900',
-            border: 'border-red-500',
-            shadow: 'shadow-[0_0_25px_rgba(239,68,68,0.3)]',
+            ...UNIFIED_THEME,
+            from: 'from-red-900/40',
             text: 'text-red-400'
         }
     },
     {
         type: 'SLOTS',
         name: '拉霸機',
-        icon: '🎰',
+        icon: <Cherry size={48} strokeWidth={1.5} className="text-amber-300" />,
         desc: '累積大獎',
-        theme: {
-            from: 'from-amber-900',
-            to: 'to-yellow-900',
-            border: 'border-amber-500',
-            shadow: 'shadow-[0_0_25px_rgba(245,158,11,0.3)]',
-            text: 'text-amber-400'
-        }
+        theme: UNIFIED_THEME
     },
     {
         type: 'BACCARAT',
         name: '百家樂',
-        icon: '🀄',
+        icon: <Crown size={48} strokeWidth={1.5} className="text-purple-300" />,
         desc: '莊閑對決',
         theme: {
-            from: 'from-purple-900',
-            to: 'to-slate-900',
-            border: 'border-purple-500',
-            shadow: 'shadow-[0_0_25px_rgba(168,85,247,0.3)]',
+            ...UNIFIED_THEME,
+            from: 'from-purple-900/40',
             text: 'text-purple-400'
         }
     },
     {
         type: 'SICBO',
         name: '擲骰子',
-        icon: '🎲',
+        icon: <Dice5 size={48} strokeWidth={1.5} className="text-rose-300" />,
         desc: '賭大小',
         theme: {
-            from: 'from-rose-900',
-            to: 'to-red-950',
-            border: 'border-rose-500',
-            shadow: 'shadow-[0_0_25px_rgba(244,63,94,0.3)]',
+            ...UNIFIED_THEME,
+            from: 'from-rose-900/40',
             text: 'text-rose-400'
         }
     },
     {
         type: 'ROULETTE',
         name: '輪盤',
-        icon: <CircleDashed size={64} strokeWidth={1.5} />,
+        icon: <CircleDashed size={48} strokeWidth={1.5} className="text-green-300" />,
         desc: '運氣旋轉',
         theme: {
-            from: 'from-green-900',
-            to: 'to-slate-900',
-            border: 'border-green-500',
-            shadow: 'shadow-[0_0_25px_rgba(34,197,94,0.3)]',
+            ...UNIFIED_THEME,
+            from: 'from-green-900/40',
             text: 'text-green-400'
         }
     }
 ];
+

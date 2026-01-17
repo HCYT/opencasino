@@ -55,7 +55,7 @@ const LobbyRightPanel: React.FC<LobbyRightPanelProps> = ({
             {/* Asset Management */}
             <div className="bg-black/30 backdrop-blur-md p-6 rounded-[2rem] border border-white/10 shadow-xl">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-1 h-6 bg-emerald-500 rounded-full" />
+                    <div className="w-1 h-6 bg-amber-500 rounded-full" />
                     <h2 className="text-lg font-black text-white/90 tracking-widest uppercase">資產管理</h2>
                 </div>
                 <BalancePanel
@@ -73,7 +73,7 @@ const LobbyRightPanel: React.FC<LobbyRightPanelProps> = ({
             <div className="bg-black/30 backdrop-blur-md p-6 rounded-[2rem] border border-white/10 shadow-xl max-h-[600px] overflow-y-auto custom-scrollbar">
                 <div className="flex items-center justify-between mb-6 sticky top-0 bg-transparent z-10">
                     <div className="flex items-center gap-3">
-                        <div className="w-1 h-6 bg-blue-500 rounded-full" />
+                        <div className="w-1 h-6 bg-amber-500 rounded-full" />
                         <h2 className="text-lg font-black text-white/90 tracking-widest uppercase">玩家檔案</h2>
                     </div>
                     <span className="text-xs font-bold text-white/30 uppercase">

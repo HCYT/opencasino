@@ -230,7 +230,7 @@ const GameSelector: React.FC<GameSelectorProps> = ({
                     <button
                       onClick={() => setBetMode('FIXED_LIMIT')}
                       className={`flex-1 py-2 rounded-lg text-[11px] font-black transition-all ${betMode === 'FIXED_LIMIT'
-                        ? 'bg-blue-600 text-white shadow-md'
+                        ? 'bg-amber-600 text-slate-900 shadow-md shadow-amber-900/30'
                         : 'text-slate-500 hover:text-slate-300'
                         }`}
                     >
@@ -239,7 +239,7 @@ const GameSelector: React.FC<GameSelectorProps> = ({
                     <button
                       onClick={() => setBetMode('NO_LIMIT')}
                       className={`flex-1 py-2 rounded-lg text-[11px] font-black transition-all ${betMode === 'NO_LIMIT'
-                        ? 'bg-blue-600 text-white shadow-md'
+                        ? 'bg-amber-600 text-slate-900 shadow-md shadow-amber-900/30'
                         : 'text-slate-500 hover:text-slate-300'
                         }`}
                     >
@@ -261,7 +261,7 @@ const GameSelector: React.FC<GameSelectorProps> = ({
             {/* DEFAULT / NO SETTINGS */}
             {['GATE', 'SLOTS'].includes(gameType) && (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 opacity-40">
-                <span className="text-4xl mb-2">⚡️</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 mb-2 text-amber-500/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></svg>
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em]">無需額外設定</span>
               </div>
             )}
