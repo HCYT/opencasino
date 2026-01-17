@@ -61,10 +61,18 @@ export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
 
     useEffect(() => {
         if (spinning) {
-            speedRef.current = 6; // Wheel spin speed
-            ballSpeedRef.current = -10; // Ball spins relative to wheel
-            ballRadiusRef.current = DROP_START_R; // Start at outer edge
+            // RANDOMNESS FIX: Add variance to initial speeds so physics result is non-deterministic
+            const speedVar = 5.8 + Math.random() * 0.5; // 5.8 to 6.3
+            const ballSpeedVar = -9.5 - Math.random() * 1.5; // -9.5 to -11.0
+
+            speedRef.current = speedVar;
+            ballSpeedRef.current = ballSpeedVar;
+            ballRadiusRef.current = DROP_START_R;
             ballHeightRef.current = 0.25;
+
+            // Randomize start angle of ball slightly too
+            ballAngleRef.current = Math.random() * Math.PI * 2;
+
             isBallDropping.current = false;
             inPocketRef.current = false; // Reset pocket state
             resultFoundRef.current = false;
@@ -107,7 +115,9 @@ export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
 
             // 3) Drop phase: shrink radius until pocket, then fix
             if (isBallDropping.current && !inPocketRef.current) {
-                ballRadiusRef.current = Math.max(POCKET_R, ballRadiusRef.current - DROP_RATE * delta);
+                // Add slight noise to drop rate for more chaos
+                const dropNoise = 1.0 + (Math.random() * 0.1 - 0.05);
+                ballRadiusRef.current = Math.max(POCKET_R, ballRadiusRef.current - DROP_RATE * dropNoise * delta);
                 ballHeightRef.current = 0.18 + Math.random() * 0.04;
 
                 if (ballRadiusRef.current <= POCKET_R + 1e-4) {
