@@ -42,8 +42,8 @@ export interface UseSevensEngineParams {
 export const useSevensEngine = ({
     seats,
     baseBet,
-    npcProfiles,
-    variant,
+    npcProfiles: _npcProfiles, // eslint-disable-line @typescript-eslint/no-unused-vars
+    variant: _variant, // eslint-disable-line @typescript-eslint/no-unused-vars
     nightmareMode = false,
     onProfilesUpdate
 }: UseSevensEngineParams) => {
@@ -57,6 +57,7 @@ export const useSevensEngine = ({
     const [isFirstMove, setIsFirstMove] = useState(true);
 
     const aiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const finishGameRef = useRef<((finalPlayers: SevensPlayer[]) => void) | null>(null);
 
     // Initialize game
     const initializeGame = useCallback(() => {
@@ -76,7 +77,6 @@ export const useSevensEngine = ({
             const hand = sortCards(deck.slice(start, end));
 
             // Assign tactic for AI players
-            const npc = npcProfiles.find(n => n.name === seat.name);
             const tactics = ['BAIT', 'CONSERVATIVE', 'AGGRESSIVE', 'DECEPTIVE'] as const;
             const tactic = seat.isAI ? tactics[Math.floor(Math.random() * tactics.length)] : undefined;
 
@@ -103,7 +103,7 @@ export const useSevensEngine = ({
         setIsFirstMove(true);
 
         playSound('shuffle');
-    }, [seats, npcProfiles]);
+    }, [seats]);
 
     // Player plays a card
     const handlePlayCard = useCallback((playerIndex: number, card: Card): boolean => {
@@ -151,7 +151,7 @@ export const useSevensEngine = ({
 
         // Check game over
         if (isGameOver(newPlayers)) {
-            finishGame(newPlayers);
+            finishGameRef.current?.(newPlayers);
         } else {
             // Move to next player
             setCurrentTurnIndex(getNextActiveIndex(newPlayers, playerIndex));
@@ -199,7 +199,7 @@ export const useSevensEngine = ({
 
         // Check game over
         if (isGameOver(newPlayers)) {
-            finishGame(newPlayers);
+            finishGameRef.current?.(newPlayers);
         } else {
             // Move to next player
             setCurrentTurnIndex(getNextActiveIndex(newPlayers, playerIndex));
@@ -279,6 +279,11 @@ export const useSevensEngine = ({
         playSound('win');
     }, [baseBet, finishedOrder, onProfilesUpdate]);
 
+    // Assign finishGame to ref for use in handlers defined before it
+    useEffect(() => {
+        finishGameRef.current = finishGame;
+    }, [finishGame]);
+
     // AI turn handler
     useEffect(() => {
         if (phase !== 'PLAYING') return;
@@ -307,7 +312,7 @@ export const useSevensEngine = ({
         return () => {
             if (aiTimerRef.current) clearTimeout(aiTimerRef.current);
         };
-    }, [phase, currentTurnIndex, players, board, isFirstMove, handlePlayCard, handlePassCard]);
+    }, [phase, currentTurnIndex, players, board, isFirstMove, handlePlayCard, handlePassCard, nightmareMode]);
 
     // Initialize on mount
     useEffect(() => {

@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 // Simple ID generator without external dependency
 const generateId = () => Math.random().toString(36).substr(2, 9);
 import {
@@ -9,10 +9,15 @@ import {
     RouletteResult
 } from './types';
 import {
-    WHEEL_ORDER,
     PAYOUTS,
     getNumberColor
 } from './constants';
+
+const checkWin = (bet: RouletteBet, winner: string): boolean => {
+    // Special handling for side bets if needed, but mostly "numbers.includes(winner)" works
+    if (bet.numbers.includes(winner)) return true;
+    return false;
+};
 
 type GameState = 'IDLE' | 'BETTING' | 'SPINNING' | 'RESULT';
 
@@ -113,23 +118,7 @@ export const useRouletteEngine = ({ onSoundEffect }: UseRouletteEngineProps = {}
     }, []);
 
     // --- Helper: Check Win ---
-    const checkWin = (bet: RouletteBet, winner: string): boolean => {
-        // Special handling for side bets if needed, but mostly "numbers.includes(winner)" works
-        // provided we populate 'numbers' correctly for inside bets.
-        // For outside bets (Red, Black, Odd, Even), we need specific logic OR 
-        // we just store ALL valid numbers in the bet object when placing it.
-        // Storing ALL numbers is cleaner for "checkWin", but heavier on memory?
-        // Given max 38 numbers, it's trivial. 
-        // BUT for "Red", do we explicitly list all red numbers in the bet? 
-        // Pro: uniform logic. Con: verbose.
-        // Let's assume 'numbers' contains the valid winning numbers.
-        // Exception: 'highLow' etc might be easier to check by property.
 
-        // OPTION A: Uniform 'numbers' array.
-        if (bet.numbers.includes(winner)) return true;
-
-        return false;
-    };
 
     // --- Validation Helper ---
     // Ensuring the UI acts as the source of truth for "What numbers are in this bet?"

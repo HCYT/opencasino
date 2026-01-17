@@ -7,9 +7,9 @@ import {
   BlackjackCutPresetKey,
   BLACKJACK_DECK_OPTIONS,
   BIG_TWO_BASE_BETS,
-  BLACKJACK_CUT_PRESETS,
-  GAMES
-} from '@/config/gameConfig';
+  BLACKJACK_CUT_PRESETS
+} from '@/config/gameConstants';
+import { GAMES } from '@/config/gameConfig';
 
 interface GameSelectorProps {
   gameType: GameType;

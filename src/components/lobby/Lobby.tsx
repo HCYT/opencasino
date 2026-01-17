@@ -8,7 +8,7 @@ import {
   BetMode,
   BlackjackCutPresetKey,
   BIG_TWO_BASE_BETS
-} from '@/config/gameConfig';
+} from '@/config/gameConstants';
 import { UserProfile } from '@/types';
 
 import CreateProfileModal from './CreateProfileModal';

@@ -72,7 +72,7 @@ const wouldHelpHuman = (
 };
 
 // Score a card for strategic passing (higher = better to pass)
-const getPassScore = (card: Card, hand: Card[], board: SevensBoard): number => {
+const getPassScore = (card: Card, hand: Card[]): number => {
     const rankVal = getRankValue(card.rank);
     let score = SEVENS_RANK_VALUE[card.rank];
 
@@ -124,11 +124,12 @@ export const aiChooseAction = (
                     : 'GREEDY';
 
             switch (strategy) {
-                case 'AGGRESSIVE':
+                case 'AGGRESSIVE': {
                     score += Math.abs(rankVal - 7) * 2;
                     const suitCount = player.hand.filter(c => c.suit === card.suit).length;
                     score += suitCount * 3;
                     break;
+                }
 
                 case 'CONSERVATIVE':
                     score -= getBlockingPower(card, board) * 5;
@@ -186,7 +187,7 @@ export const aiChooseAction = (
 
     const passScores: CardScore[] = player.hand.map(card => ({
         card,
-        score: getPassScore(card, player.hand, board)
+        score: getPassScore(card, player.hand)
     }));
 
     passScores.sort((a, b) => b.score - a.score);

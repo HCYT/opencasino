@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { GamePhase, UserProfile } from './types';
 import { MIN_BET, PLAYER_QUOTES } from './constants';
 import { NPC_PROFILES } from './config/npcProfiles';
-import { BIG_TWO_BASE_BETS, BLACKJACK_CUT_PRESETS, BACCARAT_MIN_BETS, SICBO_MIN_BETS, SEVENS_BASE_BETS, GameType, BetMode, BlackjackCutPresetKey } from './config/gameConfig';
+import { BIG_TWO_BASE_BETS, BLACKJACK_CUT_PRESETS, BACCARAT_MIN_BETS, SICBO_MIN_BETS, SEVENS_BASE_BETS, GameType, BetMode, BlackjackCutPresetKey } from './config/gameConstants';
 import { saveProfiles } from './services/profileStore';
 import { buildBigTwoSeats, buildBlackjackSeats, buildGateSeats, buildShowdownPlayers, buildBaccaratSeats, buildSicBoSeats, buildSevensSeats, buildTexasPlayers } from './services/lobby/gameStarters';
 import { pickNpcTriplet } from './services/lobby/npcPicker';
@@ -537,6 +537,7 @@ const App: React.FC = () => {
             EXIT
           </button>
           <RouletteGame
+            key={`roulette-${rouletteSessionKey}`}
             playerBalance={profiles[currentActivePlayer]?.chips ?? 1000}
             onBalanceUpdate={(newBalance, wonAmount) => {
               const updated = { ...profiles };

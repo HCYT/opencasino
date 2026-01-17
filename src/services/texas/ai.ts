@@ -79,33 +79,50 @@ export const getTexasAIAction = async (player: Player, gameState: GameState): Pr
         return { action: 'CALL' };
     }
 
-    // --- STANDARD LOGIC ---
+    // --- STANDARD LOGIC --- (More Aggressive)
     const random = Math.random();
 
-    // 1. Super Strong Hand
-    if (winProb > 0.8) {
-        if (currentMaxBet === 0) return { action: 'CHECK', taunt: "慢慢來..." }; // Slow play
-        if (random > 0.3) return { action: 'RAISE', amount: pot * 0.5 };
+    // 1. Super Strong Hand (0.75+) - Value bet heavily
+    if (winProb > 0.75) {
+        if (currentMaxBet === 0) {
+            // Bet instead of always slow-playing
+            if (random > 0.6) return { action: 'RAISE', amount: pot * 0.6, taunt: '這把穩的！' };
+            return { action: 'CHECK' }; // Slow play 40%
+        }
+        if (random > 0.2) return { action: 'RAISE', amount: pot * 0.75, taunt: '加碼！' };
         return { action: 'CALL' };
     }
 
-    // 2. Strong Hand
-    if (winProb > 0.6) {
-        if (callAmount === 0) return { action: 'CHECK' };
-        if (random > 0.5) return { action: 'RAISE', amount: Math.max(100, callAmount * 2) };
+    // 2. Strong Hand (0.5-0.75) - Bet for value and protection
+    if (winProb > 0.5) {
+        if (callAmount === 0) {
+            // Bet more often instead of checking
+            if (random > 0.4) return { action: 'RAISE', amount: Math.max(100, pot * 0.5) };
+            return { action: 'CHECK' };
+        }
+        if (random > 0.3) return { action: 'RAISE', amount: Math.max(100, callAmount * 2) };
         return { action: 'CALL' };
     }
 
-    // 3. Weak/Draw
-    if (winProb > 0.3) {
-        if (callAmount === 0) return { action: 'CHECK' };
-        if (callAmount < player.chips * 0.1) return { action: 'CALL' }; // Cheap call
-        if (random > 0.8) return { action: 'RAISE', amount: pot, taunt: "嚇唬誰呢？" }; // Bluff
+    // 3. Medium/Draw (0.25-0.5) - Semi-bluff and call cheap
+    if (winProb > 0.25) {
+        if (callAmount === 0) {
+            // Semi-bluff more often
+            if (random > 0.5) return { action: 'RAISE', amount: pot * 0.4, taunt: '看你敢不敢跟！' };
+            return { action: 'CHECK' };
+        }
+        if (callAmount < player.chips * 0.15) return { action: 'CALL' }; // Call cheap
+        if (random > 0.6) return { action: 'RAISE', amount: pot * 0.8, taunt: '嚇唬誰呢？' }; // Bluff 40%
         return { action: 'FOLD' };
     }
 
-    // 4. Trash
-    if (callAmount === 0) return { action: 'CHECK' };
-    if (random > 0.9) return { action: 'RAISE', amount: pot * 2, taunt: "這把穩贏！" }; // Rare Bluff
+    // 4. Weak (< 0.25) - Bluff occasionally, check for free
+    if (callAmount === 0) {
+        // Random bluff on check
+        if (random > 0.7) return { action: 'RAISE', amount: pot * 1.5, taunt: '這把穩贏！' }; // Bluff 30%
+        return { action: 'CHECK' };
+    }
+    // Facing a bet with trash - mostly fold but occasional bluff
+    if (random > 0.75) return { action: 'RAISE', amount: pot * 2, taunt: '都給我！' }; // Rare bluff-raise
     return { action: 'FOLD' };
 };

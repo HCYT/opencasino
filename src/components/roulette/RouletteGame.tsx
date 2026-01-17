@@ -43,13 +43,20 @@ export default function RouletteGame({ playerBalance, onBalanceUpdate, onExit }:
         clearBets();
     };
 
+    const processedResultRef = React.useRef(false);
+
     useEffect(() => {
         if (gameState === 'RESULT') {
-            const newBalance = currentBalance + lastWinAmount;
-            setCurrentBalance(newBalance);
-            onBalanceUpdate(newBalance, lastWinAmount);
+            if (!processedResultRef.current) {
+                const newBalance = currentBalance + lastWinAmount;
+                setCurrentBalance(newBalance);
+                onBalanceUpdate(newBalance, lastWinAmount);
+                processedResultRef.current = true;
+            }
+        } else {
+            processedResultRef.current = false;
         }
-    }, [gameState, lastWinAmount]);
+    }, [gameState, lastWinAmount, currentBalance, onBalanceUpdate]);
 
     const betAggregates = useMemo(() => {
         const aggs: Record<string, number> = {};

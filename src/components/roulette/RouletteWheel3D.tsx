@@ -1,5 +1,5 @@
 
-import React, { useRef, useMemo, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useMemo, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { WHEEL_ORDER, getNumberColor } from '../../services/roulette/constants';
@@ -79,12 +79,12 @@ export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
             hasReportedRef.current = false;
             landedAngleRef.current = null;
             setLanded(false);
-            setCalculatedWinner(null);
+            setLanded(false);
         }
     }, [spinning]);
 
     // Track the winning number once calculated
-    const [calculatedWinner, setCalculatedWinner] = useState<string | null>(null);
+
     const hasReportedRef = useRef(false);
     // FIXED angle when ball lands - this should not change after landing
     const landedAngleRef = useRef<number | null>(null);
@@ -170,12 +170,10 @@ export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
                 });
 
                 finalIndexRef.current = idx;
-                setCalculatedWinner(WHEEL_ORDER[idx]);
+
 
                 // Store the ACTUAL angle (not snapped center) for natural stop
-                landedAngleRef.current = rel; // Segments frame angle
-
-                // Store the ACTUAL angle (not snapped center) for natural stop
+                // eslint-disable-next-line react-hooks/immutability
                 landedAngleRef.current = rel; // Segments frame angle
             }
 
@@ -192,6 +190,7 @@ export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
 
             // Only report result once wheel has COMPLETELY stopped
             if (!hasReportedRef.current && speedRef.current < 0.03) {
+                // eslint-disable-next-line react-hooks/immutability
                 hasReportedRef.current = true;
 
                 // Use the stored final index directly
@@ -247,16 +246,13 @@ export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
             const colorNum = WHEEL_ORDER[(i + 1) % WHEEL_SIZE];
             const color = getNumberColor(colorNum);
 
-            let hex, emissiveHex;
+            let hex;
             if (color === 'green') {
                 hex = '#15803d'; // Deeper Green (Casino style)
-                emissiveHex = '#064e3b';
             } else if (color === 'red') {
                 hex = '#b91c1c'; // Deep Red
-                emissiveHex = '#7f1d1d';
             } else {
                 hex = '#0f0f0f'; // Jet Black
-                emissiveHex = '#000000';
             }
 
             // Rotate the group to center the wedge in the grid
@@ -290,7 +286,7 @@ export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
                             <meshStandardMaterial color="#0b0b0b" roughness={0.9} metalness={0} />
                         </mesh>
                         {/* Label uses the TRUE number for this slot */}
-                        <NumberLabel number={num} color={color} />
+                        <NumberLabel number={num} />
                     </group>
 
                     {/* 2. Pocket Floor - Lifted to 0.06 to avoid z-fighting */}
@@ -466,7 +462,7 @@ export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
 };
 
 // Sub-component for individual number label to avoid re-rendering heavy textures
-const NumberLabel = ({ number, color }: { number: string, color: string }) => {
+const NumberLabel = ({ number }: { number: string }) => {
     const texture = useMemo(() => {
         const canvas = document.createElement('canvas');
         canvas.width = 128;
