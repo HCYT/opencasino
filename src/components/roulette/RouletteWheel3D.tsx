@@ -217,7 +217,13 @@ export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
         const pocketSettings = { depth: 0.02, bevelEnabled: false };
 
         return WHEEL_ORDER.map((num, i) => {
-            const color = getNumberColor(num);
+            // COLOR FIX (Blind Patch):
+            // Visual observation shows Geometry Color is shifted by -1 (i.e. receives color of i-1).
+            // Example: Index 20 ('27', Red) has Green (Color of Index 19 '00').
+            // To fix, we feed Color of (i+1), so Visual gets (i+1)-1 = i.
+            const colorNum = WHEEL_ORDER[(i + 1) % WHEEL_SIZE];
+            const color = getNumberColor(colorNum);
+
             let hex, emissiveHex;
             if (color === 'green') {
                 hex = '#10b981';
@@ -250,6 +256,7 @@ export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
                         ]}
                         rotation={[-Math.PI / 2, 0, Math.PI / 2 - USABLE_ANGLE / 2]}
                     >
+                        {/* Label uses the TRUE number for this slot */}
                         <NumberLabel number={num} color={color} />
                     </group>
 
