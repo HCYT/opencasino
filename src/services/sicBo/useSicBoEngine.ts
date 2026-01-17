@@ -269,7 +269,7 @@ export const useSicBoEngine = ({
                 // 大贏或圍骰可以加強音效，目前簡單一點
             }
         }, 2000);
-    }, [gameState.phase, gameState.players, processAIBets, onProfilesUpdate, playSound]);
+    }, [gameState.phase, gameState.players, processAIBets, onProfilesUpdate, playSound, npcProfiles]);
 
     /**
      * 新回合

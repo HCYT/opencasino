@@ -1,9 +1,9 @@
 export const tableStyles = {
   wrapper: 'table-area relative w-full h-full',
   frame:
-    'absolute inset-4 sm:inset-8 rounded-[140px] p-6 bg-gradient-to-br from-[#6b4226] to-[#2e1a0e] shadow-[0_30px_60px_rgba(0,0,0,0.7),inset_0_2px_4px_rgba(255,255,255,0.2),inset_0_-4px_8px_rgba(0,0,0,0.4)]',
+    'absolute inset-4 sm:inset-8 rounded-[140px] p-6 pointer-events-none', // Removed shadows
   surface:
-    'w-full h-full rounded-[116px] bg-[radial-gradient(circle_at_center,_#156e46_0%,_#052e16_100%)] shadow-[inset_0_10px_40px_rgba(0,0,0,0.6)] relative flex items-center justify-center border border-white/5',
+    'w-full h-full rounded-[116px] relative flex items-center justify-center pointer-events-auto', // Removed border
   innerBorder: 'absolute inset-20 border-[2px] border-white/5 rounded-[60px]',
   title:
     'absolute top-6 left-0 right-0 text-center sm:text-left sm:left-10 text-yellow-500/80 font-black uppercase tracking-[0.3em] text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]',

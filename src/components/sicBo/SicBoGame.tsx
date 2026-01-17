@@ -160,7 +160,7 @@ const SicBoGame: React.FC<SicBoGameProps> = ({
 
     return (
         <div className="game-container premium-table-bg relative overflow-visible select-none h-screen w-full">
-            <TableFrame title="擲骰子 Craps" statusText={statusText}>
+            <TableFrame title="擲骰子 Craps" statusText={statusText} themeColor="#7f1d1d">
                 {/* NPC 座位 */}
                 {npcPlayers.map((npc, index) => (
                     <NPCSeat

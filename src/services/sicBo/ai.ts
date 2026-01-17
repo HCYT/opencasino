@@ -17,7 +17,7 @@ const getHotNumbers = (history: DiceResult[]): number[] => {
     });
 
     return Object.entries(counts)
-        .filter(([_, count]) => count >= 6)
+        .filter(([, count]) => count >= 6)
         .map(([num]) => parseInt(num, 10));
 };
 
