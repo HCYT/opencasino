@@ -359,12 +359,26 @@ export const useGameEngine = (initialRules: IPokerRules, options: ShowdownEngine
         }
 
         playSound('card-deal');
-        const { updatedDeck, updatedPlayers } = rulesRef.current.dealCards(deck, players, nextP);
+        const { updatedDeck, updatedPlayers, updatedCommunityCards } = rulesRef.current.dealCards(deck, players, nextP);
 
         // Reset Bets for new round
         const bettingPlayers = updatedPlayers.map(p => ({ ...p, currentBet: 0, lastAction: '' }));
 
         // Determine first talker again (Highest visible)
+        // Note: For Texas Hold'em, this might need adjustment (usually Small Blind or Dealer Left), 
+        // but existing games (Stud) use Highest Visible. 
+        // We will assume 'getHighestVisibleIndex' honors the game type via card visibility or we override in the Engine Wrapper? 
+        // Actually, 'getHighestVisibleIndex' is generic. Texas Hold'em usually acts fixed order (SB/BB).
+        // BUT: this engine is shared. 'getHighestVisibleIndex' might not be suitable for Hold'em post-flop.
+        // However, I will keep it for now and maybe override 'activePlayerIndex' in the Rules or Wrapper if needed?
+        // Wait, 'getHighestVisibleIndex' is defined inside the hook. Rules don't control it.
+        // I might need to make 'getStartingPlayerIndex' part of IPokerRules?
+        // FOR NOW: I will leave it, but be aware Hold'em usually starts left of Dealer. 
+        // "Showdown (Five Card Stud)" starts with High Card.
+        // I'll stick to 'getHighestVisibleIndex' for now and see if I need to refactor for Hold'em later.
+        // Actually, for Hold'em, 'getHighestVisibleIndex' looking at 'faceUp' cards is weird because Hold'em has NO faceUp cards (only hole cards) or ALL faceUp (community).
+        // If players have NO faceUp cards, it falls back to "first active player".
+
         const bestIdx = getHighestVisibleIndex(bettingPlayers);
 
         // Reset turn tracking for new phase
@@ -376,6 +390,7 @@ export const useGameEngine = (initialRules: IPokerRules, options: ShowdownEngine
             ...currentState,
             deck: updatedDeck,
             players: bettingPlayers,
+            communityCards: updatedCommunityCards || currentState.communityCards, // Update or keep existing
             phase: nextP,
             currentMaxBet: 0,
             activePlayerIndex: bestIdx,

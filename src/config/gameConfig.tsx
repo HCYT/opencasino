@@ -1,4 +1,4 @@
-export type GameType = 'SHOWDOWN' | 'BLACKJACK' | 'BIG_TWO' | 'GATE' | 'SLOTS' | 'BACCARAT' | 'SICBO' | 'ROULETTE' | 'SEVENS';
+export type GameType = 'SHOWDOWN' | 'BLACKJACK' | 'BIG_TWO' | 'GATE' | 'SLOTS' | 'BACCARAT' | 'SICBO' | 'ROULETTE' | 'SEVENS' | 'TEXAS';
 export type BetMode = 'FIXED_LIMIT' | 'NO_LIMIT';
 export type BlackjackCutPresetKey = 'DEEP' | 'STANDARD' | 'SHALLOW';
 
@@ -14,7 +14,7 @@ export const BLACKJACK_CUT_PRESETS = [
     { key: 'SHALLOW' as BlackjackCutPresetKey, label: '淺 (30%)', min: 0.25, max: 0.3 }
 ] as const;
 
-import { CircleDashed, Spade, Layers, Club, Target, Cherry, Crown, Dice5, Grid3X3 } from 'lucide-react';
+import { CircleDashed, Spade, Layers, Club, Target, Cherry, Crown, Dice5, Grid3X3, Diamond } from 'lucide-react';
 
 export interface GameInfo {
     type: GameType;
@@ -40,6 +40,17 @@ const UNIFIED_THEME = {
 };
 
 export const GAMES: GameInfo[] = [
+    {
+        type: 'TEXAS',
+        name: '德州撲克',
+        icon: <Diamond size={48} strokeWidth={1.5} className="text-rose-400" />,
+        desc: '無限注對決',
+        theme: {
+            ...UNIFIED_THEME,
+            from: 'from-rose-900/40',
+            text: 'text-rose-400'
+        }
+    },
     {
         type: 'SHOWDOWN',
         name: '梭哈',

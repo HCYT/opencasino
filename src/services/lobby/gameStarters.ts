@@ -216,3 +216,31 @@ export const buildSevensSeats = ({
   };
 };
 
+export const buildTexasPlayers = ({
+  playerName,
+  playerAvatar,
+  initialChips,
+  profiles,
+  aiProfiles
+}: ShowdownBuilderParams): Player[] => {
+  const withStats = (base: Player): Player => {
+    const stored = profiles[base.name];
+    const storedChips = stored?.chips ?? base.chips;
+    return {
+      ...base,
+      chips: storedChips,
+      wins: stored?.wins ?? 0,
+      losses: stored?.losses ?? 0,
+      games: stored?.games ?? 0,
+      debt: stored?.debt ?? 0
+    };
+  };
+
+  const [ai1, ai2, ai3] = aiProfiles;
+  return [
+    withStats({ id: 'player', name: playerName, chips: initialChips, currentBet: 0, cards: [], isFolded: false, isAI: false, avatar: playerAvatar }),
+    withStats({ id: 'ai1', name: ai1.name, chips: initialChips, currentBet: 0, cards: [], isFolded: false, isAI: true, avatar: ai1.avatar, lastAction: '' }),
+    withStats({ id: 'ai2', name: ai2.name, chips: initialChips, currentBet: 0, cards: [], isFolded: false, isAI: true, avatar: ai2.avatar, lastAction: '' }),
+    withStats({ id: 'ai3', name: ai3.name, chips: initialChips, currentBet: 0, cards: [], isFolded: false, isAI: true, avatar: ai3.avatar, lastAction: '' })
+  ];
+};

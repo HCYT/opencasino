@@ -7,7 +7,7 @@ export const tableStyles = {
   innerBorder: 'absolute inset-20 border-[2px] border-white/5 rounded-[60px]',
   title:
     'absolute top-6 left-0 right-0 text-center sm:text-left sm:left-10 text-yellow-500/80 font-black uppercase tracking-[0.3em] text-xs drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]',
-  statusWrap: 'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-48 z-[40]',
+  statusWrap: 'absolute top-4 left-4 z-[40]',
   statusBadge:
     'bg-black/60 backdrop-blur-xl px-10 py-3 rounded-full border border-yellow-500/30 shadow-[0_10px_30px_rgba(0,0,0,0.5)] flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500',
   statusDot: 'w-2 h-2 bg-yellow-500 rounded-full animate-ping',

@@ -85,7 +85,17 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
         </div>
 
         <div className="absolute right-0 bottom-0 pointer-events-auto flex items-end justify-end gap-4 h-[200px]">
-          {isUserTurn ? (
+          {/* Check RESULT/SHOWDOWN first, before isUserTurn, to prevent stale turn state from blocking */}
+          {(phase === GamePhase.RESULT || phase === GamePhase.SHOWDOWN) ? (
+            <GameButton
+              onClick={() => { playSound('card-deal'); onStartNewHand(); }}
+              variant="light"
+              size="pillXl"
+              className="text-xl animate-pulse transform hover:scale-105 uppercase tracking-wider"
+            >
+              Play Again
+            </GameButton>
+          ) : isUserTurn ? (
             <div className="flex items-end gap-3 animate-in slide-in-from-bottom-20 fade-in duration-300 relative">
               {showChatMenu && (
                 <div className="absolute bottom-[110%] left-0 mb-4 bg-black/90 backdrop-blur-xl p-4 rounded-[2rem] border border-white/20 shadow-2xl w-[300px] h-[400px] flex flex-col gap-2 overflow-y-auto z-[100] no-scrollbar">
@@ -166,7 +176,9 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
                       />
                     </>
                   ) : (
-                    <div className="text-center text-white/30 font-bold text-xs uppercase py-2">無法加注</div>
+                    <div className="text-white/40 text-xs font-bold uppercase tracking-widest text-center py-2">
+                      無法加注
+                    </div>
                   )
                 ) : (
                   canRaise ? (
@@ -180,7 +192,9 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
                       </div>
                     </>
                   ) : (
-                    <div className="text-center text-white/30 font-bold text-xs uppercase py-2">無法加注</div>
+                    <div className="text-white/40 text-xs font-bold uppercase tracking-widest text-center py-2">
+                      固定限注模式
+                    </div>
                   )
                 )}
               </div>
@@ -188,13 +202,13 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
               <GameButton
                 onClick={() => { playSound('chip-fold'); onAction('FOLD'); }}
                 variant="danger"
-                size="squareSm"
+                size="squareLg"
                 className="group flex flex-col items-center justify-center backdrop-blur-md"
               >
-                <span className="mb-1 text-red-100 group-hover:scale-110 transition-transform">
+                <div className="mb-1 group-hover:scale-110 transition-transform">
                   <IconFlag />
-                </span>
-                <span className="text-[8px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100">不跟</span>
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100">棄牌</span>
               </GameButton>
 
               <GameButton
@@ -236,15 +250,6 @@ const ShowdownControls: React.FC<ShowdownControlsProps> = ({
                 <span className="text-[8px] font-black uppercase tracking-widest opacity-60 group-hover:opacity-100">梭哈</span>
               </GameButton>
             </div>
-          ) : phase === GamePhase.RESULT ? (
-            <GameButton
-              onClick={() => { playSound('card-deal'); onStartNewHand(); }}
-              variant="light"
-              size="pillXl"
-              className="text-xl animate-pulse transform hover:scale-105 uppercase tracking-wider"
-            >
-              Play Again
-            </GameButton>
           ) : (
             <PillPanel className="opacity-80 flex items-center gap-3">
               <div className="flex gap-1">

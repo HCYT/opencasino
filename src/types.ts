@@ -87,7 +87,12 @@ export enum GamePhase {
   DEALING_5 = 'DEALING_5',
   BETTING_5 = 'BETTING_5',
   SHOWDOWN = 'SHOWDOWN',
-  RESULT = 'RESULT'
+  RESULT = 'RESULT',
+  // Texas Hold'em Phases
+  PRE_FLOP = 'PRE_FLOP',
+  FLOP = 'FLOP',
+  TURN = 'TURN',
+  RIVER = 'RIVER'
 }
 
 export type ActionType = 'FOLD' | 'CHECK' | 'CALL' | 'RAISE' | 'ALL_IN';
@@ -113,7 +118,7 @@ export interface IPokerRules {
   initialHandSize: number;
   canCheck(player: Player, currentMaxBet: number): boolean;
   getNextPhase(currentPhase: GamePhase, players: Player[]): GamePhase;
-  dealCards(deck: Card[], players: Player[], phase: GamePhase): { updatedDeck: Card[], updatedPlayers: Player[] };
+  dealCards(deck: Card[], players: Player[], phase: GamePhase): { updatedDeck: Card[], updatedPlayers: Player[], updatedCommunityCards?: Card[] };
   evaluateWinner(players: Player[], communityCards?: Card[]): string[];
   // AI Logic
   getAIAction(player: Player, gameState: GameState): Promise<{ action: ActionType; amount?: number; taunt?: string }>;

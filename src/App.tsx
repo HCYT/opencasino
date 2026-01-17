@@ -4,7 +4,7 @@ import { MIN_BET, PLAYER_QUOTES } from './constants';
 import { NPC_PROFILES } from './config/npcProfiles';
 import { BIG_TWO_BASE_BETS, BLACKJACK_CUT_PRESETS, BACCARAT_MIN_BETS, SICBO_MIN_BETS, SEVENS_BASE_BETS, GameType, BetMode, BlackjackCutPresetKey } from './config/gameConfig';
 import { saveProfiles } from './services/profileStore';
-import { buildBigTwoSeats, buildBlackjackSeats, buildGateSeats, buildShowdownPlayers, buildBaccaratSeats, buildSicBoSeats, buildSevensSeats } from './services/lobby/gameStarters';
+import { buildBigTwoSeats, buildBlackjackSeats, buildGateSeats, buildShowdownPlayers, buildBaccaratSeats, buildSicBoSeats, buildSevensSeats, buildTexasPlayers } from './services/lobby/gameStarters';
 import { pickNpcTriplet } from './services/lobby/npcPicker';
 import { useGameEngine } from './services/showdown/useShowdownEngine';
 import { ShowdownRules } from './services/showdown/ShowdownRules';
@@ -20,6 +20,7 @@ import SicBoGame from './components/sicBo/SicBoGame';
 import { SicBoSeat } from './services/sicBo/types';
 import RouletteGame from './components/roulette/RouletteGame';
 import SevensGame, { SevensSeat, SevensResult } from './components/sevens/SevensGame';
+import TexasGame from './components/texas/TexasGame';
 import { GameButton } from './components/ui/GameButton';
 import VolumeControl from './components/ui/VolumeControl';
 import Lobby from './components/lobby/Lobby';
@@ -55,6 +56,10 @@ const App: React.FC = () => {
   const [sevensSessionKey, setSevensSessionKey] = useState(0);
   const [sevensSeats, setSevensSeats] = useState<SevensSeat[]>([]);
   const [sevensBaseBet, setSevensBaseBet] = useState(SEVENS_BASE_BETS[0]);
+  const [texasActive, setTexasActive] = useState(false);
+  const [texasSessionKey, setTexasSessionKey] = useState(0);
+  const [texasPlayers, setTexasPlayers] = useState<import('./types').Player[]>([]);
+  const [texasNpcProfiles, setTexasNpcProfiles] = useState<import('./types').NPCProfile[]>([]);
   const [nightmareModeEnabled, setNightmareModeEnabled] = useState(false);
   const [currentActivePlayer, setCurrentActivePlayer] = useState('');
   const playerAvatar = 'https://picsum.photos/seed/me/200/200';
@@ -101,7 +106,7 @@ const App: React.FC = () => {
     setGateAnteBet(configGateAnteBet);
     setBlackjackDecks(configBlackjackDecks);
     setBlackjackCutPreset(configBlackjackCutPreset);
-    setNightmareModeEnabled(nightmareMode);
+    setNightmareModeEnabled(nightmareMode); // Reused for Texas Nightmare
     setProfiles(profiles);
 
     const currentUserProfile = profiles[playerName];
@@ -250,6 +255,22 @@ const App: React.FC = () => {
     if (gameType === 'ROULETTE') {
       setRouletteSessionKey(prev => prev + 1);
       setRouletteActive(true);
+      return;
+    }
+
+    if (gameType === 'TEXAS') {
+      const [ai1, ai2, ai3] = pickNpcTriplet(NPC_PROFILES);
+      const players = buildTexasPlayers({
+        playerName,
+        playerAvatar: dynamicAvatar,
+        initialChips,
+        profiles,
+        aiProfiles: [ai1, ai2, ai3]
+      });
+      setTexasPlayers(players);
+      setTexasNpcProfiles([ai1, ai2, ai3]);
+      setTexasSessionKey(prev => prev + 1);
+      setTexasActive(true);
       return;
     }
 
@@ -554,6 +575,23 @@ const App: React.FC = () => {
           nightmareMode={nightmareModeEnabled}
           onExit={() => setSevensActive(false)}
           onProfilesUpdate={handleSevensProfileUpdate}
+        />
+      </>
+    );
+  }
+
+  if (texasActive) {
+    return (
+      <>
+        <div className="fixed top-4 right-4 z-[100] md:top-6 md:right-6">
+          <VolumeControl />
+        </div>
+        <TexasGame
+          key={`texas-${texasSessionKey}`}
+          onBack={() => setTexasActive(false)}
+          isNightmareMode={nightmareModeEnabled}
+          initialPlayers={texasPlayers}
+          npcProfiles={texasNpcProfiles}
         />
       </>
     );
