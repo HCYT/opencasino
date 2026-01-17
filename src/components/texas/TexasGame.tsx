@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useTexasEngine } from '../../services/texas/useTexasEngine';
+import { useTexasEngine, TexasResult } from '../../services/texas/useTexasEngine';
 import CardUI from '../CardUI';
 import ShowdownControls from '../showdown/ShowdownControls';
 import ShowdownTable from '../showdown/ShowdownTable';
@@ -15,11 +15,13 @@ interface TexasGameProps {
     isNightmareMode?: boolean;
     initialPlayers: Player[];
     npcProfiles: NPCProfile[];
+    onProfilesUpdate?: (updates: Array<{ name: string; chips: number; result: TexasResult }>) => void;
 }
 
-const TexasGame: React.FC<TexasGameProps> = ({ onBack, isNightmareMode = false, initialPlayers, npcProfiles }) => {
+const TexasGame: React.FC<TexasGameProps> = ({ onBack, isNightmareMode = false, initialPlayers, npcProfiles, onProfilesUpdate }) => {
     const { gameState, initGame, handleAction, startNewHand, returnToLobby, playerSpeak } = useTexasEngine({
-        npcProfiles
+        npcProfiles,
+        onProfilesUpdate
     });
 
     const [userPlayer, setUserPlayer] = useState<Player | undefined>(undefined);
@@ -67,6 +69,13 @@ const TexasGame: React.FC<TexasGameProps> = ({ onBack, isNightmareMode = false, 
             }
         }
     }, [gameState.phase, gameState.winners]);
+
+    // Reset custom raise amount when new hand starts
+    useEffect(() => {
+        if (gameState.phase === GamePhase.PRE_FLOP) {
+            setCustomRaiseAmount(100); // Reset to default value
+        }
+    }, [gameState.phase]);
 
     const getPhaseLabel = (phase: GamePhase): string => {
         switch (phase) {

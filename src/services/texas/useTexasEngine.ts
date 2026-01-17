@@ -5,9 +5,12 @@ import { MIN_BET } from '../../constants';
 import { playSound as defaultPlaySound } from '../sound';
 import { TexasHoldemRules } from './rules';
 
+export type TexasResult = 'WIN' | 'LOSE' | 'PUSH';
+
 export interface TexasEngineOptions {
     npcProfiles?: NPCProfile[];
     playSound?: (name: string) => void;
+    onProfilesUpdate?: (updates: Array<{ name: string; chips: number; result: TexasResult }>) => void;
 }
 
 // Helper to get random quote
@@ -24,6 +27,7 @@ const getQuote = (profiles: NPCProfile[], name: string, type: keyof NPCProfile['
 export const useTexasEngine = (options: TexasEngineOptions = {}) => {
     const npcProfiles = options.npcProfiles ?? [];
     const playSound = options.playSound ?? defaultPlaySound;
+    const onProfilesUpdate = options.onProfilesUpdate;
     const rules = new TexasHoldemRules();
 
     const [gameState, setGameState] = useState<GameState>({
@@ -244,6 +248,17 @@ export const useTexasEngine = (options: TexasEngineOptions = {}) => {
                 }
                 return p;
             });
+
+            // Report profile updates for balance tracking
+            if (onProfilesUpdate) {
+                const profileUpdates = updatedPlayersWithQuotes.map(p => ({
+                    name: p.name,
+                    chips: p.chips,
+                    result: (winners.includes(p.id) ? 'WIN' : payouts[p.id] === 0 ? 'PUSH' : 'LOSE') as TexasResult
+                }));
+                // Use setTimeout to avoid calling during render
+                setTimeout(() => onProfilesUpdate(profileUpdates), 0);
+            }
 
             return {
                 ...currentState,

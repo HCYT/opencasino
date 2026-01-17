@@ -593,6 +593,16 @@ const App: React.FC = () => {
           isNightmareMode={nightmareModeEnabled}
           initialPlayers={texasPlayers}
           npcProfiles={texasNpcProfiles}
+          onProfilesUpdate={(updates) => {
+            const updatedProfiles = { ...profiles };
+            updates.forEach(u => {
+              if (updatedProfiles[u.name]) {
+                updatedProfiles[u.name] = { ...updatedProfiles[u.name], chips: u.chips };
+              }
+            });
+            setProfiles(updatedProfiles);
+            saveProfiles(updatedProfiles);
+          }}
         />
       </>
     );
