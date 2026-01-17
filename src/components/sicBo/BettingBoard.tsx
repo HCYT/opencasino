@@ -13,6 +13,13 @@ interface BettingBoardProps {
     winningBets?: SicBoBetType[];
 }
 
+// Helper for compact number display
+const formatCompactAmount = (num: number): string => {
+    if (num >= 1000000) return `$${(num / 1000000).toFixed(1).replace(/\.0$/, '')}M`;
+    if (num >= 1000) return `$${(num / 1000).toFixed(1).replace(/\.0$/, '')}k`;
+    return `$${num.toLocaleString()}`;
+};
+
 // 下注區域組件
 const BetArea: React.FC<{
     type: SicBoBetType;
@@ -42,23 +49,36 @@ const BetArea: React.FC<{
 
             {/* 籌碼顯示 - 居中疊加隨機偏移 */}
             {totalAmount !== undefined && totalAmount > 0 && (() => {
-                const displayStr = myAmount ? `$${myAmount.toLocaleString()}` : `$${totalAmount.toLocaleString()}`;
-                const len = displayStr.length;
-                const fontSizeClass = len > 7 ? 'text-[9px] tracking-tighter' : len > 5 ? 'text-[10px]' : 'text-xs';
+                // Use compact format for display, full format for tooltip
+                const amountToShow = myAmount || totalAmount;
+                const displayStr = formatCompactAmount(amountToShow);
+
+                // Dynamic sizing logic
+                // Base size 32px. For every char > 4, add extra width
+                // e.g. "$1.2k" (5 chars) -> slightly wider
+                const textLen = displayStr.length;
+                const baseSize = 32;
+                const extraWidth = Math.max(0, (textLen - 4) * 7); // ~7px per extra char
+                const totalWidth = baseSize + extraWidth;
+
+                const fontSizeClass = textLen > 6 ? 'text-[10px]' : 'text-xs';
                 const othersAmount = totalAmount - (myAmount || 0);
 
                 return (
                     <div
                         className={`bet-chip ${myAmount ? 'my-bet' : 'other-bet'} shadow-lg group-hover:z-30 transition-transform hover:scale-110 flex items-center justify-center ${fontSizeClass}`}
                         style={{
-                            transform: `translate(calc(-50% + ${chipOffset.x}px), calc(-50% + ${chipOffset.y}px))`
+                            transform: `translate(calc(-50% + ${chipOffset.x}px), calc(-50% + ${chipOffset.y}px))`,
+                            width: `${totalWidth}px`,
+                            height: `${baseSize}px`,
+                            borderRadius: '999px', // Pill shape for wider chips
                         }}
                         title={`Total: $${totalAmount.toLocaleString()} (${myAmount ? `You: $${myAmount.toLocaleString()}, ` : ''}${npcCount ? `${npcCount} NPCs: $${othersAmount.toLocaleString()}` : `Others: $${othersAmount.toLocaleString()}`})`}
                     >
                         {displayStr}
                         {myAmount > 0 && totalAmount > myAmount && (
                             <div className="absolute -top-2 -right-2 bg-yellow-500 text-black text-[10px] px-1 rounded-full font-bold shadow-sm z-20">
-                                +${(totalAmount - myAmount).toLocaleString()}
+                                +{formatCompactAmount(totalAmount - myAmount).replace('$', '')}
                             </div>
                         )}
                     </div>

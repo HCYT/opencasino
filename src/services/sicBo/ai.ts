@@ -1,36 +1,42 @@
 import { SicBoBet, SicBoBetType, DiceResult } from './types';
 import { NPCProfile } from '../../types';
 
-// Helper: Analyze history for hot numbers (last 20 rounds)
+// ==========================================
+// 1. Helpers & Analysis
+// ==========================================
+
+// Strict Hot Number Detection (Freq >= 30% in last 20 rounds, or count >= 6)
+// Expected count is 3.33. 6 is significant.
 const getHotNumbers = (history: DiceResult[]): number[] => {
     const recent = history.slice(-20);
+    if (recent.length < 5) return [];
+
     const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
     recent.forEach(res => {
         res.dice.forEach(d => counts[d]++);
     });
-    // Return numbers that appear significantly more than expected (> 20% freq)
-    // Expected freq for one number in 20 rounds (60 dice) is 10.
+
     return Object.entries(counts)
-        .filter(([_, count]) => count >= 12)
+        .filter(([_, count]) => count >= 6)
         .map(([num]) => parseInt(num, 10));
 };
 
-// Helper: Analyze streak (Big/Small)
+// Streak Analysis
 const getStreak = (history: DiceResult[]) => {
     if (history.length === 0) return { type: null, count: 0 };
 
-    let type: 'BIG' | 'SMALL' | 'TRIPLE' | null = null;
-    let count = 0;
-
     // Check last result
     const last = history[history.length - 1];
+    let type: 'BIG' | 'SMALL' | 'TRIPLE' | null = null;
+
     if (last.isTriple) type = 'TRIPLE';
     else if (last.total >= 11 && last.total <= 17) type = 'BIG';
     else if (last.total >= 4 && last.total <= 10) type = 'SMALL';
 
     if (!type) return { type: null, count: 0 };
 
-    // Count backwards
+    let count = 0;
+    // Count backwards from end
     for (let i = history.length - 1; i >= 0; i--) {
         const res = history[i];
         let currentType = null;
@@ -44,10 +50,10 @@ const getStreak = (history: DiceResult[]) => {
     return { type, count };
 };
 
-/**
- * AI 下注策略
- * 現在會參考歷史紀錄，並採取"集中下注"策略，避免亂槍打鳥
- */
+// ==========================================
+// 2. Core Logic: Scoring & Templates
+// ==========================================
+
 export const calculateAIBet = (
     playerChips: number,
     minBet: number,
@@ -56,144 +62,173 @@ export const calculateAIBet = (
 ): SicBoBet[] => {
     const bets: SicBoBet[] = [];
 
-    // 0. 解析性格與風險
-    let riskFactorBase = 1.0;
-    let isContrarian = false; // 是否喜歡反路 (Deceptive trait)
-    let followsTrend = true;  // 是否喜歡順龍 (Aggressive trait)
+    // --- A. Persona Parsing ---
+    const aggWeight = profile?.tacticWeights?.['AGGRESSIVE'] || 0;
+    const consWeight = profile?.tacticWeights?.['CONSERVATIVE'] || 0;
+    const decWeight = profile?.tacticWeights?.['DECEPTIVE'] || 0; // 反路或怪招
 
-    if (profile?.tacticWeights) {
-        const agg = profile.tacticWeights['AGGRESSIVE'] || 0;
-        const cons = profile.tacticWeights['CONSERVATIVE'] || 0;
-        const dec = profile.tacticWeights['DECEPTIVE'] || 0;
+    // Determine Persona Category
+    let persona: 'CONSERVATIVE' | 'BALANCED' | 'AGGRESSIVE' = 'BALANCED';
+    if (consWeight > 0.6) persona = 'CONSERVATIVE';
+    if (aggWeight > 0.6) persona = 'AGGRESSIVE';
 
-        riskFactorBase = 1.0 + (agg * 1.5) - (cons * 1.0);
+    // --- B. Budget Control (Fixed Rhythm) ---
+    let budgetRatio = 0.03; // Default Balanced (3%)
 
-        // Deceptive bots like to bet against the streak
-        if (Math.random() < dec) isContrarian = true;
-        // Aggressive bots love long dragons
-        if (agg > 0.6) followsTrend = true;
+    if (persona === 'CONSERVATIVE') {
+        const base = 0.01; // 1%
+        const noise = Math.random() * 0.02; // +0~2%
+        budgetRatio = base + noise;
+    } else if (persona === 'AGGRESSIVE') {
+        const base = 0.05; // 5%
+        const noise = Math.random() * 0.05; // +0~5%
+        budgetRatio = base + noise;
+
+        // Trigger: Aggressive bump if losing (Simple Martingale-lite check not implemented here, using Streak instead)
+        // If long dragon, aggressive player bets more
+        const { count } = getStreak(history);
+        if (count >= 4) budgetRatio += 0.05; // Boost 5%
     } else {
-        riskFactorBase = 0.5 + Math.random() * 1.5;
+        // Balanced
+        budgetRatio = 0.03 + Math.random() * 0.02; // 3-5%
     }
 
-    // 引入隨機波動
-    const riskFactor = riskFactorBase + (Math.random() - 0.5) * 0.2;
+    let totalBudget = Math.floor((playerChips * budgetRatio) / minBet) * minBet;
+    totalBudget = Math.max(minBet, totalBudget);
 
-    // 1. 決定總預算 (財富佔比)
-    let budgetRatio = 0.02; // Default 2%
-    if (riskFactor < 1) budgetRatio = 0.01 + Math.random() * 0.02; // 1-3%
-    else if (riskFactor < 1.8) budgetRatio = 0.03 + Math.random() * 0.05; // 3-8%
-    else budgetRatio = 0.08 + Math.random() * 0.07; // 8-15%
-
-    // 預算計算
-    let maxBudget = Math.floor((playerChips * budgetRatio) / minBet) * minBet;
-    maxBudget = Math.max(minBet, maxBudget);
-
-    // 硬上限防止梭哈
+    // Safety Cap
     if (playerChips > minBet * 100) {
-        maxBudget = Math.min(maxBudget, playerChips * 0.3);
+        totalBudget = Math.min(totalBudget, playerChips * 0.25);
     }
 
-    let remainingBudget = Math.min(playerChips, maxBudget);
+    // --- C. Scoring System (Big vs Small) ---
+    let bigScore = 50;
+    let smallScore = 50;
 
-    // 2. 分析局勢 (History Analysis)
+    // 1. Randomness (Base Noise so they don't always agree)
+    bigScore += (Math.random() - 0.5) * 40;
+    smallScore += (Math.random() - 0.5) * 40;
+
+    // 2. Streak Influence
     const { type: streakType, count: streakCount } = getStreak(history);
+    if (streakCount >= 2 && (streakType === 'BIG' || streakType === 'SMALL')) {
+        const isCounter = Math.random() < decWeight; // Deceptive chars bet against
+        const weight = streakCount * 10; // Stronger streak = Stronger pull
+
+        if (streakType === 'BIG') {
+            if (isCounter) smallScore += weight; // Counter-bet
+            else bigScore += weight; // Follow
+        } else {
+            if (isCounter) bigScore += weight;
+            else smallScore += weight;
+        }
+    }
+
+    // Decision
+    const mainTargetStr = bigScore > smallScore ? 'BIG' : 'SMALL';
+
+    // --- D. Template Selection ---
+    // Templates:
+    // 1. PURE: 100% Main
+    // 2. INSURANCE: 80% Main + 20% Hedging Total
+    // 3. BONUS: 85% Main + 15% Lucky Double
+    // 4. HUNTER: Single + Triple (Hot Numbers) - Special case
+
+    let template: 'PURE' | 'INSURANCE' | 'BONUS' | 'HUNTER' = 'PURE';
+
+    const roll = Math.random();
     const hotNumbers = getHotNumbers(history);
 
-    // 3. 制定策略 (Strategy Selection)
-    // 目標：選定一個"主攻方向"，然後圍繞它下注
-    let primaryTarget: 'BIG' | 'SMALL' | 'HOT_NUMBER' | 'RANDOM' = 'RANDOM';
-    let targetDetail: number | null = null; // For HOT_NUMBER
-
-    // Strategy A: Dragon Chasing (長龍順勢)
-    if (streakCount >= 3 && (streakType === 'BIG' || streakType === 'SMALL') && followsTrend && !isContrarian) {
-        primaryTarget = streakType;
-    }
-    // Strategy B: Contrarian (長龍斬斷)
-    else if (streakCount >= 4 && (streakType === 'BIG' || streakType === 'SMALL') && isContrarian) {
-        primaryTarget = streakType === 'BIG' ? 'SMALL' : 'BIG';
-    }
-    // Strategy C: Hot Number Hunter (熱號追蹤)
-    else if (hotNumbers.length > 0 && Math.random() < 0.6) {
-        primaryTarget = 'HOT_NUMBER';
-        targetDetail = hotNumbers[Math.floor(Math.random() * hotNumbers.length)];
-    }
-    // Strategy D: Random fallback (But consistent)
-    else {
-        primaryTarget = Math.random() < 0.5 ? 'BIG' : 'SMALL';
+    if (decWeight > 0.7 && hotNumbers.length > 0 && roll < 0.4) {
+        template = 'HUNTER';
+    } else if (aggWeight > 0.5 && roll < 0.3) {
+        template = 'BONUS';
+    } else if (consWeight > 0.5 && roll < 0.3) {
+        template = 'INSURANCE';
+    } else {
+        // Default distribution for balanced
+        if (roll < 0.7) template = 'PURE';
+        else if (roll < 0.85 && hotNumbers.length > 0) template = 'BONUS';
+        else template = 'INSURANCE';
     }
 
-    // 4. 執行下注 (Execution)
-    const addBet = (type: SicBoBetType, amount: number) => {
-        if (remainingBudget >= amount) {
-            bets.push({ type, amount });
-            remainingBudget -= amount;
-        }
+    // --- E. Construct Bets ---
+
+    // Helper to add valid bet
+    const add = (t: SicBoBetType, amt: number) => {
+        if (amt >= minBet) bets.push({ type: t, amount: amt });
     };
 
-    // 分配預算：主注佔 70-80%，輔注佔 20-30%
-    const mainBetAmount = Math.floor(remainingBudget * 0.8 / minBet) * minBet;
+    if (template === 'PURE') {
+        add(mainTargetStr, totalBudget);
 
-    // Step 4.1: Main Bet
-    if (primaryTarget === 'BIG') {
-        if (mainBetAmount > 0) addBet('BIG', mainBetAmount);
+    } else if (template === 'INSURANCE') {
+        // Main Bet
+        const mainAmt = Math.floor(totalBudget * 0.8 / minBet) * minBet;
+        add(mainTargetStr, mainAmt);
 
-        // Coherent Side Bets for BIG: Total 11-17, Doubles 4-6
-        while (remainingBudget >= minBet) {
-            if (Math.random() < 0.4) break; // Stop casually
-            const betAmt = Math.max(minBet, Math.floor(remainingBudget * 0.5 / minBet) * minBet);
-
-            const roll = Math.random();
-            if (roll < 0.3) {
-                // High Doubles
-                const num = [4, 5, 6][Math.floor(Math.random() * 3)];
-                addBet(`DOUBLE_${num}` as SicBoBetType, betAmt);
-            } else if (roll < 0.6) {
-                // High Totals
-                const total = 11 + Math.floor(Math.random() * 7); // 11-17
-                addBet(`TOTAL_${total}` as SicBoBetType, betAmt);
+        // Insurance Bet (Opposite side Total)
+        // If betting BIG, insure with Small Total (e.g., 9)
+        // If betting SMALL, insure with Big Total (e.g., 12)
+        const sideAmt = totalBudget - mainAmt;
+        if (sideAmt >= minBet) {
+            let insuranceTarget: SicBoBetType | null = null;
+            if (mainTargetStr === 'BIG') {
+                // Pick a small total (5-9)
+                const val = 5 + Math.floor(Math.random() * 5);
+                insuranceTarget = `TOTAL_${val}` as SicBoBetType;
             } else {
-                break;
+                // Pick a big total (12-16)
+                const val = 12 + Math.floor(Math.random() * 5);
+                insuranceTarget = `TOTAL_${val}` as SicBoBetType;
             }
+            add(insuranceTarget, sideAmt);
         }
 
-    } else if (primaryTarget === 'SMALL') {
-        if (mainBetAmount > 0) addBet('SMALL', mainBetAmount);
+    } else if (template === 'BONUS') {
+        // Main Bet
+        const mainAmt = Math.floor(totalBudget * 0.85 / minBet) * minBet;
+        add(mainTargetStr, mainAmt);
 
-        // Coherent Side Bets for SMALL: Total 4-10, Doubles 1-3
-        while (remainingBudget >= minBet) {
-            if (Math.random() < 0.4) break;
-            const betAmt = Math.max(minBet, Math.floor(remainingBudget * 0.5 / minBet) * minBet);
+        // Bonus Bet (Correlated, Aggressive)
+        // If BIG, bet High Double (4,5,6)
+        // If SMALL, bet Low Double (1,2,3)
+        // OR if there is a Hot Number compatible, bet that Double
+        const sideAmt = totalBudget - mainAmt;
+        if (sideAmt >= minBet) {
+            let bonusNum = 0;
+            const compatibleHot = hotNumbers.find(n =>
+                (mainTargetStr === 'BIG' && n >= 4) || (mainTargetStr === 'SMALL' && n <= 3)
+            );
 
-            const roll = Math.random();
-            if (roll < 0.3) {
-                // Low Doubles
-                const num = [1, 2, 3][Math.floor(Math.random() * 3)];
-                addBet(`DOUBLE_${num}` as SicBoBetType, betAmt);
-            } else if (roll < 0.6) {
-                // Low Totals
-                const total = 4 + Math.floor(Math.random() * 7); // 4-10
-                addBet(`TOTAL_${total}` as SicBoBetType, betAmt);
+            if (compatibleHot) {
+                bonusNum = compatibleHot; // Use hot number if fits direction
             } else {
-                break;
+                // Random compatible
+                if (mainTargetStr === 'BIG') bonusNum = 4 + Math.floor(Math.random() * 3);
+                else bonusNum = 1 + Math.floor(Math.random() * 3);
             }
+
+            add(`DOUBLE_${bonusNum}` as SicBoBetType, sideAmt);
         }
 
-    } else if (primaryTarget === 'HOT_NUMBER' && targetDetail) {
-        // 重注熱號：Single + Double + Total containing it
-        // 這裡不一定下大小，而是專攻數字
+    } else if (template === 'HUNTER') {
+        // Hunter ignores Big/Small score, purely hunts numbers
+        if (hotNumbers.length > 0) {
+            const targetNum = hotNumbers[Math.floor(Math.random() * hotNumbers.length)];
 
-        // 1. Single Bet (穩健)
-        const singleAmt = Math.floor(mainBetAmount * 0.6 / minBet) * minBet;
-        addBet(`SINGLE_${targetDetail}` as SicBoBetType, singleAmt);
+            // 70% Single
+            const singleAmt = Math.floor(totalBudget * 0.7 / minBet) * minBet;
+            add(`SINGLE_${targetNum}` as SicBoBetType, singleAmt);
 
-        // 2. Double Bet (激進)
-        const doubleAmt = Math.floor(mainBetAmount * 0.3 / minBet) * minBet;
-        if (doubleAmt >= minBet) addBet(`DOUBLE_${targetDetail}` as SicBoBetType, doubleAmt);
-
-        // 3. Triple (夢想)
-        if (remainingBudget >= minBet && riskFactor > 1.2) {
-            addBet(`TRIPLE_${targetDetail}` as SicBoBetType, minBet);
+            // 30% Triple (High Risk)
+            const tripleAmt = totalBudget - singleAmt;
+            if (tripleAmt >= minBet) {
+                add(`TRIPLE_${targetNum}` as SicBoBetType, tripleAmt);
+            }
+        } else {
+            // Fallback if prediction failed
+            add(mainTargetStr, totalBudget);
         }
     }
 
