@@ -56,7 +56,7 @@ const BetArea: React.FC<{
                         title={`Total: $${totalAmount.toLocaleString()} (${myAmount ? `You: $${myAmount.toLocaleString()}, ` : ''}${npcCount ? `${npcCount} NPCs: $${othersAmount.toLocaleString()}` : `Others: $${othersAmount.toLocaleString()}`})`}
                     >
                         {displayStr}
-                        {myAmount && totalAmount > myAmount && (
+                        {myAmount > 0 && totalAmount > myAmount && (
                             <div className="absolute -top-2 -right-2 bg-yellow-500 text-black text-[10px] px-1 rounded-full font-bold shadow-sm z-20">
                                 +${(totalAmount - myAmount).toLocaleString()}
                             </div>

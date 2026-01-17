@@ -193,4 +193,4 @@ const Dice3D: React.FC<Dice3DProps> = ({ dice, isRolling }) => {
     );
 };
 
-export default Dice3D;
+export default React.memo(Dice3D);
