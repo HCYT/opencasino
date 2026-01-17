@@ -24,6 +24,10 @@ opencasino 是一個純前端、單機娛樂向的牌桌合集。主打桌面臨
   - 94% RTP（業界標準回報率）
   - WILD 百搭、SCATTER 免費旋轉
   - 累進式 Grand Jackpot
+- **百家樂（Baccarat）**
+  - 免傭規則（Banker 1:0.95）
+  - **專業路單系統**：實時生成珠盤路（Bead Plate）與大路（Big Road）
+  - 完整對子與例牌（Natural）判定
 
 ## 特色
 
@@ -36,6 +40,7 @@ opencasino 是一個純前端、單機娛樂向的牌桌合集。主打桌面臨
   - 戰績排行榜
 - **遊戲體驗**：
   - 沉浸式桌面 UI
+  - **現代化介面**：Premium Dark Glassmorphism 設計風格
   - 音效與音量控制
 
 ## 本機執行
@@ -53,7 +58,7 @@ opencasino 是一個純前端、單機娛樂向的牌桌合集。主打桌面臨
 
 ## 專案結構（重點）
 
-- `src/components`：遊戲 UI 元件（包含 `showdown`, `blackjack`, `bigTwo`, `showdownGate`, `slots`）
+- `src/components`：遊戲 UI 元件（包含 `showdown`, `blackjack`, `bigTwo`, `showdownGate`, `slots`, `baccarat`）
 - `src/services`：遊戲規則、引擎與 AI
 - `src/config`：NPC 設定
 - `src/types.ts`：共用型別

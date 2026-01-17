@@ -6,6 +6,7 @@ import { BaccaratSeat, BetType, BACCARAT_PAYOUTS, BaccaratPlayer } from '../../s
 import TableFrame from '../table/TableFrame';
 import CardDisplay from './CardDisplay';
 import ShoeDisplay from '../ui/ShoeDisplay';
+import RoadmapDisplay from './RoadmapDisplay';
 import { GameButton } from '../ui/GameButton';
 import StackCard from '../ui/StackCard';
 import PlayerSeatCard from '../ui/PlayerSeatCard';
@@ -162,6 +163,7 @@ const BaccaratGame: React.FC<BaccaratGameProps> = ({
         shoeSize,
         cardsRemaining,
         needsShuffle,
+        history,
     } = useBaccaratEngine({
         seats,
         minBet,
@@ -219,6 +221,11 @@ const BaccaratGame: React.FC<BaccaratGameProps> = ({
                     cardsRemaining={cardsRemaining}
                     needsShuffle={needsShuffle}
                 />
+
+                {/* 路單顯示 */}
+                <div className="absolute bottom-32 left-4 z-10 w-[320px] md:w-[400px] opacity-90 hover:opacity-100 transition-opacity">
+                    <RoadmapDisplay history={history} />
+                </div>
 
                 {/* 發牌區域 - 放在桌面中央 */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

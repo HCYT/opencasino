@@ -60,3 +60,13 @@ export const BACCARAT_PAYOUTS = {
     BANKER_PAIR: 11,    // 莊對子賠率
     PLAYER_PAIR: 11,    // 閒對子賠率
 } as const;
+
+// 歷史記錄項
+export interface BaccaratHistoryItem {
+    result: BaccaratResult;
+    bankerPoints: number;
+    playerPoints: number;
+    bankerPair: boolean;
+    playerPair: boolean;
+    isNatural: boolean; // 例牌 (8或9點直接勝負)
+}

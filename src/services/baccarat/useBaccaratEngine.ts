@@ -7,6 +7,7 @@ import {
     BaccaratPlayer,
     BaccaratSeat,
     BaccaratResult,
+    BaccaratHistoryItem,
     BetType,
 } from './types';
 import {
@@ -51,6 +52,9 @@ export const useBaccaratEngine = ({
     const [phase, setPhase] = useState<BaccaratPhase>('BETTING');
     const [bankerCards, setBankerCards] = useState<Card[]>([]);
     const [playerCards, setPlayerCards] = useState<Card[]>([]);  // 遊戲的"閒家"
+
+    // 路單歷史
+    const [history, setHistory] = useState<BaccaratHistoryItem[]>([]);
 
     // 牌靴狀態
     const deckCount = SHOE_CONFIG.BACCARAT_DECKS;
@@ -135,6 +139,17 @@ export const useBaccaratEngine = ({
 
         setResult(gameResult);
         setShoe(finalDeck);
+
+        // 更新歷史記錄
+        const newHistoryItem: BaccaratHistoryItem = {
+            result: gameResult!,
+            bankerPoints: bankerPts,
+            playerPoints: playerPts,
+            bankerPair: hasBankerPair,
+            playerPair: hasPlayerPair,
+            isNatural: isNatural(bankerPts) || isNatural(playerPts),
+        };
+        setHistory(prev => [...prev, newHistoryItem]);
 
         // 檢查是否需要洗牌（已發牌數超過切牌卡位置）
         const cardsUsed = shoeSize - finalDeck.length;
@@ -339,7 +354,10 @@ export const useBaccaratEngine = ({
             const newShoe = buildShoe(deckCount);
             setShoe(newShoe.deck);
             setNeedsShuffle(false);
-            setMessage('新牌靴已準備！請下注');
+            setMessage('牌靴已重新洗牌');
+            setHistory([]); // 清空路單
+
+            // 重新初始化所有狀態
         }
     }, [needsShuffle, deckCount]);
 
@@ -350,8 +368,8 @@ export const useBaccaratEngine = ({
     const playerPair = isPair(playerCards);
 
     // 牌靴資訊
+    // 牌靴資訊
     const cardsRemaining = shoe.length;
-    const cardsDealt = shoeSize - shoe.length;
 
     return {
         // 狀態
@@ -368,11 +386,11 @@ export const useBaccaratEngine = ({
         minBet,
         humanPlayer,
 
-        // 牌靴狀態
+        // 牌靴資訊
         shoeSize,
         cardsRemaining,
-        cardsDealt,
-        needsShuffle,
+        needsShuffle, // UI 可用此判斷是否顯示洗牌提示
+        history,
 
         // 操作
         placeBet,
