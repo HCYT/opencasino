@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { GamePhase, UserProfile } from './types';
 import { MIN_BET, PLAYER_QUOTES } from './constants';
 import { NPC_PROFILES } from './config/npcProfiles';
-import { BIG_TWO_BASE_BETS, BLACKJACK_CUT_PRESETS, BACCARAT_MIN_BETS, GameType, BetMode, BlackjackCutPresetKey } from './config/gameConfig';
+import { BIG_TWO_BASE_BETS, BLACKJACK_CUT_PRESETS, BACCARAT_MIN_BETS, SICBO_MIN_BETS, GameType, BetMode, BlackjackCutPresetKey } from './config/gameConfig';
 import { saveProfiles } from './services/profileStore';
-import { buildBigTwoSeats, buildBlackjackSeats, buildGateSeats, buildShowdownPlayers, buildBaccaratSeats } from './services/lobby/gameStarters';
+import { buildBigTwoSeats, buildBlackjackSeats, buildGateSeats, buildShowdownPlayers, buildBaccaratSeats, buildSicBoSeats } from './services/lobby/gameStarters';
 import { pickNpcTriplet } from './services/lobby/npcPicker';
 import { useGameEngine } from './services/showdown/useShowdownEngine';
 import { ShowdownRules } from './services/showdown/ShowdownRules';
@@ -16,6 +16,8 @@ import { GateSeat, GateResult } from './services/showdownGate/types';
 import SlotMachineGame from './components/slots/SlotMachineGame';
 import BaccaratGame from './components/baccarat/BaccaratGame';
 import { BaccaratSeat } from './services/baccarat/types';
+import SicBoGame from './components/sicBo/SicBoGame';
+import { SicBoSeat } from './services/sicBo/types';
 import { GameButton } from './components/ui/GameButton';
 import VolumeControl from './components/ui/VolumeControl';
 import Lobby from './components/lobby/Lobby';
@@ -41,6 +43,10 @@ const App: React.FC = () => {
   const [baccaratSessionKey, setBaccaratSessionKey] = useState(0);
   const [baccaratSeats, setBaccaratSeats] = useState<BaccaratSeat[]>([]);
   const [baccaratMinBet] = useState(BACCARAT_MIN_BETS[1]);
+  const [sicBoActive, setSicBoActive] = useState(false);
+  const [sicBoSessionKey, setSicBoSessionKey] = useState(0);
+  const [sicBoSeats, setSicBoSeats] = useState<SicBoSeat[]>([]);
+  const [sicBoMinBet] = useState(SICBO_MIN_BETS[1]);
   const [currentActivePlayer, setCurrentActivePlayer] = useState('');
   const playerAvatar = 'https://picsum.photos/seed/me/200/200';
 
@@ -182,6 +188,27 @@ const App: React.FC = () => {
 
     if (gameType === 'BACCARAT') {
       startBaccarat();
+      return;
+    }
+
+    const startSicBo = () => {
+      const [ai1, ai2, ai3] = pickNpcTriplet(NPC_PROFILES);
+      const { seats, updatedProfiles } = buildSicBoSeats({
+        playerName,
+        playerChips,
+        playerAvatar: dynamicAvatar,
+        initialChips,
+        profiles,
+        aiProfiles: [ai1, ai2, ai3]
+      });
+      saveProfiles(updatedProfiles);
+      setSicBoSeats(seats);
+      setSicBoSessionKey(prev => prev + 1);
+      setSicBoActive(true);
+    };
+
+    if (gameType === 'SICBO') {
+      startSicBo();
       return;
     }
 
@@ -351,6 +378,43 @@ const App: React.FC = () => {
           minBet={baccaratMinBet}
           npcProfiles={NPC_PROFILES}
           onExit={() => setBaccaratActive(false)}
+          onProfilesUpdate={(updates) => {
+            const updated = { ...profiles };
+            updates.forEach(payload => {
+              const prev = updated[payload.name];
+              const wins = prev?.wins ?? 0;
+              const losses = prev?.losses ?? 0;
+              const games = prev?.games ?? 0;
+              const debt = prev?.debt ?? 0;
+              updated[payload.name] = {
+                name: payload.name,
+                chips: payload.chips,
+                wins: wins + (payload.result === 'WIN' ? 1 : 0),
+                losses: losses + (payload.result === 'LOSE' ? 1 : 0),
+                games: games + 1,
+                debt
+              };
+            });
+            saveProfiles(updated);
+            setProfiles(updated);
+          }}
+        />
+      </>
+    );
+  }
+
+  if (sicBoActive) {
+    return (
+      <>
+        <div className="fixed top-4 right-4 z-[100] md:top-6 md:right-6">
+          <VolumeControl />
+        </div>
+        <SicBoGame
+          key={`sicbo-${sicBoSessionKey}`}
+          seats={sicBoSeats}
+          minBet={sicBoMinBet}
+          npcProfiles={NPC_PROFILES}
+          onExit={() => setSicBoActive(false)}
           onProfilesUpdate={(updates) => {
             const updated = { ...profiles };
             updates.forEach(payload => {

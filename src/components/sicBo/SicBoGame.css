@@ -1,0 +1,576 @@
+/* 遊戲主容器 */
+.sicbo-game {
+    min-height: 100vh;
+    background: radial-gradient(circle at center, #2b0f0f 0%, #1a0505 100%);
+    background-image:
+        url('/image/bg.png'),
+        radial-gradient(ellipse at top, rgba(220, 38, 38, 0.2) 0%, transparent 60%);
+    background-size: cover;
+    background-position: center;
+    background-blend-mode: overlay;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    gap: 1.5rem;
+    color: white;
+    font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* 頂部標題 */
+.sicbo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.sicbo-title {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(to bottom, #ffd700, #b45309);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.8));
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* 骰子區域 */
+.sicbo-dice-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 2rem 0;
+    position: relative;
+    /* 增加一個光暈背景 */
+}
+
+.sicbo-dice-section::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(220, 38, 38, 0.2) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.sicbo-message {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fbbf24;
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+    height: 2rem;
+    /* 固定高度避免跳動 */
+    z-index: 1;
+}
+
+/* 歷史記錄 */
+.sicbo-history {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(8px);
+    max-width: 100%;
+    overflow-x: auto;
+    margin: 0 auto;
+}
+
+.history-label {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
+
+.history-items {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.history-item {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.history-item.big {
+    background: linear-gradient(135deg, #ef4444, #991b1b);
+    color: white;
+}
+
+.history-item.small {
+    background: linear-gradient(135deg, #3b82f6, #1e3a8a);
+    color: white;
+}
+
+.history-item.triple {
+    background: linear-gradient(135deg, #8b5cf6, #5b21b6);
+    color: #fbbf24;
+    border-color: #fbbf24;
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
+}
+
+/* 下注區域 */
+.sicbo-board-section {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    overflow-y: auto;
+    padding: 0 1rem;
+}
+
+/* 底部控制區 */
+.sicbo-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: rgba(20, 20, 25, 0.85);
+    border-radius: 24px 24px 0 0;
+    backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+    margin: 0 -1rem -1rem -1rem;
+    /* 抵消父元素的 padding */
+}
+
+/* 玩家資訊 */
+.sicbo-player-info {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    font-size: 1.1rem;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.75rem 2rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    align-self: center;
+}
+
+.player-chips,
+.player-bet {
+    color: rgba(255, 255, 255, 0.6);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.chips-value {
+    color: #ffd700;
+    font-weight: 700;
+    font-family: 'Monaco', monospace;
+    font-size: 1.2rem;
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.bet-value {
+    color: #60a5fa;
+    font-weight: 700;
+    font-family: 'Monaco', monospace;
+    font-size: 1.2rem;
+    text-shadow: 0 0 10px rgba(96, 165, 250, 0.3);
+}
+
+.player-result {
+    font-weight: 800;
+    font-size: 1.5rem;
+    font-family: 'Monaco', monospace;
+    animation: popIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+.player-result.win {
+    color: #4ade80;
+    text-shadow: 0 0 15px rgba(74, 222, 128, 0.5);
+}
+
+.player-result.lose {
+    color: #f87171;
+    text-shadow: 0 0 15px rgba(248, 113, 113, 0.5);
+}
+
+/* 籌碼選擇器 */
+.chip-selector {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    padding: 0.5rem 0;
+}
+
+.chip-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 4px dashed rgba(255, 255, 255, 0.2);
+    background: linear-gradient(145deg, #1f2937, #111827);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.75rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.chip-btn:hover:not(:disabled) {
+    transform: translateY(-4px) scale(1.1);
+    border-style: solid;
+    border-color: rgba(255, 215, 0, 0.5);
+    color: white;
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.4);
+}
+
+.chip-btn.selected {
+    border: 4px solid #ffd700;
+    background: radial-gradient(circle at 30% 30%, #fbbf24, #b45309);
+    color: #451a03;
+    transform: translateY(-4px) scale(1.1);
+    box-shadow:
+        0 0 20px rgba(251, 191, 36, 0.4),
+        0 10px 15px rgba(0, 0, 0, 0.4);
+}
+
+.chip-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    filter: grayscale(100%);
+}
+
+/* 動作按鈕 */
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    padding-top: 0.5rem;
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+    .sicbo-game {
+        padding: 0;
+        gap: 0.5rem;
+    }
+
+    .sicbo-header {
+        border-radius: 0;
+        background: rgba(0, 0, 0, 0.6);
+    }
+
+    .sicbo-title {
+        font-size: 1.5rem;
+    }
+
+    .sicbo-dice-section {
+        padding: 1rem 0;
+    }
+
+    .sicbo-dice-section::before {
+        width: 200px;
+        height: 200px;
+    }
+
+    .sicbo-controls {
+        padding: 1rem;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .sicbo-player-info {
+        gap: 1.5rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .chips-value,
+    .bet-value {
+        font-size: 1rem;
+    }
+
+    .chip-selector {
+        gap: 0.5rem;
+    }
+
+    .chip-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 0.65rem;
+        border-width: 3px;
+    }
+}
+
+@media (max-width: 380px) {
+    .sicbo-player-info {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+    }
+}
+
+
+/* 頂部標題 */
+.sicbo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 0.5rem;
+}
+
+.sicbo-title {
+    font-size: 1.75rem;
+    font-weight: bold;
+    background: linear-gradient(to right, #ffd700, #ffaa00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+/* 骰子區域 */
+.sicbo-dice-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 0;
+}
+
+.sicbo-message {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #ffd700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* 歷史記錄 */
+.sicbo-history {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+.history-label {
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.7);
+    white-space: nowrap;
+}
+
+.history-items {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.history-item {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.history-item.big {
+    background: linear-gradient(145deg, #991b1b, #7f1d1d);
+    color: white;
+}
+
+.history-item.small {
+    background: linear-gradient(145deg, #1e40af, #1e3a8a);
+    color: white;
+}
+
+.history-item.triple {
+    background: linear-gradient(145deg, #7c3aed, #5b21b6);
+    color: #ffd700;
+    box-shadow: 0 0 8px rgba(124, 58, 237, 0.5);
+}
+
+/* 下注區域 */
+.sicbo-board-section {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+}
+
+/* 底部控制區 */
+.sicbo-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+/* 玩家資訊 */
+.sicbo-player-info {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    font-size: 1rem;
+}
+
+.player-chips,
+.player-bet {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.chips-value {
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.bet-value {
+    color: #60a5fa;
+    font-weight: bold;
+}
+
+.player-result {
+    font-weight: bold;
+    font-size: 1.25rem;
+}
+
+.player-result.win {
+    color: #22c55e;
+}
+
+.player-result.lose {
+    color: #ef4444;
+}
+
+/* 籌碼選擇器 */
+.chip-selector {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.chip-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    background: linear-gradient(145deg, #374151, #1f2937);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.chip-btn:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.chip-btn.selected {
+    border-color: #ffd700;
+    background: linear-gradient(145deg, #ca8a04, #a16207);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+}
+
+.chip-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 動作按鈕 */
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+/* 響應式 */
+@media (max-width: 768px) {
+    .sicbo-game {
+        padding: 0.5rem;
+        gap: 0.5rem;
+    }
+
+    .sicbo-title {
+        font-size: 1.25rem;
+    }
+
+    .sicbo-player-info {
+        gap: 1rem;
+        font-size: 0.875rem;
+    }
+
+    .chip-btn {
+        width: 42px;
+        height: 42px;
+        font-size: 0.6rem;
+    }
+
+    .sicbo-controls {
+        padding: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .sicbo-player-info {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .chip-selector {
+        gap: 0.25rem;
+    }
+
+    .chip-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 0.55rem;
+    }
+}
