@@ -12,6 +12,8 @@ const sounds: Record<string, string> = {
   'chip-fold': '/sounds/chips-collide-1.ogg',
   'dice-shake': '/sounds/dice-shake-1.ogg',
   'dice-throw': '/sounds/dice-throw-1.ogg',
+  'roulette-wheel-spin': '/sounds/Roulette-Wheel-Spin-Loop.ogg',
+  'roulette-ball': '/sounds/roulette-game-429833.mp3',
 };
 
 const variantSounds: Record<string, string[]> = {
@@ -75,6 +77,8 @@ const volumes: Record<string, number> = {
   'chip-fold': 0.3,
   'dice-shake': 0.5,
   'dice-throw': 0.4,
+  'roulette-wheel-spin': 0.4,
+  'roulette-ball': 0.5,
 };
 
 let volume = 0.4;

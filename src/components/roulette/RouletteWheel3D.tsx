@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { WHEEL_ORDER, getNumberColor } from '../../services/roulette/constants';
 import { Environment } from '@react-three/drei';
+import { playSoundLoop } from '../../services/sound';
 
 interface RouletteWheel3DProps {
     spinning: boolean;
@@ -47,6 +48,10 @@ export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
     const wheelRef = useRef<THREE.Group>(null);
     const ballRef = useRef<THREE.Mesh>(null);
 
+    // Audio refs for stopping sounds
+    const wheelAudioRef = useRef<HTMLAudioElement | null>(null);
+    const ballAudioRef = useRef<HTMLAudioElement | null>(null);
+
     // Animation state
     const speedRef = useRef(0);
     const ballSpeedRef = useRef(0);
@@ -59,8 +64,14 @@ export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
 
     const [landed, setLanded] = useState(false);
 
+    // Start sounds when spinning begins
     useEffect(() => {
         if (spinning) {
+            // Start wheel spin loop sound
+            wheelAudioRef.current = playSoundLoop('roulette-wheel-spin');
+            // Start ball sound
+            ballAudioRef.current = playSoundLoop('roulette-ball');
+
             // RANDOMNESS FIX: Add variance to initial speeds so physics result is non-deterministic
             const speedVar = 5.8 + Math.random() * 0.5; // 5.8 to 6.3
             const ballSpeedVar = -9.5 - Math.random() * 1.5; // -9.5 to -11.0
@@ -80,8 +91,32 @@ export const RouletteWheel3D: React.FC<RouletteWheel3DProps> = ({
             landedAngleRef.current = null;
             setLanded(false);
             setLanded(false);
+        } else {
+            // Stop sounds when spinning stops
+            if (wheelAudioRef.current) {
+                wheelAudioRef.current.pause();
+                wheelAudioRef.current = null;
+            }
+            if (ballAudioRef.current) {
+                ballAudioRef.current.pause();
+                ballAudioRef.current = null;
+            }
         }
     }, [spinning]);
+
+    // Stop sounds when ball lands
+    useEffect(() => {
+        if (landed) {
+            if (wheelAudioRef.current) {
+                wheelAudioRef.current.pause();
+                wheelAudioRef.current = null;
+            }
+            if (ballAudioRef.current) {
+                ballAudioRef.current.pause();
+                ballAudioRef.current = null;
+            }
+        }
+    }, [landed]);
 
     // Track the winning number once calculated
 
