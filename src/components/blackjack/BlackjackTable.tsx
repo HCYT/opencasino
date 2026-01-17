@@ -14,6 +14,7 @@ interface BlackjackTableProps {
   shufflePending: boolean;
   deckCount: number;
   cutCardOwner: string;
+  cutCardRolls: Record<string, number>;
   rollSummary: string;
   children?: React.ReactNode;
 }
@@ -27,6 +28,7 @@ const BlackjackTable: React.FC<BlackjackTableProps> = ({
   shufflePending,
   deckCount,
   cutCardOwner,
+  cutCardRolls,
   rollSummary,
   children
 }) => {
@@ -34,7 +36,11 @@ const BlackjackTable: React.FC<BlackjackTableProps> = ({
     <TableFrame title="慈善撲克王大賽 · 21 點公開賽" statusText={statusText} overlay={children}>
       {cutRollPending && (
         <div className="absolute inset-0 z-[70] flex items-center justify-center pointer-events-auto">
-          <RollPrompt onRoll={onRollCutCard} />
+          <RollPrompt
+            onRoll={onRollCutCard}
+            rollResult={cutCardRolls}
+            winner={cutCardOwner}
+          />
         </div>
       )}
       <DeckStatusCard
@@ -56,7 +62,7 @@ const BlackjackTable: React.FC<BlackjackTableProps> = ({
           )}
         </div>
         <div className="text-4xl font-black text-white flex items-center gap-2 justify-center">
-          <span className="text-emerald-400">🎲</span> {dealerTotal || 0}
+          {dealerTotal || 0}
         </div>
       </div>
     </TableFrame>
@@ -64,3 +70,4 @@ const BlackjackTable: React.FC<BlackjackTableProps> = ({
 };
 
 export default BlackjackTable;
+

@@ -110,6 +110,7 @@ const BlackjackGame: React.FC<BlackjackGameProps> = ({
         shufflePending={shufflePending}
         deckCount={deck.length}
         cutCardOwner={cutCardOwner}
+        cutCardRolls={cutCardRolls}
         rollSummary={rollSummary}
       >
         {players.map((p, i) => (
