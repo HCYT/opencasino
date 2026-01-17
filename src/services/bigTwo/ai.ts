@@ -674,8 +674,7 @@ export const aiChoosePlay = (
   players: BigTwoAiPlayer[],
   playedCards: Card[],
   nightmareMode = false,
-  humanIdx = -1,
-  _totalSims = 300
+  humanIdx = -1
 ) => {
   const legalCandidates = getLegalPlays(hand, current, mustIncludeThree);
   if (legalCandidates.length === 0) return null;

@@ -1,5 +1,5 @@
 import { Card, Rank } from '../../types';
-import { createDeck } from '../pokerLogic';
+import { shuffleCards, buildShoe as sharedBuildShoe, SHOE_CONFIG } from '../shoeService';
 import { BlackjackStatus, CutRatioRange } from './types';
 
 export const getCardValue = (rank: Rank) => {
@@ -8,7 +8,7 @@ export const getCardValue = (rank: Rank) => {
   return Number(rank);
 };
 
-export const DEFAULT_SHOE_DECKS = 6;
+export const DEFAULT_SHOE_DECKS = SHOE_CONFIG.BLACKJACK_DECKS;
 
 export const getHandValue = (cards: Card[]) => {
   let total = 0;
@@ -53,24 +53,15 @@ export const getSplitStatus = (cards: Card[]): BlackjackStatus => {
   return 'PLAYING';
 };
 
-export const shuffleCards = <T,>(cards: T[]) => {
-  const deck = [...cards];
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
-  }
-  return deck;
-};
+// 重新導出共享的洗牌函數
+export { shuffleCards };
 
+// 使用共享服務的 buildShoe，但保持原有的 API 簽名
 export const buildShoe = (decks: number, cutRatioRange: CutRatioRange) => {
-  let shoe: Card[] = [];
-  for (let i = 0; i < decks; i++) {
-    shoe = shoe.concat(createDeck());
-  }
-  const shuffled = shuffleCards(shoe);
-  const penetration = cutRatioRange.min + Math.random() * (cutRatioRange.max - cutRatioRange.min);
-  const cutRemaining = Math.max(15, Math.floor(shuffled.length * penetration));
-  return { deck: shuffled, cutRemaining };
+  const result = sharedBuildShoe(decks, cutRatioRange);
+  // 轉換為 21 點期望的格式
+  const cutRemaining = result.shoeSize - result.cutCardPosition;
+  return { deck: result.deck, cutRemaining };
 };
 
 export const rollCutCardOwner = (names: string[]) => {

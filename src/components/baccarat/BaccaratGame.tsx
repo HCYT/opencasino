@@ -5,6 +5,7 @@ import { useBaccaratEngine } from '../../services/baccarat/useBaccaratEngine';
 import { BaccaratSeat, BetType, BACCARAT_PAYOUTS, BaccaratPlayer } from '../../services/baccarat/types';
 import TableFrame from '../table/TableFrame';
 import CardDisplay from './CardDisplay';
+import ShoeDisplay from '../ui/ShoeDisplay';
 import { GameButton } from '../ui/GameButton';
 import StackCard from '../ui/StackCard';
 import PlayerSeatCard from '../ui/PlayerSeatCard';
@@ -157,6 +158,10 @@ const BaccaratGame: React.FC<BaccaratGameProps> = ({
         clearBets,
         startDeal,
         resetRound,
+        // 牌靴狀態
+        shoeSize,
+        cardsRemaining,
+        needsShuffle,
     } = useBaccaratEngine({
         seats,
         minBet,
@@ -207,6 +212,13 @@ const BaccaratGame: React.FC<BaccaratGameProps> = ({
                         npcProfile={npcProfiles.find(p => p.name === npc.name)}
                     />
                 ))}
+
+                {/* 牌靴顯示 */}
+                <ShoeDisplay
+                    shoeSize={shoeSize}
+                    cardsRemaining={cardsRemaining}
+                    needsShuffle={needsShuffle}
+                />
 
                 {/* 發牌區域 - 放在桌面中央 */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

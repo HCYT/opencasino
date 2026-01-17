@@ -57,7 +57,7 @@ const App: React.FC = () => {
     playerName: string;
     playerChips: number;
     initialChips: number;
-    profiles: Record<string, any>;
+    profiles: Record<string, UserProfile>;
     betMode: BetMode;
     teamingEnabled: boolean;
     bigTwoBaseBet: number;

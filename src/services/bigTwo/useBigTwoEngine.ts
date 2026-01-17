@@ -439,8 +439,7 @@ export const useBigTwoEngine = ({ seats, baseBet, npcProfiles, onProfilesUpdate,
         aiPlayers,
         playedCards,
         nightmareMode,
-        humanPlayerIdx,
-        300
+        humanPlayerIdx
       );
       if (play && play.length > 0) {
         const success = applyPlay(currentTurnIndex, play);

@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { Card, NPCProfile } from '../../types';
-import { createDeck } from '../pokerLogic';
 import { playSound as defaultPlaySound } from '../sound';
+import { buildShoe, SHOE_CONFIG } from '../shoeService';
 import {
     BaccaratPhase,
     BaccaratPlayer,
@@ -27,6 +27,7 @@ interface UseBaccaratEngineParams {
     npcProfiles: NPCProfile[];
     onProfilesUpdate: (updates: Array<{ name: string; chips: number; result: 'WIN' | 'LOSE' | 'PUSH' }>) => void;
     playSound?: (name: string) => void;
+    deckCount?: number; // 牌靴副數，默認 8
 }
 
 export const useBaccaratEngine = ({
@@ -50,7 +51,15 @@ export const useBaccaratEngine = ({
     const [phase, setPhase] = useState<BaccaratPhase>('BETTING');
     const [bankerCards, setBankerCards] = useState<Card[]>([]);
     const [playerCards, setPlayerCards] = useState<Card[]>([]);  // 遊戲的"閒家"
-    const [deck, setDeck] = useState<Card[]>(createDeck());
+
+    // 牌靴狀態
+    const deckCount = SHOE_CONFIG.BACCARAT_DECKS;
+    const initialShoe = buildShoe(deckCount);
+    const [shoe, setShoe] = useState<Card[]>(() => initialShoe.deck);
+    const [shoeSize] = useState(initialShoe.shoeSize);
+    const [cutCardPosition] = useState(initialShoe.cutCardPosition);
+    const [needsShuffle, setNeedsShuffle] = useState(false);
+
     const [result, setResult] = useState<BaccaratResult>(null);
     const [message, setMessage] = useState('請下注');
 
@@ -125,7 +134,13 @@ export const useBaccaratEngine = ({
         const hasPlayerPair = isPair(finalPlayerCards);
 
         setResult(gameResult);
-        setDeck(finalDeck);
+        setShoe(finalDeck);
+
+        // 檢查是否需要洗牌（已發牌數超過切牌卡位置）
+        const cardsUsed = shoeSize - finalDeck.length;
+        if (cardsUsed >= cutCardPosition) {
+            setNeedsShuffle(true);
+        }
 
         // 結果訊息
         const resultMessages = {
@@ -174,7 +189,7 @@ export const useBaccaratEngine = ({
         }
 
         setPhase('RESULT');
-    }, [npcProfiles, onProfilesUpdate, playSound, players]);
+    }, [npcProfiles, onProfilesUpdate, playSound, players, shoeSize, cutCardPosition]);
 
     // 補牌流程
     const processDrawing = useCallback(async (
@@ -249,7 +264,7 @@ export const useBaccaratEngine = ({
         setMessage('發牌中...');
         playSound('deal');
 
-        let currentDeck = [...deck];
+        let currentDeck = [...shoe];
         const newPlayerCards: Card[] = [];
         const newBankerCards: Card[] = [];
 
@@ -299,7 +314,7 @@ export const useBaccaratEngine = ({
         }
 
         isProcessingRef.current = false;
-    }, [phase, players, deck, drawCard, processAIBets, playSound, settleRound, processDrawing]);
+    }, [phase, players, shoe, drawCard, processAIBets, playSound, settleRound, processDrawing]);
 
     // 開始新回合
     const resetRound = useCallback(() => {
@@ -319,17 +334,24 @@ export const useBaccaratEngine = ({
             roundStartChips: p.chips,
         })));
 
-        // 檢查是否需要洗牌
-        if (deck.length < 20) {
-            setDeck(createDeck());
+        // 檢查是否需要洗牌（切牌卡機制）
+        if (needsShuffle) {
+            const newShoe = buildShoe(deckCount);
+            setShoe(newShoe.deck);
+            setNeedsShuffle(false);
+            setMessage('新牌靴已準備！請下注');
         }
-    }, [deck.length]);
+    }, [needsShuffle, deckCount]);
 
     // 計算當前點數
     const bankerPoints = calculatePoints(bankerCards);
     const playerPoints = calculatePoints(playerCards);
     const bankerPair = isPair(bankerCards);
     const playerPair = isPair(playerCards);
+
+    // 牌靴資訊
+    const cardsRemaining = shoe.length;
+    const cardsDealt = shoeSize - shoe.length;
 
     return {
         // 狀態
@@ -345,6 +367,12 @@ export const useBaccaratEngine = ({
         message,
         minBet,
         humanPlayer,
+
+        // 牌靴狀態
+        shoeSize,
+        cardsRemaining,
+        cardsDealt,
+        needsShuffle,
 
         // 操作
         placeBet,

@@ -76,13 +76,11 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
                         <div
                             key={index}
                             className={`
-                transform transition-all duration-500
-                ${index === 2 ? 'rotate-90 translate-x-2' : ''}
-                animate-in fade-in slide-in-from-top-4
-              `}
+                                transform transition-all duration-500
+                                ${index === 2 ? 'rotate-90 translate-x-2' : ''}
+                            `}
                             style={{
-                                animationDelay: `${index * 200}ms`,
-                                animationFillMode: 'backwards',
+                                animation: `dealFromShoe 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) ${index * 250}ms backwards`,
                             }}
                         >
                             <CardUI card={card} size="md" />
@@ -90,6 +88,27 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
                     ))
                 )}
             </div>
+
+            {/* 發牌動畫 keyframes - 從牌靴位置發出 */}
+            <style>{`
+                @keyframes dealFromShoe {
+                    0% {
+                        opacity: 0;
+                        transform: translate(calc(50vw - 100%), -200px) rotate(-5deg) scale(0.6);
+                    }
+                    20% {
+                        opacity: 1;
+                        transform: translate(150px, -120px) rotate(-3deg) scale(0.8);
+                    }
+                    70% {
+                        transform: translate(10px, -5px) rotate(1deg) scale(1.02);
+                    }
+                    100% {
+                        opacity: 1;
+                        transform: translate(0, 0) rotate(0deg) scale(1);
+                    }
+                }
+            `}</style>
 
             {/* 點數 */}
             <div
