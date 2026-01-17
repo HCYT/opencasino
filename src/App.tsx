@@ -18,6 +18,7 @@ import BaccaratGame from './components/baccarat/BaccaratGame';
 import { BaccaratSeat } from './services/baccarat/types';
 import SicBoGame from './components/sicBo/SicBoGame';
 import { SicBoSeat } from './services/sicBo/types';
+import RouletteGame from './components/roulette/RouletteGame';
 import { GameButton } from './components/ui/GameButton';
 import VolumeControl from './components/ui/VolumeControl';
 import Lobby from './components/lobby/Lobby';
@@ -47,6 +48,8 @@ const App: React.FC = () => {
   const [sicBoSessionKey, setSicBoSessionKey] = useState(0);
   const [sicBoSeats, setSicBoSeats] = useState<SicBoSeat[]>([]);
   const [sicBoMinBet] = useState(SICBO_MIN_BETS[1]);
+  const [rouletteActive, setRouletteActive] = useState(false);
+  const [rouletteSessionKey, setRouletteSessionKey] = useState(0);
   const [currentActivePlayer, setCurrentActivePlayer] = useState('');
   const playerAvatar = 'https://picsum.photos/seed/me/200/200';
 
@@ -90,6 +93,7 @@ const App: React.FC = () => {
     setGateAnteBet(configGateAnteBet);
     setBlackjackDecks(configBlackjackDecks);
     setBlackjackCutPreset(configBlackjackCutPreset);
+    setProfiles(profiles);
 
     const currentUserProfile = profiles[playerName];
     const dynamicAvatar = currentUserProfile?.avatar || playerAvatar;
@@ -209,6 +213,12 @@ const App: React.FC = () => {
 
     if (gameType === 'SICBO') {
       startSicBo();
+      return;
+    }
+
+    if (gameType === 'ROULETTE') {
+      setRouletteSessionKey(prev => prev + 1);
+      setRouletteActive(true);
       return;
     }
 
@@ -436,6 +446,43 @@ const App: React.FC = () => {
             setProfiles(updated);
           }}
         />
+      </>
+    );
+  }
+
+  if (rouletteActive) {
+    return (
+      <>
+        <div className="fixed top-4 right-4 z-[100] md:top-6 md:right-6">
+          <VolumeControl />
+        </div>
+        <div className="relative w-full h-full">
+          <button
+            onClick={() => setRouletteActive(false)}
+            className="absolute top-4 left-4 z-50 bg-black/50 hover:bg-black/70 text-white px-4 py-2 rounded-lg border border-white/10"
+          >
+            EXIT
+          </button>
+          <RouletteGame
+            playerBalance={profiles[currentActivePlayer]?.chips ?? 1000}
+            onBalanceUpdate={(newBalance, wonAmount) => {
+              const updated = { ...profiles };
+              const prev = updated[currentActivePlayer];
+              if (prev) {
+                updated[currentActivePlayer] = {
+                  ...prev,
+                  chips: newBalance,
+                  wins: prev.wins + (wonAmount > 0 ? 1 : 0),
+                  losses: prev.losses + (wonAmount === 0 ? 1 : 0),
+                  games: prev.games + 1
+                };
+                saveProfiles(updated);
+                setProfiles(updated);
+              }
+            }}
+            onExit={() => setRouletteActive(false)}
+          />
+        </div>
       </>
     );
   }

@@ -1,4 +1,4 @@
-export type GameType = 'SHOWDOWN' | 'BLACKJACK' | 'BIG_TWO' | 'GATE' | 'SLOTS' | 'BACCARAT' | 'SICBO';
+export type GameType = 'SHOWDOWN' | 'BLACKJACK' | 'BIG_TWO' | 'GATE' | 'SLOTS' | 'BACCARAT' | 'SICBO' | 'ROULETTE';
 export type BetMode = 'FIXED_LIMIT' | 'NO_LIMIT';
 export type BlackjackCutPresetKey = 'DEEP' | 'STANDARD' | 'SHALLOW';
 
@@ -117,6 +117,19 @@ export const GAMES: GameInfo[] = [
             border: 'border-rose-500',
             shadow: 'shadow-[0_0_25px_rgba(244,63,94,0.3)]',
             text: 'text-rose-400'
+        }
+    },
+    {
+        type: 'ROULETTE',
+        name: '輪盤',
+        icon: '🎡',
+        desc: '運氣旋轉',
+        theme: {
+            from: 'from-green-900',
+            to: 'to-slate-900',
+            border: 'border-green-500',
+            shadow: 'shadow-[0_0_25px_rgba(34,197,94,0.3)]',
+            text: 'text-green-400'
         }
     }
 ];
