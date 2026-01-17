@@ -424,6 +424,11 @@
     border-color: rgba(16, 185, 129, 0.5);
 }
 
+.bet-double .bet-label {
+    font-size: 2rem;
+    line-height: 1;
+}
+
 /* 總點數行 */
 .totals-row .bet-area {
     flex: 1;

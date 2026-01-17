@@ -114,7 +114,7 @@ const Die = ({ position, rotation, value, isRolling }: { position: [number, numb
         });
     }, []);
 
-    // 旋轉邏輯
+    // 旋轉邏輯：定義每個點數對應的旋轉角度 (x, y, z)
     const targetRotations: Record<number, [number, number, number]> = useMemo(() => ({
         1: [0, 0, Math.PI / 2],
         6: [0, 0, -Math.PI / 2],
@@ -124,12 +124,22 @@ const Die = ({ position, rotation, value, isRolling }: { position: [number, numb
         5: [Math.PI / 2, 0, 0],
     }), []);
 
+    // 隨機旋轉速度 (每顆骰子獨一無二)
+    const spinSpeed = useMemo(() => {
+        const rand = (min: number, max: number) => (Math.random() * (max - min) + min) * (Math.random() < 0.5 ? 1 : -1);
+        return {
+            x: rand(15, 25),
+            y: rand(15, 25),
+            z: rand(15, 25)
+        };
+    }, []);
+
     useFrame((state, delta) => {
         if (!meshRef.current) return;
         if (isRolling) {
-            meshRef.current.rotation.x += delta * 20;
-            meshRef.current.rotation.y += delta * 15;
-            meshRef.current.rotation.z += delta * 18;
+            meshRef.current.rotation.x += delta * spinSpeed.x;
+            meshRef.current.rotation.y += delta * spinSpeed.y;
+            meshRef.current.rotation.z += delta * spinSpeed.z;
         } else {
             const target = targetRotations[value];
             const current = meshRef.current.rotation;
@@ -150,8 +160,8 @@ const Die = ({ position, rotation, value, isRolling }: { position: [number, numb
     return (
         <mesh
             ref={meshRef}
-            position={new Vector3(...position)}
-            rotation={new THREE.Euler(...rotation)}
+            // 移除 props 傳入的 position/rotation，改由外層 Float 控制位置，內層只負責自轉
+            rotation={new THREE.Euler(0, 0, 0)}
         >
             <boxGeometry args={[1.6, 1.6, 1.6]} />
             {materials.map((mat, i) => (
@@ -182,10 +192,37 @@ const Dice3D: React.FC<Dice3DProps> = ({ dice, isRolling }) => {
                 <pointLight position={[-5, 5, -5]} intensity={1.0} color="#fbbf24" />
 
                 <group position={[0, -0.5, 0]}>
-                    <Float speed={isRolling ? 20 : 0} rotationIntensity={isRolling ? 2 : 0} floatIntensity={isRolling ? 2 : 0}>
-                        <Die position={[-2.2, 0, 0]} rotation={[0, 0, 0]} value={dice[0]} isRolling={isRolling} />
-                        <Die position={[0, 0, 0.2]} rotation={[0, 0, 0]} value={dice[1]} isRolling={isRolling} />
-                        <Die position={[2.2, 0, -0.1]} rotation={[0, 0, 0]} value={dice[2]} isRolling={isRolling} />
+                    {/* 左骰子：獨立懸浮 */}
+                    <Float
+                        position={[-2.2, 0, 0]}
+                        speed={isRolling ? 20 : 0}
+                        rotationIntensity={isRolling ? 2 : 0}
+                        floatIntensity={isRolling ? 3 : 0}
+                        floatingRange={isRolling ? [-0.5, 0.5] : [-0.1, 0.1]}
+                    >
+                        <Die position={[0, 0, 0]} rotation={[0, 0, 0]} value={dice[0]} isRolling={isRolling} />
+                    </Float>
+
+                    {/* 中骰子：更劇烈的浮動 */}
+                    <Float
+                        position={[0, 0, 0.2]}
+                        speed={isRolling ? 25 : 0}
+                        rotationIntensity={isRolling ? 2.5 : 0}
+                        floatIntensity={isRolling ? 3 : 0}
+                        floatingRange={isRolling ? [-0.5, 0.5] : [-0.1, 0.1]}
+                    >
+                        <Die position={[0, 0, 0]} rotation={[0, 0, 0]} value={dice[1]} isRolling={isRolling} />
+                    </Float>
+
+                    {/* 右骰子：反向或不同的浮動參數 */}
+                    <Float
+                        position={[2.2, 0, -0.1]}
+                        speed={isRolling ? 18 : 0}
+                        rotationIntensity={isRolling ? 1.5 : 0}
+                        floatIntensity={isRolling ? 3 : 0}
+                        floatingRange={isRolling ? [-0.5, 0.5] : [-0.1, 0.1]}
+                    >
+                        <Die position={[0, 0, 0]} rotation={[0, 0, 0]} value={dice[2]} isRolling={isRolling} />
                     </Float>
                 </group>
             </Canvas>

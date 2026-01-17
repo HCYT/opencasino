@@ -135,7 +135,7 @@ const BettingBoard: React.FC<BettingBoardProps> = ({
                             <BetArea
                                 key={`double-${n}`}
                                 type={`DOUBLE_${n}` as SicBoBetType}
-                                label={`⚀`.repeat(2)}
+                                label={String.fromCodePoint(9855 + n).repeat(2)}
                                 payout="1:10"
                                 className="bet-double"
                                 {...getAmounts(`DOUBLE_${n}` as SicBoBetType)}
