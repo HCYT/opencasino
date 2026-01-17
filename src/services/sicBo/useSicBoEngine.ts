@@ -152,7 +152,7 @@ export const useSicBoEngine = ({
                 if (!player.isAI) return player;
 
                 const profile = npcProfiles.find(p => p.name === player.name);
-                const aiBets = calculateAIBet(player.chips, minBet, profile);
+                const aiBets = calculateAIBet(player.chips, minBet, history, profile);
                 const totalBetAmount = aiBets.reduce((sum, b) => sum + b.amount, 0);
 
                 // 確保 AI 有足夠籌碼
@@ -169,7 +169,7 @@ export const useSicBoEngine = ({
 
             return { ...prev, players };
         });
-    }, [minBet, npcProfiles]);
+    }, [minBet, npcProfiles, history]);
 
     /**
      * 開始搖骰
@@ -224,8 +224,9 @@ export const useSicBoEngine = ({
                     });
 
                     // AI 語音
+                    const profile = npcProfiles.find(p => p.name === player.name);
                     const quote = player.isAI
-                        ? getAIQuote(won, payout)
+                        ? getAIQuote(won, payout, profile)
                         : undefined;
 
                     return {
