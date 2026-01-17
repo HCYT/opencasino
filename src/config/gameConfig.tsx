@@ -13,10 +13,12 @@ export const BLACKJACK_CUT_PRESETS = [
     { key: 'SHALLOW' as BlackjackCutPresetKey, label: '淺 (30%)', min: 0.25, max: 0.3 }
 ] as const;
 
+import { CircleDashed } from 'lucide-react';
+
 export interface GameInfo {
     type: GameType;
     name: string;
-    icon: string;
+    icon: React.ReactNode | string;
     desc: string;
     theme: {
         from: string;
@@ -122,7 +124,7 @@ export const GAMES: GameInfo[] = [
     {
         type: 'ROULETTE',
         name: '輪盤',
-        icon: '🎡',
+        icon: <CircleDashed size={64} strokeWidth={1.5} />,
         desc: '運氣旋轉',
         theme: {
             from: 'from-green-900',

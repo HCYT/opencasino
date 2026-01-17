@@ -158,46 +158,52 @@ export default function RouletteGame({ playerBalance, onBalanceUpdate, onExit }:
 
                 <div className="bg-slate-900/80 backdrop-blur-xl border-t border-white/10 shadow-[0_-10px_40px_rgba(0,0,0,0.6)] rounded-t-3xl pointer-events-auto max-h-[50vh] flex flex-col">
 
-                    {/* Control Bar (Balance Left, Chips Center, Actions Right) */}
+                    {/* Control Bar (Balance/Chips Left, Actions Right) */}
                     <div className="px-6 py-3 flex justify-between items-center border-b border-white/5 bg-black/20 rounded-t-3xl">
 
-                        {/* LEFT: Balance & Exit */}
-                        <div className="flex items-center gap-4">
-                            <GameButton onClick={onExit} variant="glass" size="pillSm" className="text-slate-400 border-white/10 hover:text-white px-3">
-                                <span className="text-lg">←</span>
-                            </GameButton>
-                            <div className="flex flex-col">
-                                <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-none mb-1">Total Balance</span>
-                                <span className="text-yellow-400 font-mono text-xl md:text-2xl font-bold tracking-tight drop-shadow-md leading-none">
-                                    ${currentBalance.toLocaleString()}
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* CENTER: Chip Selection */}
-                        <div className="flex gap-2 md:gap-4 overflow-x-auto pb-1 no-scrollbar mx-4">
-                            {[10, 50, 100, 500, 1000].map(amt => (
-                                <button
-                                    key={amt}
-                                    onClick={() => setSelectedChip(amt)}
-                                    className={`group relative w-10 h-10 md:w-12 md:h-12 flex-shrink-0 rounded-full flex items-center justify-center transition-all duration-200
-                                            ${selectedChip === amt
-                                            ? 'scale-110 -translate-y-1 shadow-[0_10px_20px_rgba(0,0,0,0.5)] z-10'
-                                            : 'hover:scale-105 hover:-translate-y-0.5 opacity-80 hover:opacity-100'}
-                                    `}
-                                >
-                                    {/* Chip Graphic CSS */}
-                                    <div className={`absolute inset-0 rounded-full border-2 border-dashed border-white/30 
-                                                    ${selectedChip === amt ? 'bg-gradient-to-b from-yellow-400 to-yellow-700 border-yellow-200' :
-                                            amt === 10 ? 'bg-slate-700' : amt === 50 ? 'bg-blue-700' : amt === 100 ? 'bg-red-700' : 'bg-purple-700'}
-                                                    shadow-inner`}></div>
-                                    <div className="absolute inset-1 rounded-full border border-white/20 bg-black/10"></div>
-                                    <span className={`relative text-[10px] md:text-xs font-black z-10 
-                                                    ${selectedChip === amt ? 'text-yellow-950' : 'text-white'} drop-shadow-md`}>
-                                        {amt}
+                        {/* LEFT: Balance, Exit, & Chips */}
+                        <div className="flex items-center gap-8">
+                            {/* Nav & Balance */}
+                            <div className="flex items-center gap-4">
+                                <GameButton onClick={onExit} variant="glass" size="pillSm" className="text-slate-400 border-white/10 hover:text-white px-3">
+                                    <span className="text-lg">←</span>
+                                </GameButton>
+                                <div className="flex flex-col">
+                                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-none mb-1">Total Balance</span>
+                                    <span className="text-yellow-400 font-mono text-xl md:text-2xl font-bold tracking-tight drop-shadow-md leading-none">
+                                        ${currentBalance.toLocaleString()}
                                     </span>
-                                </button>
-                            ))}
+                                </div>
+                            </div>
+
+                            {/* Divider */}
+                            <div className="hidden md:block w-px h-8 bg-white/10" />
+
+                            {/* Chip Selection */}
+                            <div className="flex items-center gap-2">
+                                {[10, 50, 100, 500, 1000].map(amt => (
+                                    <button
+                                        key={amt}
+                                        onClick={() => setSelectedChip(amt)}
+                                        className={`group relative w-10 h-10 md:w-12 md:h-12 flex-shrink-0 rounded-full flex items-center justify-center transition-all duration-200
+                                                ${selectedChip === amt
+                                                ? 'scale-110 -translate-y-1 shadow-[0_10px_20px_rgba(0,0,0,0.5)] z-10'
+                                                : 'hover:scale-105 hover:-translate-y-0.5 opacity-80 hover:opacity-100'}
+                                        `}
+                                    >
+                                        {/* Chip Graphic CSS */}
+                                        <div className={`absolute inset-0 rounded-full border-2 border-dashed border-white/30 
+                                                        ${selectedChip === amt ? 'bg-gradient-to-b from-yellow-400 to-yellow-700 border-yellow-200' :
+                                                amt === 10 ? 'bg-slate-700' : amt === 50 ? 'bg-blue-700' : amt === 100 ? 'bg-red-700' : 'bg-purple-700'} 
+                                                        shadow-inner`}></div>
+                                        <div className="absolute inset-1 rounded-full border border-white/20 bg-black/10"></div>
+                                        <span className={`relative text-[10px] md:text-xs font-black z-10 
+                                                        ${selectedChip === amt ? 'text-yellow-950' : 'text-white'} drop-shadow-md`}>
+                                            {amt}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
                         {/* RIGHT: Action Buttons */}
