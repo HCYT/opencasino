@@ -2,7 +2,6 @@ import { useState, useRef, useCallback } from 'react';
 import { NPCProfile } from '../../types';
 import { playSound as defaultPlaySound } from '../sound';
 import {
-    SicBoPhase,
     SicBoSeat,
     SicBoPlayer,
     SicBoBet,
@@ -170,7 +169,7 @@ export const useSicBoEngine = ({
 
             return { ...prev, players };
         });
-    }, [minBet]);
+    }, [minBet, npcProfiles]);
 
     /**
      * 開始搖骰

@@ -1,8 +1,8 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { RoundedBox, Float } from '@react-three/drei';
+import { Float } from '@react-three/drei';
 import * as THREE from 'three';
-import { Vector3 } from 'three';
+
 
 // 產生凹凸貼圖與顏色貼圖
 const createDiceTextures = (number: number, color: string, dotColor: string) => {
@@ -89,7 +89,7 @@ const createDiceTextures = (number: number, color: string, dotColor: string) => 
     };
 };
 
-const Die = ({ position, rotation, value, isRolling }: { position: [number, number, number], rotation: [number, number, number], value: number, isRolling: boolean }) => {
+const Die = ({ value, isRolling }: { value: number, isRolling: boolean }) => {
     const meshRef = useRef<THREE.Mesh>(null);
 
     // 材質生成
@@ -125,14 +125,14 @@ const Die = ({ position, rotation, value, isRolling }: { position: [number, numb
     }), []);
 
     // 隨機旋轉速度 (每顆骰子獨一無二)
-    const spinSpeed = useMemo(() => {
+    const [spinSpeed] = useState(() => {
         const rand = (min: number, max: number) => (Math.random() * (max - min) + min) * (Math.random() < 0.5 ? 1 : -1);
         return {
             x: rand(15, 25),
             y: rand(15, 25),
             z: rand(15, 25)
         };
-    }, []);
+    });
 
     useFrame((state, delta) => {
         if (!meshRef.current) return;
@@ -200,7 +200,7 @@ const Dice3D: React.FC<Dice3DProps> = ({ dice, isRolling }) => {
                         floatIntensity={isRolling ? 3 : 0}
                         floatingRange={isRolling ? [-0.5, 0.5] : [-0.1, 0.1]}
                     >
-                        <Die position={[0, 0, 0]} rotation={[0, 0, 0]} value={dice[0]} isRolling={isRolling} />
+                        <Die value={dice[0]} isRolling={isRolling} />
                     </Float>
 
                     {/* 中骰子：更劇烈的浮動 */}
@@ -211,7 +211,7 @@ const Dice3D: React.FC<Dice3DProps> = ({ dice, isRolling }) => {
                         floatIntensity={isRolling ? 3 : 0}
                         floatingRange={isRolling ? [-0.5, 0.5] : [-0.1, 0.1]}
                     >
-                        <Die position={[0, 0, 0]} rotation={[0, 0, 0]} value={dice[1]} isRolling={isRolling} />
+                        <Die value={dice[1]} isRolling={isRolling} />
                     </Float>
 
                     {/* 右骰子：反向或不同的浮動參數 */}
@@ -222,7 +222,7 @@ const Dice3D: React.FC<Dice3DProps> = ({ dice, isRolling }) => {
                         floatIntensity={isRolling ? 3 : 0}
                         floatingRange={isRolling ? [-0.5, 0.5] : [-0.1, 0.1]}
                     >
-                        <Die position={[0, 0, 0]} rotation={[0, 0, 0]} value={dice[2]} isRolling={isRolling} />
+                        <Die value={dice[2]} isRolling={isRolling} />
                     </Float>
                 </group>
             </Canvas>

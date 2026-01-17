@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { SicBoBet, SicBoBetType, SICBO_PAYOUTS } from '../../services/sicBo/types';
+import React, { useState } from 'react';
+import { SicBoBet, SicBoBetType } from '../../services/sicBo/types';
 import './BettingBoard.css';
 
 interface BettingBoardProps {
@@ -26,10 +26,10 @@ const BetArea: React.FC<{
     isWinning?: boolean;
     npcCount?: number; // 新增：下注的 NPC 數量
 }> = ({ type, label, payout, className = '', totalAmount, myAmount, onClick, disabled, isWinning, npcCount }) => {
-    const chipOffset = useMemo(() => ({
+    const [chipOffset] = useState(() => ({
         x: (Math.random() - 0.5) * 20, // 修正：縮小 X 軸隨機偏移至 +/- 10px，避免溢出
         y: (Math.random() - 0.5) * 10  // 修正：縮小 Y 軸隨機偏移至 +/- 5px
-    }), []);
+    }));
 
     return (
         <div

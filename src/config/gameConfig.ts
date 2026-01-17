@@ -108,7 +108,7 @@ export const GAMES: GameInfo[] = [
     },
     {
         type: 'SICBO',
-        name: '骰寶',
+        name: '擲骰子',
         icon: '🎲',
         desc: '賭大小',
         theme: {

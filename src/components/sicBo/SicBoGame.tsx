@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { NPCProfile } from '../../types';
 import { useSicBoEngine } from '../../services/sicBo/useSicBoEngine';
-import { SicBoSeat, SicBoBetType, SicBoBet } from '../../services/sicBo/types';
+import { SicBoSeat, SicBoBetType, SicBoBet, SicBoPlayer } from '../../services/sicBo/types';
 import { checkBetWin } from '../../services/sicBo/rules';
 import TableFrame from '../table/TableFrame';
 import Dice3D from './Dice3D';
@@ -31,7 +31,7 @@ const SicBoGame: React.FC<SicBoGameProps> = ({
 }) => {
     // NPC 座位組件
     const NPCSeat: React.FC<{
-        player: any; // 暫時使用 any 避免複雜類型轉換，實際是 SicBoPlayer
+        player: SicBoPlayer;
         position: 'left' | 'right' | 'top';
         npcProfile?: NPCProfile;
     }> = ({ player, position, npcProfile }) => {
@@ -160,7 +160,7 @@ const SicBoGame: React.FC<SicBoGameProps> = ({
 
     return (
         <div className="game-container premium-table-bg relative overflow-visible select-none h-screen w-full">
-            <TableFrame title="骰寶 Sic Bo" statusText={statusText}>
+            <TableFrame title="擲骰子 Craps" statusText={statusText}>
                 {/* NPC 座位 */}
                 {npcPlayers.map((npc, index) => (
                     <NPCSeat
