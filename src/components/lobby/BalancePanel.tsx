@@ -9,7 +9,6 @@ interface BalancePanelProps {
   setRepayAmount: (amount: number) => void;
   handleLoan: () => void;
   handleRepay: () => void;
-  resolveChips: () => void;
 }
 
 const BalancePanel: React.FC<BalancePanelProps> = ({
@@ -18,8 +17,7 @@ const BalancePanel: React.FC<BalancePanelProps> = ({
   repayAmount,
   setRepayAmount,
   handleLoan,
-  handleRepay,
-  resolveChips
+  handleRepay
 }) => {
   return (
     <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl rounded-3xl p-6 shadow-2xl shadow-black/50">

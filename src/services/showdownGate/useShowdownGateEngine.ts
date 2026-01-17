@@ -93,8 +93,8 @@ export function useShowdownGateEngine({
     const npcTimerRef = useRef<number | null>(null);
 
     // Refs for cyclic dependencies
-    const handleAITurnRef = useRef<any>(null);
-    const advanceTurnRef = useRef<any>(null);
+    const handleAITurnRef = useRef<((players: GatePlayer[], deck: Card[], aiIndex: number, pot: number) => void) | null>(null);
+    const advanceTurnRef = useRef<((players: GatePlayer[], deck: Card[], pot: number, finishedIndex: number) => void) | null>(null);
 
     const playerIndex = players.findIndex(p => !p.isAI);
     const player = players[playerIndex];

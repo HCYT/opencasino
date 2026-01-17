@@ -27,6 +27,16 @@ export interface NPCProfile {
   tacticQuotes?: Partial<Record<AITactic, string[]>>;
 }
 
+export interface UserProfile {
+  name: string;
+  chips: number;
+  wins: number;
+  losses: number;
+  games: number;
+  debt: number;
+  avatar?: string;
+}
+
 export type AITactic = 'BAIT' | 'CONSERVATIVE' | 'DECEPTIVE' | 'AGGRESSIVE';
 
 export type HandRank =

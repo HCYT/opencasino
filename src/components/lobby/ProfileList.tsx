@@ -16,7 +16,6 @@ interface ProfileListProps {
   setPlayerName: (name: string) => void;
   npcNames: Set<string>;
   handleDeleteProfile: (name: string) => void;
-  handleCreateProfile: () => void;
   handleResetNpcProfiles: () => void;
   handleResetAllProfiles: () => void;
   handleRenameProfile: (oldName: string, newName: string) => void;
@@ -30,7 +29,6 @@ const ProfileList: React.FC<ProfileListProps> = ({
   setPlayerName,
   npcNames,
   handleDeleteProfile,
-  handleCreateProfile, // Keeping it for now but we will use modal trigger
   handleResetNpcProfiles,
   handleResetAllProfiles,
   handleRenameProfile,

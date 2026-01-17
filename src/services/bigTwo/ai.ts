@@ -233,7 +233,7 @@ const chooseTeamPlay = (
   // Finisher Ready Check (Use simHands!)
   // And EXCLUDE if Finished (size == 0)
   let finisherReady = false;
-  const finisherIdxStr = Object.entries(ctx.roles).find(([_, r]) => r === 'FINISHER')?.[0];
+  const finisherIdxStr = Object.entries(ctx.roles).find(([, r]) => r === 'FINISHER')?.[0];
   if (finisherIdxStr) {
     const fIdx = parseInt(finisherIdxStr, 10);
     const fHandSize = simHands[fIdx]?.length ?? 99;
@@ -423,8 +423,7 @@ const simulateRound = (
   snapshotPlayers: BigTwoAiPlayer[],
   playedCards: Card[],
   nightmareMode = false,
-  humanIdx = -1,
-  _totalSims = 300
+  humanIdx = -1
 ): number => { // RETURN NUMBER UTILITY
   const aiHand = sortCards(snapshotPlayers[aiIdx].hand);
   const aiRemaining = aiHand.filter(card => !candidate.cards.some(c => cardKey(c) === cardKey(card)));
@@ -626,7 +625,7 @@ const simulateRound = (
   if (firstWinner !== -1) {
     if (nightmareMode) {
       if (firstWinner === humanIdx) return 0;
-      const finisherIdxStr = Object.entries(teamContext?.roles || {}).find(([_, r]) => r === 'FINISHER')?.[0];
+      const finisherIdxStr = Object.entries(teamContext?.roles || {}).find(([, r]) => r === 'FINISHER')?.[0];
       const finisherIdx = finisherIdxStr ? parseInt(finisherIdxStr, 10) : -1;
       if (firstWinner === finisherIdx) return 1.0;
       return 0.7;

@@ -9,6 +9,7 @@ import {
   BlackjackCutPresetKey,
   BIG_TWO_BASE_BETS
 } from '@/config/gameConfig';
+import { UserProfile } from '@/types';
 
 import CreateProfileModal from './CreateProfileModal';
 import LobbyHeader from './LobbyHeader';
@@ -23,7 +24,7 @@ interface GameStartConfig {
   playerName: string;
   playerChips: number;
   initialChips: number;
-  profiles: Record<string, any>;
+  profiles: Record<string, UserProfile>;
   betMode: BetMode;
   teamingEnabled: boolean;
   bigTwoBaseBet: number;
@@ -109,25 +110,6 @@ const Lobby: React.FC<LobbyProps> = ({ onGameStart }) => {
       blackjackDecks,
       blackjackCutPreset
     });
-  };
-
-  const onCreateProfile = (name: string) => {
-    setPlayerName(name);
-    // handleCreateProfile logic is slightly different in useLobbyState, 
-    // it uses current "playerName" state. 
-    // We should probably just set the name here and let handleCreateProfile work?
-    // Actually handleCreateProfile checks if playerName is empty.
-    // Let's manually trigger it with the new name.
-    // Wait, handleCreateProfile in useLobbyState relies on `playerName` state.
-    // We need to set state then call it? React batching might be an issue.
-    // Ideally useLobbyState should accept a name arg for create.
-    // For now, let's assume setting playerName is enough if we modify handleCreateProfile to wait or pass arg.
-    // OR we can just manually create it here since we have setProfiles exposed.. 
-    // BUT useLobbyState encapsulates logic.
-    // Let's modify useLobbyState to accept name optional arg.
-
-    // HACK: For now, I'll update the state and call create in a tailored way.
-    // Actually, I should update useLobbyState first.
   };
 
   return (

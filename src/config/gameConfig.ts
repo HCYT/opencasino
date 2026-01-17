@@ -1,9 +1,10 @@
-export type GameType = 'SHOWDOWN' | 'BLACKJACK' | 'BIG_TWO' | 'GATE' | 'SLOTS';
+export type GameType = 'SHOWDOWN' | 'BLACKJACK' | 'BIG_TWO' | 'GATE' | 'SLOTS' | 'BACCARAT';
 export type BetMode = 'FIXED_LIMIT' | 'NO_LIMIT';
 export type BlackjackCutPresetKey = 'DEEP' | 'STANDARD' | 'SHALLOW';
 
 export const BLACKJACK_DECK_OPTIONS = [4, 6, 8];
 export const BIG_TWO_BASE_BETS = [5, 50, 1000, 5000];
+export const BACCARAT_MIN_BETS = [10, 100, 500, 1000];
 
 export const BLACKJACK_CUT_PRESETS = [
     { key: 'DEEP' as BlackjackCutPresetKey, label: '深 (20%)', min: 0.15, max: 0.2 },
@@ -89,6 +90,19 @@ export const GAMES: GameInfo[] = [
             border: 'border-amber-500',
             shadow: 'shadow-[0_0_25px_rgba(245,158,11,0.3)]',
             text: 'text-amber-400'
+        }
+    },
+    {
+        type: 'BACCARAT',
+        name: '百家樂',
+        icon: '🀄',
+        desc: '莊閑對決',
+        theme: {
+            from: 'from-purple-900',
+            to: 'to-slate-900',
+            border: 'border-purple-500',
+            shadow: 'shadow-[0_0_25px_rgba(168,85,247,0.3)]',
+            text: 'text-purple-400'
         }
     }
 ];

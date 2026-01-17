@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { GamePhase } from './types';
-import { INITIAL_CHIPS_OPTIONS, MIN_BET, PLAYER_QUOTES } from './constants';
+import { GamePhase, UserProfile } from './types';
+import { MIN_BET, PLAYER_QUOTES } from './constants';
 import { NPC_PROFILES } from './config/npcProfiles';
-import { BIG_TWO_BASE_BETS, BLACKJACK_CUT_PRESETS, GameType, BetMode, BlackjackCutPresetKey } from './config/gameConfig';
+import { BIG_TWO_BASE_BETS, BLACKJACK_CUT_PRESETS, BACCARAT_MIN_BETS, GameType, BetMode, BlackjackCutPresetKey } from './config/gameConfig';
 import { saveProfiles } from './services/profileStore';
-import { buildBigTwoSeats, buildBlackjackSeats, buildGateSeats, buildShowdownPlayers } from './services/lobby/gameStarters';
+import { buildBigTwoSeats, buildBlackjackSeats, buildGateSeats, buildShowdownPlayers, buildBaccaratSeats } from './services/lobby/gameStarters';
 import { pickNpcTriplet } from './services/lobby/npcPicker';
-import { useShowdownProfileSync } from './services/showdown/useShowdownProfileSync';
 import { useGameEngine } from './services/showdown/useShowdownEngine';
 import { ShowdownRules } from './services/showdown/ShowdownRules';
 import BlackjackGame, { BlackjackResult, BlackjackSeat } from './components/BlackjackGame';
@@ -15,13 +14,14 @@ import ShowdownGame from './components/showdown/ShowdownGame';
 import ShowdownGateGame from './components/showdownGate/ShowdownGateGame';
 import { GateSeat, GateResult } from './services/showdownGate/types';
 import SlotMachineGame from './components/slots/SlotMachineGame';
+import BaccaratGame from './components/baccarat/BaccaratGame';
+import { BaccaratSeat } from './services/baccarat/types';
 import { GameButton } from './components/ui/GameButton';
-import Panel from './components/ui/Panel';
 import VolumeControl from './components/ui/VolumeControl';
 import Lobby from './components/lobby/Lobby';
 
 const App: React.FC = () => {
-  const [profiles, setProfiles] = useState<Record<string, any>>({});
+  const [profiles, setProfiles] = useState<Record<string, UserProfile>>({});
   const [blackjackActive, setBlackjackActive] = useState(false);
   const [blackjackSessionKey, setBlackjackSessionKey] = useState(0);
   const [blackjackSeats, setBlackjackSeats] = useState<BlackjackSeat[]>([]);
@@ -37,6 +37,10 @@ const App: React.FC = () => {
   const [gateAnteBet, setGateAnteBet] = useState(MIN_BET);
   const [slotsActive, setSlotsActive] = useState(false);
   const [slotsSessionKey, setSlotsSessionKey] = useState(0);
+  const [baccaratActive, setBaccaratActive] = useState(false);
+  const [baccaratSessionKey, setBaccaratSessionKey] = useState(0);
+  const [baccaratSeats, setBaccaratSeats] = useState<BaccaratSeat[]>([]);
+  const [baccaratMinBet] = useState(BACCARAT_MIN_BETS[1]);
   const [currentActivePlayer, setCurrentActivePlayer] = useState('');
   const playerAvatar = 'https://picsum.photos/seed/me/200/200';
 
@@ -140,6 +144,22 @@ const App: React.FC = () => {
       setSlotsActive(true);
     };
 
+    const startBaccarat = () => {
+      const [ai1, ai2, ai3] = pickNpcTriplet(NPC_PROFILES);
+      const { seats, updatedProfiles } = buildBaccaratSeats({
+        playerName,
+        playerChips,
+        playerAvatar: dynamicAvatar,
+        initialChips,
+        profiles,
+        aiProfiles: [ai1, ai2, ai3]
+      });
+      saveProfiles(updatedProfiles);
+      setBaccaratSeats(seats);
+      setBaccaratSessionKey(prev => prev + 1);
+      setBaccaratActive(true);
+    };
+
     if (gameType === 'BLACKJACK') {
       startBlackjack();
       return;
@@ -157,6 +177,11 @@ const App: React.FC = () => {
 
     if (gameType === 'SLOTS') {
       startSlots();
+      return;
+    }
+
+    if (gameType === 'BACCARAT') {
+      startBaccarat();
       return;
     }
 
@@ -309,6 +334,43 @@ const App: React.FC = () => {
           key={`slots-${slotsSessionKey}`}
           playerName={currentActivePlayer}
           onExit={() => setSlotsActive(false)}
+        />
+      </>
+    );
+  }
+
+  if (baccaratActive) {
+    return (
+      <>
+        <div className="fixed top-4 right-4 z-[100] md:top-6 md:right-6">
+          <VolumeControl />
+        </div>
+        <BaccaratGame
+          key={`baccarat-${baccaratSessionKey}`}
+          seats={baccaratSeats}
+          minBet={baccaratMinBet}
+          npcProfiles={NPC_PROFILES}
+          onExit={() => setBaccaratActive(false)}
+          onProfilesUpdate={(updates) => {
+            const updated = { ...profiles };
+            updates.forEach(payload => {
+              const prev = updated[payload.name];
+              const wins = prev?.wins ?? 0;
+              const losses = prev?.losses ?? 0;
+              const games = prev?.games ?? 0;
+              const debt = prev?.debt ?? 0;
+              updated[payload.name] = {
+                name: payload.name,
+                chips: payload.chips,
+                wins: wins + (payload.result === 'WIN' ? 1 : 0),
+                losses: losses + (payload.result === 'LOSE' ? 1 : 0),
+                games: games + 1,
+                debt
+              };
+            });
+            saveProfiles(updated);
+            setProfiles(updated);
+          }}
         />
       </>
     );
