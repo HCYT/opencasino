@@ -101,19 +101,9 @@ export const useRouletteEngine = ({ onSoundEffect }: UseRouletteEngineProps = {}
         setGameState('SPINNING');
         onSoundEffect?.('spin');
 
-        // Simulate spin duration (e.g., 3-5 seconds in UI, but logic here determines result)
-        // In a real integration, the UI might call a 'land' function, but here we determine it upfront
-        // or wait for a timeout. We'll generate it now but reveal it later.
-        const winnerIndex = Math.floor(Math.random() * WHEEL_ORDER.length);
-        const winner = WHEEL_ORDER[winnerIndex];
-
-        // For now, simple timeout to simulate spin. 
-        // Ideally, the 3D component drives the timing, but this is the "Engine".
-        setTimeout(() => {
-            resolveRound(winner);
-        }, 4000);
-
-    }, [gameState, bets, onSoundEffect, resolveRound]);
+        // The winner is now determined by the 3D component's ball landing
+        // No more setTimeout here - the 3D component will call resolveRound
+    }, [gameState, bets, onSoundEffect]);
 
     const resetGame = useCallback(() => {
         setGameState('IDLE');
@@ -155,5 +145,6 @@ export const useRouletteEngine = ({ onSoundEffect }: UseRouletteEngineProps = {}
         clearBets,
         spinWheel,
         resetGame,
+        resolveRound, // Exposed for 3D component to call when ball lands
     };
 };

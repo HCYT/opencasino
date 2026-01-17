@@ -22,6 +22,7 @@ export default function RouletteGame({ playerBalance, onBalanceUpdate, onExit }:
         clearBets,
         spinWheel,
         resetGame,
+        resolveRound,
         bets
     } = useRouletteEngine();
 
@@ -109,13 +110,18 @@ export default function RouletteGame({ playerBalance, onBalanceUpdate, onExit }:
                         maxDistance={18}
                         enablePan={false}
                     />
-                    <Environment preset="night" />
-                    <ambientLight intensity={0.4} />
-                    <spotLight position={[5, 15, 5]} angle={0.4} penumbra={1} castShadow intensity={1.5} color="#ffeebb" />
+                    <Environment preset="city" /> {/* Brighter preset */}
+                    <ambientLight intensity={0.8} />
+                    <spotLight position={[5, 15, 5]} angle={0.4} penumbra={1} castShadow intensity={2.0} color="#ffeebb" />
+                    {/* Top-down light for metallic reflections */}
+                    <pointLight position={[0, 5, 0]} intensity={1.5} color="white" distance={20} />
 
                     <RouletteWheel3D
                         spinning={gameState === 'SPINNING'}
-                        winningNumber={winningNumber}
+                        onBallLand={(winner) => {
+                            // The 3D component has calculated the winning number from ball position
+                            resolveRound(winner);
+                        }}
                         onSpinComplete={() => { }}
                     />
                 </Canvas>
