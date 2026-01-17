@@ -152,12 +152,13 @@ export const useSicBoEngine = ({
             const players = prev.players.map(player => {
                 if (!player.isAI) return player;
 
-                const aiBets = calculateAIBet(player.chips, minBet);
+                const profile = npcProfiles.find(p => p.name === player.name);
+                const aiBets = calculateAIBet(player.chips, minBet, profile);
                 const totalBetAmount = aiBets.reduce((sum, b) => sum + b.amount, 0);
 
                 // 確保 AI 有足夠籌碼
                 if (totalBetAmount > player.chips) {
-                    return player;
+                    return player; // 籌碼不足，跳過
                 }
 
                 return {
